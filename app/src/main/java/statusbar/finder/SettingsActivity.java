@@ -49,7 +49,7 @@ public class SettingsActivity extends FragmentActivity {
 
 
         // add urls
-        mUrlMap.put("app", "https://github.com/VictorModi/LyricsGetterExt");
+        mUrlMap.put("app", "https://github.com/VictorModi/Lyrics-Getter-Ext");
         mUrlMap.put("statusbarlyricext", "https://github.com/KaguraRinko/StatusBarLyricExt");
         mUrlMap.put("lyricview", "https://github.com/markzhai/LyricView");
 
