@@ -40,8 +40,8 @@ It's base on [KaguraRinko/StatusBarLyricExt](https://github.com/KaguraRinko/Stat
 
 <a href="https://star-history.com/#VictorModi/Lyrics-Getter-Ext&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=YouCanAi/LyricsGetterExt&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=YouCanAi/LyricsGetterExt&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=YouCanAi/LyricsGetterExt&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=VictorModi/LyricsGetterExt&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=VictorModi/LyricsGetterExt&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=VictorModi/LyricsGetterExt&type=Date" />
   </picture>
 </a>
