@@ -1,0 +1,52 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    defaultConfig {
+        compileSdk 34
+
+        applicationId "statusbar.finder"
+        minSdkVersion 26
+        targetSdkVersion 34
+        versionCode 8
+        versionName "1.0.8"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_20
+        targetCompatibility JavaVersion.VERSION_20
+    }
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/DEPENDENCIES', 'META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt', 'META-INF/LICENSE.md', 'META-INF/LICENSE-notice.md']
+        }
+    }
+    namespace 'statusbar.finder'
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation "com.android.support:support-compat:28.0.0"
+    implementation 'androidx.preference:preference-ktx:1.2.1'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    implementation group: 'com.github.houbb', name: 'opencc4j', version: '1.8.1'
+    implementation group: 'io.github.kju2.languagedetector', name: 'language-detector', version: '1.0.5'
+    implementation 'com.github.xiaowine:Lyric-Getter-Api:6.0.0'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'com.andree-surya:moji4j:1.0.0'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    compileOnly 'de.robv.android.xposed:api:82'
+    implementation "com.github.kyuubiran:EzXHelper:2.0.8"
+    implementation 'com.github.xiaowine:XKT:1.0.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
+repositories {
+    mavenCentral()
+}

@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Lyrics Getter Ext</string>
+
+    <string name="profile_choose_app">Choose app</string>
+    <string name="dialog_delete_title">Delete</string>
+    <string name="dialog_delete_message">Remove selected item?</string>
+    <string name="add_package_to_title">Add application</string>
+
+    <!-- Preference Titles -->
+    <string name="preferences_header">Prefreences</string>
+    <string name="about_header">About</string>
+    <string name="enabled_title">Enabled</string>
+    <string name="lyricsGetterStatus_title">Lyrics Getter Connection Status</string>
+
+    <!--    &lt;!&ndash; Unsupport ROM &ndash;&gt;-->
+<!--    <string name="unsupport_rom_title">Unsupport</string>-->
+<!--    <string name="unsupport_rom_summary">Sorry, We don\'t support this ROM</string>-->
+
+    <!-- Toast -->
+    <string name="toast_cannot_start_lyricsgetter">Sorry, Lyrics Getter does not start, please check if LyricsGetter is installed properly!</string>
+    <string name="toast_cannot_get_rules">Sorry, Get Rules Failed. Please Check Your Network.</string>
+    <string name="toast_get_notification_permission">Notification permission not granted. Please allow notification permission for this app in the next screen.</string>
+    <string name="target_apps_title">Target apps</string>
+
+</resources>

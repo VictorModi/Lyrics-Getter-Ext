@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lyrics Getter 扩展</string>
+    <string name="about_header">关于</string>
+    <string name="preferences_header">设置</string>
+    <string name="profile_choose_app">选择应用</string>
+    <string name="dialog_delete_title">删除</string>
+    <string name="dialog_delete_message">移除所选项目？</string>
+    <string name="add_package_to_title">添加应用</string>
+    <string name="enabled_title">启用</string>
+    <string name="lyricsGetterStatus_title">Lyrics Getter 连接状态</string>
+    <string name="target_apps_title">目标应用</string>
+    <string name="toast_cannot_start_lyricsgetter">很抱歉， Lyrics Getter 启动失败。请检查是否正确安装LyricsGetter。</string>
+    <string name="toast_cannot_get_rules">很抱歉，忽略应用规则更新失败，请检查您的网络配置。</string>
+    <string name="toast_get_notification_permission">未获取到通知权限，请在下一界面允许本应用的通知权限。</string>
+</resources>
