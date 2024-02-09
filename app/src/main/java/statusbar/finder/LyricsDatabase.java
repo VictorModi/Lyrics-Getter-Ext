@@ -59,7 +59,7 @@ public class LyricsDatabase extends SQLiteOpenHelper {
         if (lyricResult == null) {
             try {
                 db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
-                        originMediaInfo.getDuration(), packageName, originMediaInfo.getDuration(), null, null, null, null, null, null, 0});
+                        packageName, originMediaInfo.getDuration(), -1, null, null, null, null, null, null, 0});
                 db.setTransactionSuccessful();
                 return true;
             } catch (Exception e) {
@@ -71,7 +71,7 @@ public class LyricsDatabase extends SQLiteOpenHelper {
         }
         try {
             db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
-                    originMediaInfo.getDuration(), packageName, originMediaInfo.getDuration(), lyricResult.resultInfo.getTitle()
+                    packageName, originMediaInfo.getDuration(), lyricResult.mDistance, lyricResult.resultInfo.getTitle()
                     , lyricResult.resultInfo.getArtist(), lyricResult.resultInfo.getAlbum(), lyricResult.mLyric, lyricResult.mTranslatedLyric,
                     lyricResult.mSource, 0});
             db.setTransactionSuccessful();
