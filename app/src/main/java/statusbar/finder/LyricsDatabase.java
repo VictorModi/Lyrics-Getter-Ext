@@ -56,25 +56,18 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
-        if (lyricResult == null) {
-            try {
+        if (searchLyricFromDatabase(originMediaInfo) != null) return true;
+        try {
+            if (lyricResult == null) {
                 db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
                         packageName, originMediaInfo.getDuration(), -1, null, null, null, null, null, null, 0});
-                db.setTransactionSuccessful();
-                return true;
-            } catch (Exception e) {
-                e.fillInStackTrace();
-                return false;
-            } finally {
-                db.endTransaction();
+            } else {
+                db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
+                        packageName, originMediaInfo.getDuration(), lyricResult.mDistance, lyricResult.resultInfo.getTitle()
+                        , lyricResult.resultInfo.getArtist(), lyricResult.resultInfo.getAlbum(), lyricResult.mLyric, lyricResult.mTranslatedLyric,
+                        lyricResult.mSource, 0});
             }
-        }
-        try {
-            db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
-                    packageName, originMediaInfo.getDuration(), lyricResult.mDistance, lyricResult.resultInfo.getTitle()
-                    , lyricResult.resultInfo.getArtist(), lyricResult.resultInfo.getAlbum(), lyricResult.mLyric, lyricResult.mTranslatedLyric,
-                    lyricResult.mSource, 0});
-            db.setTransactionSuccessful();
+                db.setTransactionSuccessful();
             return true;
         } catch (Exception e) {
             e.fillInStackTrace();
