@@ -5,7 +5,6 @@ import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.Locale;
 
 public interface ILrcProvider {
     LyricResult getLyric(MediaMetadata data) throws IOException;

@@ -2,19 +2,16 @@ package statusbar.finder.provider;
 
 
 import android.media.MediaMetadata;
-
+import android.util.Base64;
+import android.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import statusbar.finder.provider.utils.HttpRequestUtil;
+import statusbar.finder.provider.utils.LyricSearchUtil;
 
 import java.io.IOException;
 import java.util.Locale;
-
-import android.util.Base64;
-import android.util.Pair;
-
-import statusbar.finder.provider.utils.HttpRequestUtil;
-import statusbar.finder.provider.utils.LyricSearchUtil;
 
 import static org.apache.commons.lang3.StringEscapeUtils.unescapeHtml4;
 

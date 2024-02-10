@@ -18,36 +18,21 @@ package statusbar.finder.preferences;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
-
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.net.ConnectException;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import statusbar.finder.R;
-import statusbar.finder.misc.Constants;
+import statusbar.finder.broadcast.AppsChangedLiveData;
 import statusbar.finder.preferences.PackageListAdapter.PackageItem;
-import statusbar.finder.provider.utils.HttpRequestUtil;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class PackageListPreference extends PreferenceCategory implements
         Preference.OnPreferenceClickListener {
@@ -111,7 +96,9 @@ public class PackageListPreference extends PreferenceCategory implements
         String packageListData;
         packageListData = String.join(";", mPackages);
         persistString(packageListData);
-        LocalBroadcastManager.getInstance(this.getContext()).sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
+        AppsChangedLiveData.getInstance().notifyChange();
+        // this.getContext().sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
+        // LocalBroadcastManager.getInstance(this.getContext()).sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
     }
 
     private void addPackageToPref(String packageName) {

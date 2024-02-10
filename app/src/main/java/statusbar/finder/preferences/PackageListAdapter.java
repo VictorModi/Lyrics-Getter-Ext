@@ -16,6 +16,7 @@
 
 package statusbar.finder.preferences;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -32,18 +33,17 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import statusbar.finder.R;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 
-import statusbar.finder.R;
-
 public class PackageListAdapter extends BaseAdapter implements Runnable {
     private final PackageManager mPm;
     private final LayoutInflater mInflater;
-    private final List<PackageItem> mInstalledPackages = new LinkedList<PackageItem>();
+    private final List<PackageItem> mInstalledPackages = new LinkedList<>();
 
     // Packages which don't have launcher icons, but which we want to show nevertheless
     private static final String[] PACKAGE_WHITELIST = new String[] {
@@ -113,6 +113,7 @@ public class PackageListAdapter extends BaseAdapter implements Runnable {
         }
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
@@ -122,9 +123,9 @@ public class PackageListAdapter extends BaseAdapter implements Runnable {
             convertView = mInflater.inflate(R.layout.applist_preference_icon, null, false);
             holder = new ViewHolder();
             convertView.setTag(holder);
-            holder.title = (TextView) convertView.findViewById(R.id.title);
-            holder.summary = (TextView) convertView.findViewById(R.id.summary);
-            holder.icon = (ImageView) convertView.findViewById(R.id.icon);
+            holder.title = convertView.findViewById(R.id.title);
+            holder.summary = convertView.findViewById(R.id.summary);
+            holder.icon = convertView.findViewById(R.id.icon);
         }
 
         PackageItem applicationInfo = getItem(position);
@@ -184,4 +185,5 @@ public class PackageListAdapter extends BaseAdapter implements Runnable {
         TextView summary;
         ImageView icon;
     }
+
 }

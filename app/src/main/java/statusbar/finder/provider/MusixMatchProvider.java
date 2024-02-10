@@ -4,13 +4,15 @@ import android.media.MediaMetadata;
 import android.os.Build;
 import android.util.Log;
 import android.util.Pair;
-
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
-
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import statusbar.finder.misc.Constants;
+import statusbar.finder.misc.checkStringLang;
+import statusbar.finder.provider.utils.HttpRequestUtil;
+import statusbar.finder.provider.utils.LyricSearchUtil;
+import statusbar.finder.provider.utils.UnicodeUtil;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -20,12 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import statusbar.finder.misc.Constants;
-import statusbar.finder.misc.checkStringLang;
-import statusbar.finder.provider.utils.HttpRequestUtil;
-import statusbar.finder.provider.utils.LyricSearchUtil;
-import statusbar.finder.provider.utils.UnicodeUtil;
 
 public class MusixMatchProvider implements ILrcProvider {
 
