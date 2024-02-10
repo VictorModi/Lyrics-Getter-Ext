@@ -47,7 +47,7 @@ public class LrcGetter {
             }
         }
 
-        ILrcProvider.LyricResult currentResult = lyricsDatabase.searchLyricFromDatabase(mediaInfo);
+        ILrcProvider.LyricResult currentResult = lyricsDatabase.searchLyricFromDatabase(mediaInfo, packageName);
         if (currentResult != null) {
             return LyricUtils.parseLyric(currentResult, mediaInfo);
         }

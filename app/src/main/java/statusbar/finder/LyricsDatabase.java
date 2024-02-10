@@ -9,6 +9,8 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import statusbar.finder.provider.ILrcProvider;
 
+import java.util.Arrays;
+
 public class LyricsDatabase extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "Lyrics.db";
@@ -55,7 +57,7 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
-        if (searchLyricFromDatabase(originMediaInfo) != null) return true;
+        if (searchLyricFromDatabase(originMediaInfo, packageName) != null) return true;
         try {
             if (lyricResult == null) {
                 db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
@@ -77,7 +79,7 @@ public class LyricsDatabase extends SQLiteOpenHelper {
     }
 
     @SuppressLint("Range")
-    public ILrcProvider.LyricResult searchLyricFromDatabase(ILrcProvider.MediaInfo mediaInfo) {
+    public ILrcProvider.LyricResult searchLyricFromDatabase(ILrcProvider.MediaInfo mediaInfo, String packageName) {
         @SuppressLint("Recycle") Cursor cursor;
         if (mediaInfo.getTitle() == null || mediaInfo.getArtist() == null) {
             return null;
@@ -86,14 +88,15 @@ public class LyricsDatabase extends SQLiteOpenHelper {
         ILrcProvider.LyricResult result = new ILrcProvider.LyricResult();
         SQLiteDatabase db = this.getReadableDatabase();
         Log.d("searchLyricFromDatabase: ", String.format("SearchInfo : %s - %s - %s - %d", mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum(), mediaInfo.getDuration()));
-        if (mediaInfo.getAlbum() != null) {
-            String query = "SELECT lyric, translated_lyric, lyric_source, distance, _offset FROM Lyrics WHERE origin_title = ? AND origin_artist = ? AND origin_album = ? AND duration = ?";
-            cursor = db.rawQuery(query, new String[]{mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum(), String.valueOf(mediaInfo.getDuration())});
-        } else {
-            String query = "SELECT lyric, translated_lyric, lyric_source, distance, _offset FROM Lyrics WHERE origin_title = ? AND origin_artist = ? AND origin_duration = ?";
-            cursor = db.rawQuery(query, new String[]{mediaInfo.getTitle(), mediaInfo.getArtist(), String.valueOf(mediaInfo.getDuration())});
-        }
+        String query = "SELECT lyric, translated_lyric, lyric_source, distance, _offset FROM Lyrics WHERE origin_title = ? AND origin_artist = ? AND origin_package_name = ?";
 
+        String[] args = new String[]{mediaInfo.getTitle(), mediaInfo.getArtist(), packageName};
+        if (mediaInfo.getAlbum() != null) {
+            query += " AND origin_album = ?";
+            args = Arrays.copyOf(args, args.length + 1);
+            args[args.length - 1] = mediaInfo.getAlbum();
+        }
+        cursor = db.rawQuery(query, args);
 
         if (cursor != null) {
             if (cursor.moveToFirst()) {
