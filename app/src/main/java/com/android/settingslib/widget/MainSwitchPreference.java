@@ -20,14 +20,12 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.widget.Switch;
-
 import androidx.preference.PreferenceViewHolder;
 import androidx.preference.TwoStatePreference;
+import statusbar.finder.R;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import statusbar.finder.R;
 
 /**
  * MainSwitchPreference is a Preference with a customized Switch.

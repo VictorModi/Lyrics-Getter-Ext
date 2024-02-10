@@ -12,7 +12,7 @@ public class UnicodeUtil {
         String regex = "\\\\u[a-f0-9A-F]{1,4}";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(unicodeStr);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         while(matcher.find()) {
             String oldChar = matcher.group();//原本的Unicode字符
@@ -31,8 +31,8 @@ public class UnicodeUtil {
 
     /**
      * 字符串转换unicode
-     * @param string
-     * @return
+     * @param string 原始字符串
+     * @return Unicode 字符串
      */
     public static String string2Unicode(String string) {
         StringBuilder unicode = new StringBuilder();
@@ -49,7 +49,7 @@ public class UnicodeUtil {
     /**
      * unicode 转字符串
      * @param unicode 全为 Unicode 的字符串
-     * @return
+     * @return 转换后的字符串
      */
     public static String unicode2String(String unicode) {
         StringBuilder string = new StringBuilder();

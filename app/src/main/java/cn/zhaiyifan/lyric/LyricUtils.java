@@ -1,16 +1,14 @@
 package cn.zhaiyifan.lyric;
 
 import android.media.MediaMetadata;
-import android.text.TextUtils;
 import android.util.Log;
-
 import cn.zhaiyifan.lyric.model.Lyric;
 import cn.zhaiyifan.lyric.model.Lyric.Sentence;
 import statusbar.finder.provider.ILrcProvider;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.util.Collections;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,12 +55,13 @@ public class LyricUtils {
     }
 
     public static Lyric parseLyric(ILrcProvider.LyricResult lyricResult, ILrcProvider.MediaInfo mediaInfo) {
+        if (lyricResult.mLyric == null) return null;
         Lyric lyric = new Lyric();
         try {
             BufferedReader br = new BufferedReader(new StringReader(lyricResult.mLyric));
             String line;
             while ((line = br.readLine()) != null) {
-                parseLine(lyric.sentenceList, line, lyric);
+                if (!parseLine(lyric.sentenceList, line, lyric)) return null;
             }
             lyric.sentenceList.sort(new Lyric.SentenceComparator());
         } catch (IOException e) {
@@ -73,7 +72,7 @@ public class LyricUtils {
                 BufferedReader tbr = new BufferedReader(new StringReader(lyricResult.mTranslatedLyric));
                 String transLine;
                 while ((transLine = tbr.readLine()) != null) {
-                    parseLine(lyric.transSentenceList, transLine, lyric);
+                    if (!parseLine(lyric.transSentenceList, transLine, lyric)) return null;
                 }
                 lyric.transSentenceList.sort(new Lyric.SentenceComparator());
             } catch (IOException e) {
@@ -86,29 +85,6 @@ public class LyricUtils {
         lyric.length = mediaInfo.getDuration();
         lyric.offset = lyricResult.mOffset;
         return lyric;
-    }
-
-    /**
-     * Save lyric to local app directory
-     *
-     * @return Saved destination. Null if failed.
-     */
-    public static String saveLyric(Lyric lyric) {
-        return "";
-    }
-
-    /**
-     * Get sentence according to timestamp.
-     */
-    public static Sentence getSentence(List<Sentence> lyricList, long ts) {
-        return getSentence(lyricList, ts, 0);
-    }
-
-    /**
-     * Get sentence according to timestamp and current index.
-     */
-    public static Sentence getSentence(List<Sentence> lyricList, long ts, int index) {
-        return getSentence(lyricList, ts, index, 0);
     }
 
     /**
@@ -174,7 +150,7 @@ public class LyricUtils {
         int lineLength = line.length();
         line = line.trim();
         int openBracketIndex, closedBracketIndex;
-        openBracketIndex = line.indexOf('[', 0);
+        openBracketIndex = line.indexOf('[');
 
         while (openBracketIndex != -1) {
             closedBracketIndex = line.indexOf(']', openBracketIndex);
@@ -222,7 +198,7 @@ public class LyricUtils {
                         closedBracketIndex = nextClosedBracketIndex;
                     }
 
-                    String content = line.substring(closedBracketIndex + 1, line.length());
+                    String content = line.substring(closedBracketIndex + 1);
                     for (long timestamp : timestampList) {
                         lyric.addSentence(sentenceList, content, timestamp);
                     }
@@ -244,7 +220,7 @@ public class LyricUtils {
      * @return 此时间表示的毫秒
      */
     private static long parseTime(String time, Lyric lyric) {
-        String[] ss = time.split("\\:|\\.");
+        String[] ss = time.split("[:.]");
         // 如果 是两位以后，就非法了
         if (ss.length < 2) {
             return -1;
@@ -262,7 +238,7 @@ public class LyricUtils {
                     throw new RuntimeException("数字不合法!");
                 }
                 // System.out.println("time" + (min * 60 + sec) * 1000L);
-                return (min * 60 + sec) * 1000L;
+                return (min * 60L + sec) * 1000L;
             } catch (Exception exe) {
                 return -1;
             }
@@ -275,7 +251,7 @@ public class LyricUtils {
                     throw new RuntimeException("数字不合法!");
                 }
                 // System.out.println("time" + (min * 60 + sec) * 1000L + mm);
-                return (min * 60 + sec) * 1000L + mm;
+                return (min * 60L + sec) * 1000L + mm;
             } catch (Exception exe) {
                 return -1;
             }
@@ -293,7 +269,7 @@ public class LyricUtils {
     private static int parseOffset(String str) {
         if (str.equalsIgnoreCase("0"))
             return 0;
-        String[] ss = str.split("\\:");
+        String[] ss = str.split(":");
         if (ss.length == 2) {
             if (ss[0].equalsIgnoreCase("offset")) {
                 int os = Integer.parseInt(ss[1]);

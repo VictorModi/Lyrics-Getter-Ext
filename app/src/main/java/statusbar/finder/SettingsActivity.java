@@ -1,5 +1,6 @@
 package statusbar.finder;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
@@ -14,20 +15,18 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.widget.Toast;
 import android.widget.Toolbar;
-
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
+import cn.lyric.getter.api.API;
+import org.jetbrains.annotations.NotNull;
+import statusbar.finder.misc.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import cn.lyric.getter.api.API;
-
-import statusbar.finder.misc.Constants;
 
 public class SettingsActivity extends FragmentActivity {
 
@@ -90,7 +89,7 @@ public class SettingsActivity extends FragmentActivity {
 
     public static void requestIgnoreBatteryOptimizations(Context context) {
         try {
-            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            @SuppressLint("BatteryLife") Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + context.getPackageName()));
             context.startActivity(intent);
         } catch (Exception e) {
@@ -150,7 +149,7 @@ public class SettingsActivity extends FragmentActivity {
             manager.cancelAll();
             mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED);
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS);
-            mTranslate = findPreference(Constants.PREFERENCE_KEY_TRANSELATE);
+            mTranslate = findPreference(Constants.PREFERENCE_KEY_TRANSLATE);
 //            try {
 //                mNotificationFields[0] =
 //                        Notification.class.getDeclaredField("FLAG_ALWAYS_SHOW_TICKER").getInt(null);
@@ -200,7 +199,7 @@ public class SettingsActivity extends FragmentActivity {
         }
 
         @Override
-        public boolean onPreferenceClick(Preference preference) {
+        public boolean onPreferenceClick(@NotNull Preference preference) {
             if (preference == mEnabledPreference) {
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
             } else if(preference == mConnectionStatusPreference) {

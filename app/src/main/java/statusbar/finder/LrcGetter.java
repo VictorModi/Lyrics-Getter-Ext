@@ -2,30 +2,30 @@ package statusbar.finder;
 
 import android.content.Context;
 import android.media.MediaMetadata;
+import cn.zhaiyifan.lyric.LyricUtils;
+import cn.zhaiyifan.lyric.model.Lyric;
+import com.github.houbb.opencc4j.util.ZhConverterUtil;
+import com.moji4j.MojiConverter;
+import com.moji4j.MojiDetector;
+import statusbar.finder.misc.Constants;
+import statusbar.finder.misc.checkStringLang;
+import statusbar.finder.provider.ILrcProvider;
+import statusbar.finder.provider.KugouProvider;
+import statusbar.finder.provider.MusixMatchProvider;
+import statusbar.finder.provider.NeteaseProvider;
+import statusbar.finder.provider.utils.LyricSearchUtil;
 
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
-import cn.zhaiyifan.lyric.LyricUtils;
-import cn.zhaiyifan.lyric.model.Lyric;
-import com.moji4j.MojiConverter;
-import com.moji4j.MojiDetector;
-import statusbar.finder.misc.Constants;
-import statusbar.finder.provider.*;
-import statusbar.finder.provider.utils.LyricSearchUtil;
-import statusbar.finder.misc.checkStringLang;
-
-import com.github.houbb.opencc4j.util.ZhConverterUtil;
-
 public class LrcGetter {
-    static final String TAG = "LrcGetter";
     private static final ILrcProvider[] providers = {
             new MusixMatchProvider(),
             new NeteaseProvider(),
             new KugouProvider(),
-            new QQMusicProvider()
+            // new QQMusicProvider()
     };
     private static MessageDigest messageDigest;
 
@@ -36,12 +36,13 @@ public class LrcGetter {
     public static Lyric getLyric(Context context, ILrcProvider.MediaInfo mediaInfo, String sysLang, String packageName) {
         LyricsDatabase lyricsDatabase = new LyricsDatabase(context);
         // Log.d(TAG, "curMediaData" + new SimpleSongInfo(mediaMetadata));
-        ILrcProvider.MediaInfo hiraganaMediaInfo = null;
+        ILrcProvider.MediaInfo hiraganaMediaInfo;
         if (messageDigest == null) {
             try {
                 messageDigest = MessageDigest.getInstance("SHA");
             } catch (NoSuchAlgorithmException e) {
                 e.fillInStackTrace();
+                lyricsDatabase.close();
                 return null;
             }
         }
@@ -59,6 +60,7 @@ public class LrcGetter {
                     hiraganaMediaInfo = mediaInfo.clone();
                     hiraganaMediaInfo.setTitle(converter.convertRomajiToHiragana(mediaInfo.getTitle()));
                     if (detector.hasLatin(hiraganaMediaInfo.getTitle())) {
+                        lyricsDatabase.close();
                         return null;
                     }
                     currentResult = searchLyricsResultByInfo(hiraganaMediaInfo);
@@ -76,6 +78,7 @@ public class LrcGetter {
             }
             if (currentResult == null) {
                 lyricsDatabase.insertLyricIntoDatabase(null, mediaInfo, packageName);
+                lyricsDatabase.close();
                 return null;
             }
         }
@@ -105,8 +108,10 @@ public class LrcGetter {
         }
 
         if (lyricsDatabase.insertLyricIntoDatabase(currentResult, mediaInfo, packageName)) {
+            lyricsDatabase.close();
             return LyricUtils.parseLyric(currentResult, currentResult.resultInfo);
         }
+        lyricsDatabase.close();
         return null;
     }
 

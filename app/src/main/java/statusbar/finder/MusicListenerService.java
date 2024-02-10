@@ -3,12 +3,7 @@ package statusbar.finder;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
@@ -20,27 +15,24 @@ import android.os.Message;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
-
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
+import cn.lyric.getter.api.API;
+import cn.lyric.getter.api.data.ExtraData;
+import cn.lyric.getter.api.tools.Tools;
+import cn.zhaiyifan.lyric.LyricUtils;
+import cn.zhaiyifan.lyric.model.Lyric;
+import statusbar.finder.broadcast.AppsChangedLiveData;
+import statusbar.finder.misc.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import cn.lyric.getter.api.API;
-import cn.lyric.getter.api.data.ExtraData;
-import cn.lyric.getter.api.tools.Tools;
-
-import cn.zhaiyifan.lyric.LyricUtils;
-import cn.zhaiyifan.lyric.model.Lyric;
-
-import statusbar.finder.misc.Constants;
 
 public class MusicListenerService extends NotificationListenerService {
 
@@ -53,6 +45,7 @@ public class MusicListenerService extends NotificationListenerService {
     private NotificationManager mNotificationManager;
 
     private final ArrayList<String> mTargetPackageList = new ArrayList<>();
+    private Observer<Void> mObserver;
     private SharedPreferences mSharedPreferences;
 
     private Lyric mLyric;
@@ -65,17 +58,6 @@ public class MusicListenerService extends NotificationListenerService {
     private String drawBase64;
     private Thread curLrcUpdateThread;
     private API lyricsGetterApi;
-
-    private final BroadcastReceiver mTargetPackageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (Objects.equals(intent.getAction(), Constants.BROADCAST_TARGET_APP_CHANGED)) {
-                updateIgnoredPackageList();
-                unBindMediaListeners();
-                bindMediaListeners();
-            }
-        }
-    };
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -194,8 +176,12 @@ public class MusicListenerService extends NotificationListenerService {
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mLyricNotification = buildLrcNotification();
         mMediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mTargetPackageReceiver, new IntentFilter(Constants.BROADCAST_TARGET_APP_CHANGED));
-        updateIgnoredPackageList();
+        mObserver = data -> {
+             updateTargetPackageList();
+             bindMediaListeners();
+        };
+        AppsChangedLiveData.getInstance().observeForever(mObserver);
+        updateTargetPackageList();
         bindMediaListeners();
     }
 
@@ -203,7 +189,7 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerDisconnected() {
         stopLyric();
         unBindMediaListeners();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mTargetPackageReceiver);
+        AppsChangedLiveData.getInstance().removeObserver(mObserver);
         super.onListenerDisconnected();
     }
 
@@ -231,7 +217,7 @@ public class MusicListenerService extends NotificationListenerService {
         mMediaController = null;
     }
 
-    private void updateIgnoredPackageList() {
+    private void updateTargetPackageList() {
         mTargetPackageList.clear();
         String value = mSharedPreferences.getString(Constants.PREFERENCE_KEY_TARGET_PACKAGES, "");
         String[] arr = value.split(";");

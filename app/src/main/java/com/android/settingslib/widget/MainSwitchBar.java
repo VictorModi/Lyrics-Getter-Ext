@@ -28,15 +28,12 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-
 import androidx.annotation.ColorInt;
-
 import com.android.settingslib.utils.BuildCompatUtils;
+import statusbar.finder.R;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import statusbar.finder.R;
 
 /**
  * MainSwitchBar is a View with a customized Switch.

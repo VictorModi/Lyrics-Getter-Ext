@@ -3,16 +3,14 @@ package statusbar.finder.provider;
 import android.media.MediaMetadata;
 import android.util.Log;
 import android.util.Pair;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import statusbar.finder.provider.utils.HttpRequestUtil;
+import statusbar.finder.provider.utils.LyricSearchUtil;
 
 import java.io.IOException;
 import java.util.Locale;
-
-import statusbar.finder.provider.utils.HttpRequestUtil;
-import statusbar.finder.provider.utils.LyricSearchUtil;
 
 public class NeteaseProvider implements ILrcProvider {
 

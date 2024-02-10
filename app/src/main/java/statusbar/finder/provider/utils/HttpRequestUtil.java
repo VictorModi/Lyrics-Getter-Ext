@@ -1,17 +1,16 @@
 package statusbar.finder.provider.utils;
 
 import android.text.TextUtils;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.CookieHandler;
 import java.net.CookieManager;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class HttpRequestUtil {
     /*
@@ -23,44 +22,73 @@ public class HttpRequestUtil {
     }
 
     /**
-     * 通过网络请求JSON结果，并返回JSON对象。
+     * 获取指定URL的JSON响应。
      *
-     * @param url 请求的地址
-     * @return  JSON结果
-     * @throws IOException 网络异常
-     * @throws JSONException JSON解析器异常
+     * @param url 请求的URL
+     * @return  返回从URL获取的JSON响应的JSONObject对象
+     * @throws IOException 如果发生I/O错误
+     * @throws JSONException 如果解析JSON响应时发生错误
      */
     public static JSONObject getJsonResponse(String url) throws IOException, JSONException {
         return getJsonResponse(url, null);
     }
 
+    /**
+     * 获取指定URL的JSON响应。
+     *
+     * @param url 请求的URL
+     * @param referer 请求的引用页
+     * @return 返回从URL获取的JSON响应的JSONObject对象
+     * @throws IOException 如果发生I/O错误
+     * @throws JSONException 如果解析JSON响应时发生错误
+     */
     public static JSONObject getJsonResponse(String url, String referer) throws IOException, JSONException {
+        // 初始化连接对象
         HttpURLConnection connection = null;
+
+        // 重定向处理：如果响应码为301或302，则继续重定向直到得到非重定向响应
         do {
-            if (connection == null) { // 测定 connection 为 null 时，视为第一次请求
-                connection = getHttpConnection(url, referer);
-            } else { // 否则非第一次请求，说明有重定向
-                connection = getHttpConnection(connection.getHeaderField("Location"), referer);
-            }
-        } while (connection.getResponseCode() == 301 || connection.getResponseCode() == 302); // 处理重定向, 但目前只有天杀的 MusixMatch 需要我做这一步
-        return handleStreamToJson(connection);
+            // 获取HTTP连接对象
+            connection = createHttpURLConnection(connection == null ? url : connection.getHeaderField("Location"), referer);
+        } while (connection.getResponseCode() == 301 || connection.getResponseCode() == 302);
+
+        // 将响应流转换为JSONObject对象并返回
+        return convertStreamToJSONObject(connection);
     }
 
-    private static HttpURLConnection getHttpConnection(String url, String referer) throws IOException {
+
+    /**
+     * 创建并返回一个HTTP连接对象。
+     *
+     * @param url 请求的URL
+     * @param referer 请求的引用页
+     * @return 返回一个HTTPURLConnection对象
+     * @throws IOException 如果发生I/O错误
+     */
+    private static HttpURLConnection createHttpURLConnection(String url, String referer) throws IOException {
+        // 创建URL对象
         URL httpUrl = new URL(url);
+        // 打开连接
         HttpURLConnection connection = (HttpURLConnection) httpUrl.openConnection();
+        // 设置请求方法为GET
         connection.setRequestMethod("GET");
+        // 设置User-Agent
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0");
+        // 设置Referer
         if (!TextUtils.isEmpty(referer)) {
             connection.setRequestProperty("Referer", referer);
         }
+        // 设置连接超时时间
         connection.setConnectTimeout(5000);
+        // 设置读取超时时间
         connection.setReadTimeout(5000);
+        // 连接
         connection.connect();
         return connection;
     }
 
-    private static JSONObject handleStreamToJson(HttpURLConnection connection) throws IOException {
+
+    private static JSONObject convertStreamToJSONObject(HttpURLConnection connection) throws IOException {
         InputStream in = connection.getInputStream();
         byte[] data = readStream(in);
         // Log.d("data", new String(data));

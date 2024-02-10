@@ -3,19 +3,16 @@ package statusbar.finder.provider.utils;
 import android.media.MediaMetadata;
 import android.os.Build;
 import android.text.TextUtils;
-
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
-
 import org.json.JSONArray;
 import org.json.JSONException;
+import statusbar.finder.misc.checkStringLang;
+import statusbar.finder.provider.ILrcProvider;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
-
-import statusbar.finder.misc.checkStringLang;
-import statusbar.finder.provider.ILrcProvider;
 
 public class LyricSearchUtil {
 

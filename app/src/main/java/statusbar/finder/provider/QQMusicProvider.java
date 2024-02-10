@@ -3,16 +3,14 @@ package statusbar.finder.provider;
 import android.media.MediaMetadata;
 import android.util.Base64;
 import android.util.Pair;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import statusbar.finder.provider.utils.HttpRequestUtil;
+import statusbar.finder.provider.utils.LyricSearchUtil;
 
 import java.io.IOException;
 import java.util.Locale;
-
-import statusbar.finder.provider.utils.HttpRequestUtil;
-import statusbar.finder.provider.utils.LyricSearchUtil;
 
 /**
  * @deprecated Can't Work.
@@ -78,7 +76,7 @@ public class QQMusicProvider implements ILrcProvider {
                 currentMID = jsonObject.getString("songmid");
             }
         }
-        if (currentMID.equals("")) {return null;}
+        if (currentMID.isEmpty()) {return null;}
         return new Pair<>(String.format(Locale.getDefault(), QM_LRC_URL_FORMAT, currentMID), minDistance);
     }
 }
