@@ -234,7 +234,7 @@ public class MusicListenerService extends NotificationListenerService {
             if (data.getTranslatedLyric() != null) {
                 contentTextLyric += String.format("\nTranslatedLyric: %s", data.getTranslatedLyric());
             }
-            contentTextLyric += "LyricsSource: " + mCurrentResult.second.mSource;
+            contentTextLyric += "\nLyricsSource: " + mCurrentResult.second.mSource;
             builder.setContentText(contentTextResult + "\n" + contentTextLyric);
             builder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentTextResult + "\n" + contentTextLyric))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
