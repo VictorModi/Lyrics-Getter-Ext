@@ -51,7 +51,7 @@ public class LrcGetter {
 
         ILrcProvider.LyricResult currentResult = lyricsDatabase.searchLyricFromDatabase(mediaInfo, packageName);
         if (currentResult != null) {
-            GetResult.getInstance().notifyResult(new Pair<>(mediaInfo, currentResult));
+            GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
             return LyricUtils.parseLyric(currentResult, mediaInfo);
         }
         currentResult = searchLyricsResultByInfo(mediaInfo);
@@ -63,6 +63,7 @@ public class LrcGetter {
                     hiraganaMediaInfo = mediaInfo.clone();
                     hiraganaMediaInfo.setTitle(converter.convertRomajiToHiragana(mediaInfo.getTitle()));
                     if (detector.hasLatin(hiraganaMediaInfo.getTitle())) {
+                        GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
                         lyricsDatabase.close();
                         return null;
                     }
@@ -80,6 +81,7 @@ public class LrcGetter {
 
             }
             if (currentResult == null) {
+                GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
                 lyricsDatabase.insertLyricIntoDatabase(null, mediaInfo, packageName);
                 lyricsDatabase.close();
                 return null;
@@ -111,10 +113,11 @@ public class LrcGetter {
         }
 
         if (lyricsDatabase.insertLyricIntoDatabase(currentResult, mediaInfo, packageName)) {
-            GetResult.getInstance().notifyResult(new Pair<>(mediaInfo, currentResult));
+            GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
             lyricsDatabase.close();
             return LyricUtils.parseLyric(currentResult, currentResult.resultInfo);
         }
+        GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
         lyricsDatabase.close();
         return null;
     }

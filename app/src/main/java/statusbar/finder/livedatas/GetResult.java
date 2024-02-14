@@ -12,7 +12,7 @@ import statusbar.finder.provider.ILrcProvider;
  * @email: victormodi@outlook.com
  * @date: 2024/2/14 13:32
  */
-public class GetResult extends LiveData<Pair<ILrcProvider.MediaInfo, ILrcProvider.LyricResult>> {
+public class GetResult extends LiveData<GetResult.Data> {
     private static GetResult instance;
 
     public static GetResult getInstance() {
@@ -22,7 +22,18 @@ public class GetResult extends LiveData<Pair<ILrcProvider.MediaInfo, ILrcProvide
         return instance;
     }
 
-    public void notifyResult(Pair<ILrcProvider.MediaInfo, ILrcProvider.LyricResult> data) {
+    public void notifyResult(GetResult.Data data) {
         postValue(data);
+    }
+
+    @lombok.Data
+    public static class Data {
+        private ILrcProvider.MediaInfo originInfo;
+        private ILrcProvider.LyricResult result;
+
+        public Data(ILrcProvider.MediaInfo originInfo, ILrcProvider.LyricResult result) {
+            this.originInfo = originInfo;
+            this.result = result;
+        }
     }
 }

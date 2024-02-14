@@ -18,7 +18,6 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -52,14 +51,15 @@ public class MusicListenerService extends NotificationListenerService {
 
     private final ArrayList<String> mTargetPackageList = new ArrayList<>();
     private Observer<Void> mAppsListChangedObserver;
-    private Observer<Pair<ILrcProvider.MediaInfo, ILrcProvider.LyricResult>> mGetResultObserver;
+    private Observer<GetResult.Data> mGetResultObserver;
 
     private SharedPreferences mSharedPreferences;
 
     private Lyric mLyric;
     private String requiredLrcTitle;
     private Notification mLyricNotification;
-    private Pair<ILrcProvider.MediaInfo, ILrcProvider.LyricResult> mCurrentResult;
+    private GetResult.Data mCurrentResult;
+    private ILrcProvider.MediaInfo mCurrentMediaInfo;
     private long mLastSentenceFromTime = -1;
 
     @SuppressLint("ConstantLocale")
@@ -116,7 +116,10 @@ public class MusicListenerService extends NotificationListenerService {
             stopLyric();
             mLyric = null;
             if (metadata == null) return;
+            mLyricNotification = buildLrcNotification();
+            mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
+            mCurrentMediaInfo = new ILrcProvider.MediaInfo(metadata);
             if (curLrcUpdateThread == null || !curLrcUpdateThread.isAlive()) {
                 curLrcUpdateThread = new LrcUpdateThread(getApplicationContext(), mHandler, metadata, mMediaController.getPackageName());
                 curLrcUpdateThread.start();
@@ -190,7 +193,11 @@ public class MusicListenerService extends NotificationListenerService {
              bindMediaListeners();
         };
 
-        mGetResultObserver = data -> mCurrentResult = data;
+        mGetResultObserver = data -> {
+            mCurrentResult = data;
+            mLyricNotification = buildLrcNotification(data);
+            mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
+        };
         AppsListChanged.getInstance().observeForever(mAppsListChangedObserver);
         GetResult.getInstance().observeForever(mGetResultObserver);
         updateTargetPackageList();
@@ -210,35 +217,36 @@ public class MusicListenerService extends NotificationListenerService {
         return buildLrcNotification(null);
     }
 
-    private Notification buildLrcNotification(LyricsChanged.Data data) {
+    private Notification buildLrcNotification(Object data) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_LRC);
-        builder.setSmallIcon(R.drawable.ic_music);
-        builder.setOngoing(true);
+        builder.setSmallIcon(R.drawable.ic_music).setOngoing(true);
         if (data != null) {
-            String contentTitleFormat = "%s - %s";
-            if (mCurrentResult.first.getAlbum() != null) {
-                contentTitleFormat += " - %s";
-                builder.setContentTitle(String.format(contentTitleFormat, mCurrentResult.first.getTitle(),
-                        mCurrentResult.first.getArtist(), mCurrentResult.first.getAlbum()));
-            } else {
-                builder.setContentTitle(String.format("%s - %s", mCurrentResult.first.getTitle(),
-                        mCurrentResult.first.getArtist()));
+            String contentText = "Incorrect data type, please send this message to the developer.\nType: " + Object.class.getName();
+            if (data instanceof LyricsChanged.Data) {
+                contentText = notificationLyricsContentText((LyricsChanged.Data) data);
+            } else if (data instanceof GetResult.Data) {
+                contentText = notificationResultContentText((GetResult.Data) data);
             }
-            String contentTextResult;
-            contentTextResult = String.format("Result: %s - %s", mCurrentResult.second.resultInfo.getTitle(),
-                    mCurrentResult.second.resultInfo.getArtist());
-            if (mCurrentResult.second.resultInfo.getAlbum() != null) {
-                contentTextResult += " - " +  mCurrentResult.second.resultInfo.getAlbum();
-            }
-            String contentTextLyric = String.format("Lyric: %s", data.getLyric());
-            if (data.getTranslatedLyric() != null) {
-                contentTextLyric += "\nTranslatedLyric: " + data.getTranslatedLyric();
-            }
-            contentTextLyric += "\nLyricsDelay: " + data.getDelay();
-            contentTextLyric += "\nLyricsSource: " + mCurrentResult.second.mSource;
-            builder.setContentText(contentTextResult + "\n" + contentTextLyric);
-            builder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentTextResult + "\n" + contentTextLyric))
+            builder.setContentText("Tap to View Details")
+                    .setStyle(new NotificationCompat.BigTextStyle()
+                    .bigText(contentText))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        } else {
+            builder.setContentText("Still Searching...");
+        }
+        String contentTitleFormat = "%s - %s";
+        if (mCurrentMediaInfo != null) {
+            if (mCurrentMediaInfo.getAlbum() != null) {
+                contentTitleFormat += " - %s";
+                builder.setContentTitle(String.format(contentTitleFormat, mCurrentMediaInfo.getTitle(),
+                        mCurrentMediaInfo.getArtist(), mCurrentMediaInfo.getAlbum()));
+            } else {
+                builder.setContentTitle(String.format("%s - %s", mCurrentMediaInfo.getTitle(),
+                        mCurrentMediaInfo.getArtist()));
+            }
+        } else {
+            builder.setContentTitle("Failed to retrieve current playback media information");
+            builder.setContentText("Please check if the target application is correctly configured and if the target application is currently playing media.");
         }
         Notification notification = builder.build();
         notification.extras.putLong("ticker_icon", R.drawable.ic_music);
@@ -246,6 +254,31 @@ public class MusicListenerService extends NotificationListenerService {
         notification.flags |= Constants.FLAG_ALWAYS_SHOW_TICKER;
         notification.flags |= Constants.FLAG_ONLY_UPDATE_TICKER;
         return notification;
+    }
+
+    private String notificationResultContentText(GetResult.Data data) {
+        if (data.getResult() == null) {
+            return "Failed to retrieve lyrics! Bad luck!";
+        }
+
+        String contentTextResult;
+        contentTextResult = String.format("Result: %s - %s", mCurrentResult.getResult().resultInfo.getTitle(),
+                mCurrentResult.getResult().resultInfo.getArtist());
+        if (mCurrentResult.getResult().resultInfo.getAlbum() != null) {
+            contentTextResult += " - " +  mCurrentResult.getResult().resultInfo.getAlbum();
+        }
+        return contentTextResult;
+    }
+
+    private String notificationLyricsContentText(LyricsChanged.Data data) {
+        String contentTextResult = notificationResultContentText(mCurrentResult);
+        String contentTextLyric = String.format("Lyric: %s", data.getLyric());
+        if (data.getTranslatedLyric() != null) {
+            contentTextLyric += "\nTranslatedLyric: " + data.getTranslatedLyric();
+        }
+        contentTextLyric += "\nLyricsDelay: " + data.getDelay();
+        contentTextLyric += "\nLyricsSource: " + mCurrentResult.getResult().mSource;
+        return contentTextResult + "\n" + contentTextLyric;
     }
 
     private void bindMediaListeners() {
