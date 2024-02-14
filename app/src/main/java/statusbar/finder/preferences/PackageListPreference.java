@@ -27,7 +27,7 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import org.jetbrains.annotations.NotNull;
 import statusbar.finder.R;
-import statusbar.finder.broadcast.AppsChangedLiveData;
+import statusbar.finder.livedatas.AppsListChanged;
 import statusbar.finder.preferences.PackageListAdapter.PackageItem;
 
 import java.util.ArrayList;
@@ -96,7 +96,7 @@ public class PackageListPreference extends PreferenceCategory implements
         String packageListData;
         packageListData = String.join(";", mPackages);
         persistString(packageListData);
-        AppsChangedLiveData.getInstance().notifyChange();
+        AppsListChanged.getInstance().notifyChange();
         // this.getContext().sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
         // LocalBroadcastManager.getInstance(this.getContext()).sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
     }

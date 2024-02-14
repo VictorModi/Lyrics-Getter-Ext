@@ -2,11 +2,13 @@ package statusbar.finder;
 
 import android.content.Context;
 import android.media.MediaMetadata;
+import android.util.Pair;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import com.moji4j.MojiConverter;
 import com.moji4j.MojiDetector;
+import statusbar.finder.livedatas.GetResult;
 import statusbar.finder.misc.Constants;
 import statusbar.finder.misc.checkStringLang;
 import statusbar.finder.provider.ILrcProvider;
@@ -49,6 +51,7 @@ public class LrcGetter {
 
         ILrcProvider.LyricResult currentResult = lyricsDatabase.searchLyricFromDatabase(mediaInfo, packageName);
         if (currentResult != null) {
+            GetResult.getInstance().notifyResult(new Pair<>(mediaInfo, currentResult));
             return LyricUtils.parseLyric(currentResult, mediaInfo);
         }
         currentResult = searchLyricsResultByInfo(mediaInfo);
@@ -108,6 +111,7 @@ public class LrcGetter {
         }
 
         if (lyricsDatabase.insertLyricIntoDatabase(currentResult, mediaInfo, packageName)) {
+            GetResult.getInstance().notifyResult(new Pair<>(mediaInfo, currentResult));
             lyricsDatabase.close();
             return LyricUtils.parseLyric(currentResult, currentResult.resultInfo);
         }

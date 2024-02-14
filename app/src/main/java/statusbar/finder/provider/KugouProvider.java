@@ -85,6 +85,6 @@ public class KugouProvider implements ILrcProvider {
         if (currentId == -1) {
             return null;
         }
-        return new Pair<>(String.format(Locale.getDefault(), KUGOU_LRC_URL_FORMAT, currentId, currentAccessKey), new MediaInfo(soundName, artist, null, minDistance));
+        return new Pair<>(String.format(Locale.getDefault(), KUGOU_LRC_URL_FORMAT, currentId, currentAccessKey), new MediaInfo(soundName, artist, null, -1, minDistance));
     }
 }

@@ -36,24 +36,20 @@ public interface ILrcProvider {
         private long duration;
         private long distance;
 
-        public MediaInfo(String title, String artist, String album, long distance) {
+        public MediaInfo(String title, String artist, String album, long distance, long duration) {
             this.title = title;
             this.artist = artist;
             this.album = album;
             this.distance = distance;
+            this.duration = duration;
         }
-//        public MediaInfo(String title, String artist, String album, long duration) {
-//            this.title = title;
-//            this.artist = artist;
-//            this.album = album;
-//            this.duration = duration;
-//        }
 
         public MediaInfo(MediaMetadata mediaMetadata) {
             this.title = mediaMetadata.getString(MediaMetadata.METADATA_KEY_TITLE);
             this.artist = mediaMetadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
             this.album = mediaMetadata.getString(MediaMetadata.METADATA_KEY_ALBUM);
             this.duration = mediaMetadata.getLong(MediaMetadata.METADATA_KEY_DURATION);
+            this.distance = -1;
 
             if (this.title == null) {
                 this.title = "";

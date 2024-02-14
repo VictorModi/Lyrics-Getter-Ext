@@ -88,7 +88,7 @@ public class LyricsDatabase extends SQLiteOpenHelper {
         ILrcProvider.LyricResult result = new ILrcProvider.LyricResult();
         SQLiteDatabase db = this.getReadableDatabase();
         Log.d("searchLyricFromDatabase: ", String.format("SearchInfo : %s - %s - %s - %d", mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum(), mediaInfo.getDuration()));
-        String query = "SELECT lyric, translated_lyric, lyric_source, distance, _offset FROM Lyrics WHERE origin_title = ? AND origin_artist = ? AND origin_package_name = ?";
+        String query = "SELECT lyric, translated_lyric, lyric_source, distance, duration, _offset, result_title, result_artist, result_album  FROM Lyrics WHERE origin_title = ? AND origin_artist = ? AND origin_package_name = ?";
 
         String[] args = new String[]{mediaInfo.getTitle(), mediaInfo.getArtist(), packageName};
         if (mediaInfo.getAlbum() != null) {
@@ -105,6 +105,14 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                 result.mSource = cursor.getString(cursor.getColumnIndex("lyric_source"));
                 result.mDistance = cursor.getLong(cursor.getColumnIndex("distance"));
                 result.mOffset = (int) cursor.getLong(cursor.getColumnIndex("_offset"));
+
+                result.resultInfo = new ILrcProvider.MediaInfo(
+                        cursor.getString(cursor.getColumnIndex("result_title")),
+                        cursor.getString(cursor.getColumnIndex("result_artist")),
+                        cursor.getString(cursor.getColumnIndex("result_album")),
+                        cursor.getLong(cursor.getColumnIndex("duration")),
+                        cursor.getLong(cursor.getColumnIndex("distance"))
+                );
 
                 cursor.close();
                 return result;

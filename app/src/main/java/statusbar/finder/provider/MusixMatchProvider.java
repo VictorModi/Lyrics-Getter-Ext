@@ -92,7 +92,7 @@ public class MusixMatchProvider implements ILrcProvider {
                 String artistName = infoJson.getString("artist_name");
                 result.mDistance = result.mDistance == 0 ? LyricSearchUtil.calculateSongInfoDistance(mediaInfo, soundName, artistName, albumName) : result.mDistance;
                 result.mSource = "MusixMatch";
-                result.resultInfo = new MediaInfo(soundName, artistName, albumName, result.mDistance);
+                result.resultInfo = new MediaInfo(soundName, artistName, albumName, -1, result.mDistance);
                 if (Constants.isTranslateCheck){result.mTranslatedLyric = getTranslatedLyric(result.mLyric, trackId);};
                 return result;
             }

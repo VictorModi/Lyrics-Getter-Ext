@@ -3,7 +3,9 @@ package statusbar.finder;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
@@ -16,6 +18,7 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -26,8 +29,11 @@ import cn.lyric.getter.api.data.ExtraData;
 import cn.lyric.getter.api.tools.Tools;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
-import statusbar.finder.broadcast.AppsChangedLiveData;
+import statusbar.finder.livedatas.AppsListChanged;
+import statusbar.finder.livedatas.GetResult;
+import statusbar.finder.livedatas.LyricsChanged;
 import statusbar.finder.misc.Constants;
+import statusbar.finder.provider.ILrcProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +41,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class MusicListenerService extends NotificationListenerService {
+    private static final String TAG = MusicListenerService.class.getSimpleName();
 
     private static final int NOTIFICATION_ID_LRC = 1;
 
@@ -45,12 +52,16 @@ public class MusicListenerService extends NotificationListenerService {
     private NotificationManager mNotificationManager;
 
     private final ArrayList<String> mTargetPackageList = new ArrayList<>();
-    private Observer<Void> mObserver;
+    private Observer<Void> mAppsListChangedObserver;
+    private Observer<LyricsChanged.Data> mLyricsChangedObserver;
+    private Observer<Pair<ILrcProvider.MediaInfo, ILrcProvider.LyricResult>> mGetResultObserver;
+
     private SharedPreferences mSharedPreferences;
 
     private Lyric mLyric;
     private String requiredLrcTitle;
     private Notification mLyricNotification;
+    private Pair<ILrcProvider.MediaInfo, ILrcProvider.LyricResult> mCurrentResult;
     private long mLastSentenceFromTime = -1;
 
     @SuppressLint("ConstantLocale")
@@ -176,11 +187,22 @@ public class MusicListenerService extends NotificationListenerService {
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mLyricNotification = buildLrcNotification();
         mMediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-        mObserver = data -> {
+        mAppsListChangedObserver = data -> {
              updateTargetPackageList();
              bindMediaListeners();
         };
-        AppsChangedLiveData.getInstance().observeForever(mObserver);
+
+        mLyricsChangedObserver = data -> {
+            mLyricNotification = buildLrcNotification(data);
+            mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
+        };
+
+        mGetResultObserver = data -> {
+            mCurrentResult = data;
+        };
+        LyricsChanged.getInstance().observeForever(mLyricsChangedObserver);
+        AppsListChanged.getInstance().observeForever(mAppsListChangedObserver);
+        GetResult.getInstance().observeForever(mGetResultObserver);
         updateTargetPackageList();
         bindMediaListeners();
     }
@@ -189,15 +211,44 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerDisconnected() {
         stopLyric();
         unBindMediaListeners();
-        AppsChangedLiveData.getInstance().removeObserver(mObserver);
+        LyricsChanged.getInstance().removeObserver(mLyricsChangedObserver);
+        AppsListChanged.getInstance().removeObserver(mAppsListChangedObserver);
+        GetResult.getInstance().removeObserver(mGetResultObserver);
         super.onListenerDisconnected();
     }
 
     private Notification buildLrcNotification() {
+        return buildLrcNotification(null);
+    }
+
+    private Notification buildLrcNotification(LyricsChanged.Data data) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_LRC);
         builder.setSmallIcon(R.drawable.ic_music);
         builder.setOngoing(true);
         Notification notification = builder.build();
+        if (data != null) {
+            String contentTitleFormat = "%s - %s";
+            if (mCurrentResult.first.getAlbum() != null) {
+                contentTitleFormat += " - %s";
+                builder.setContentTitle(String.format(contentTitleFormat, mCurrentResult.first.getTitle(),
+                        mCurrentResult.first.getArtist(), mCurrentResult.first.getAlbum()));
+            } else {
+                builder.setContentTitle(String.format("%s - %s", mCurrentResult.first.getTitle(),
+                        mCurrentResult.first.getArtist()));
+            }
+            String contentTextResult;
+            contentTextResult = String.format("Result: %s - %s", mCurrentResult.second.resultInfo.getTitle(),
+                    mCurrentResult.second.resultInfo.getArtist());
+            if (mCurrentResult.second.resultInfo.getAlbum() != null) {
+                contentTextResult += String.format(" - %s", mCurrentResult.second.resultInfo.getAlbum());
+            }
+            String contentTextLyric = String.format("Lyric: %s", data.getLyric());
+            if (data.getTranslatedLyric() != null) {
+                contentTextLyric += String.format("\nTranslatedLyric: %s", data.getTranslatedLyric());
+            }
+            contentTextLyric += "LyricsSource :" + mCurrentResult.second.mSource;
+            builder.setContentText(contentTextResult + "\n" + contentTextLyric);
+        }
         notification.extras.putLong("ticker_icon", R.drawable.ic_music);
         notification.extras.putBoolean("ticker_icon_switch", false);
         notification.flags |= Constants.FLAG_ALWAYS_SHOW_TICKER;
@@ -251,14 +302,19 @@ public class MusicListenerService extends NotificationListenerService {
         }
 
         int delay = calculateDelay(position);
-
         if (sentence.fromTime != mLastSentenceFromTime) {
-            if (sentence.content.isEmpty()){return;}
+            if (sentence.content.isEmpty()) {
+                return;
+            }
             String curLyric = sentence.content.trim();
+            Lyric.Sentence translatedSentence = null;
             if (Constants.isTranslateCheck) { // 增添翻译
-                Lyric.Sentence transSentence = getTranslatedSentence(position);
-                if (transSentence != null && !Objects.equals(transSentence.content, "") && !Objects.equals(sentence.content, "")) {
-                    curLyric += "\n\r" + transSentence.content.trim();
+                translatedSentence = getTranslatedSentence(position);
+                if (translatedSentence != null && !Objects.equals(translatedSentence.content, "") && !Objects.equals(sentence.content, "")) {
+                    curLyric += "\n\r" + translatedSentence.content.trim();
+                    LyricsChanged.getInstance().notifyLyrics(new LyricsChanged.Data(sentence.content.trim(), translatedSentence.content.trim(), delay));
+                } else {
+                    LyricsChanged.getInstance().notifyLyrics(new LyricsChanged.Data(sentence.content.trim(), null, delay));
                 }
             }
             // EventTools.INSTANCE.sendLyric(getApplicationContext(), curLyric, true, drawBase64, false, "", getPackageName(), delay);
@@ -285,9 +341,6 @@ public class MusicListenerService extends NotificationListenerService {
         if (nextFound < mLyric.sentenceList.size()) { //判断是否超出范围 防止崩溃
             Lyric.Sentence nextSentence = mLyric.sentenceList.get(nextFound);
             delay = (int) (nextSentence.fromTime - position) / 1000 / 3;
-            if (delay < 0) {
-                delay = 0;
-            }
         }
 
         return delay;
