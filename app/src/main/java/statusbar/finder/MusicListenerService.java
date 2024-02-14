@@ -228,12 +228,13 @@ public class MusicListenerService extends NotificationListenerService {
             contentTextResult = String.format("Result: %s - %s", mCurrentResult.second.resultInfo.getTitle(),
                     mCurrentResult.second.resultInfo.getArtist());
             if (mCurrentResult.second.resultInfo.getAlbum() != null) {
-                contentTextResult += String.format(" - %s", mCurrentResult.second.resultInfo.getAlbum());
+                contentTextResult += " - " +  mCurrentResult.second.resultInfo.getAlbum();
             }
             String contentTextLyric = String.format("Lyric: %s", data.getLyric());
             if (data.getTranslatedLyric() != null) {
-                contentTextLyric += String.format("\nTranslatedLyric: %s", data.getTranslatedLyric());
+                contentTextLyric += "\nTranslatedLyric: " + data.getTranslatedLyric();
             }
+            contentTextLyric += "\nLyricsDelay: " + data.getDelay();
             contentTextLyric += "\nLyricsSource: " + mCurrentResult.second.mSource;
             builder.setContentText(contentTextResult + "\n" + contentTextLyric);
             builder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentTextResult + "\n" + contentTextLyric))
