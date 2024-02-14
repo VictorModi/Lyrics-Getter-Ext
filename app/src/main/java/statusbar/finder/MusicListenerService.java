@@ -41,7 +41,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class MusicListenerService extends NotificationListenerService {
-    private static final String TAG = MusicListenerService.class.getSimpleName();
 
     private static final int NOTIFICATION_ID_LRC = 1;
 
@@ -53,7 +52,6 @@ public class MusicListenerService extends NotificationListenerService {
 
     private final ArrayList<String> mTargetPackageList = new ArrayList<>();
     private Observer<Void> mAppsListChangedObserver;
-    private Observer<LyricsChanged.Data> mLyricsChangedObserver;
     private Observer<Pair<ILrcProvider.MediaInfo, ILrcProvider.LyricResult>> mGetResultObserver;
 
     private SharedPreferences mSharedPreferences;
@@ -192,15 +190,7 @@ public class MusicListenerService extends NotificationListenerService {
              bindMediaListeners();
         };
 
-        mLyricsChangedObserver = data -> {
-            mLyricNotification = buildLrcNotification(data);
-            mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
-        };
-
-        mGetResultObserver = data -> {
-            mCurrentResult = data;
-        };
-        LyricsChanged.getInstance().observeForever(mLyricsChangedObserver);
+        mGetResultObserver = data -> mCurrentResult = data;
         AppsListChanged.getInstance().observeForever(mAppsListChangedObserver);
         GetResult.getInstance().observeForever(mGetResultObserver);
         updateTargetPackageList();
@@ -211,7 +201,6 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerDisconnected() {
         stopLyric();
         unBindMediaListeners();
-        LyricsChanged.getInstance().removeObserver(mLyricsChangedObserver);
         AppsListChanged.getInstance().removeObserver(mAppsListChangedObserver);
         GetResult.getInstance().removeObserver(mGetResultObserver);
         super.onListenerDisconnected();
@@ -225,7 +214,6 @@ public class MusicListenerService extends NotificationListenerService {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_LRC);
         builder.setSmallIcon(R.drawable.ic_music);
         builder.setOngoing(true);
-        Notification notification = builder.build();
         if (data != null) {
             String contentTitleFormat = "%s - %s";
             if (mCurrentResult.first.getAlbum() != null) {
@@ -248,7 +236,10 @@ public class MusicListenerService extends NotificationListenerService {
             }
             contentTextLyric += "LyricsSource :" + mCurrentResult.second.mSource;
             builder.setContentText(contentTextResult + "\n" + contentTextLyric);
+            builder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentTextResult + "\n" + contentTextLyric))
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
         }
+        Notification notification = builder.build();
         notification.extras.putLong("ticker_icon", R.drawable.ic_music);
         notification.extras.putBoolean("ticker_icon_switch", false);
         notification.flags |= Constants.FLAG_ALWAYS_SHOW_TICKER;
@@ -312,14 +303,14 @@ public class MusicListenerService extends NotificationListenerService {
                 translatedSentence = getTranslatedSentence(position);
                 if (translatedSentence != null && !Objects.equals(translatedSentence.content, "") && !Objects.equals(sentence.content, "")) {
                     curLyric += "\n\r" + translatedSentence.content.trim();
-                    LyricsChanged.getInstance().notifyLyrics(new LyricsChanged.Data(sentence.content.trim(), translatedSentence.content.trim(), delay));
-                } else {
-                    LyricsChanged.getInstance().notifyLyrics(new LyricsChanged.Data(sentence.content.trim(), null, delay));
                 }
             }
+            LyricsChanged.Data data = new LyricsChanged.Data(sentence.content.trim(), translatedSentence != null ? translatedSentence.content.trim() : null, delay);
+            LyricsChanged.getInstance().notifyLyrics(data);
+            mLyricNotification = buildLrcNotification(data);
+            mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             // EventTools.INSTANCE.sendLyric(getApplicationContext(), curLyric, true, drawBase64, false, "", getPackageName(), delay);
             Log.d("updateLyric: ", String.format("Lyric: %s , delay: %d", curLyric, delay));
-//            Log.d("HasEnable", String.valueOf(lyricsGetterApi.getHasEnable()));
             lyricsGetterApi.sendLyric(curLyric, new ExtraData(
                     true,
                     drawBase64,
