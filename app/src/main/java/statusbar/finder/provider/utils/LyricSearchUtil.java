@@ -144,4 +144,17 @@ public class LyricSearchUtil {
         return LyricContentPattern.matcher(content).find();
     }
 
+    public static String[] extractLyric(String lyricLine) { // 解析歌词行 [0] 时间戳 [1] 歌词文本
+        int startIndex = lyricLine.indexOf("[");
+        int endIndex = lyricLine.indexOf("]");
+
+        if (startIndex != -1 && endIndex != -1) {
+            String timeStamp = lyricLine.substring(startIndex + 1, endIndex);
+            String lyricText = lyricLine.substring(endIndex + 1).trim();
+            return new String[]{timeStamp, lyricText};
+        }
+
+        return null;
+    }
+
 }

@@ -69,22 +69,24 @@ public class KugouProvider implements ILrcProvider {
         String currentAccessKey = "";
         long minDistance = 10000;
         long currentId = -1;
-        String soundName = null;
-        String artist = null;
+        String resultSoundName = null;
+        String resultArtist = null;
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            soundName = jsonObject.getString("song");
-            artist = jsonObject.getString("singer");
+            String soundName = jsonObject.getString("song");
+            String artist = jsonObject.getString("singer");
             long dis = LyricSearchUtil.calculateSongInfoDistance(songTitle, songArtist, songAlbum, soundName, artist, null);
             if (dis < minDistance) {
                 minDistance = dis;
                 currentId = jsonObject.getLong("id");
                 currentAccessKey = jsonObject.getString("accesskey");
+                resultSoundName = soundName;
+                resultArtist = artist;
             }
         }
         if (currentId == -1) {
             return null;
         }
-        return new Pair<>(String.format(Locale.getDefault(), KUGOU_LRC_URL_FORMAT, currentId, currentAccessKey), new MediaInfo(soundName, artist, null, -1, minDistance));
+        return new Pair<>(String.format(Locale.getDefault(), KUGOU_LRC_URL_FORMAT, currentId, currentAccessKey), new MediaInfo(resultSoundName, resultArtist, null, -1, minDistance));
     }
 }

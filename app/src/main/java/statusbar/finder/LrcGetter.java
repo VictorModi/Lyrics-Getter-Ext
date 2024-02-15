@@ -2,7 +2,6 @@ package statusbar.finder;
 
 import android.content.Context;
 import android.media.MediaMetadata;
-import android.util.Pair;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
@@ -51,6 +50,7 @@ public class LrcGetter {
 
         ILrcProvider.LyricResult currentResult = lyricsDatabase.searchLyricFromDatabase(mediaInfo, packageName);
         if (currentResult != null) {
+            currentResult.mSource += " (Database)";
             GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
             return LyricUtils.parseLyric(currentResult, mediaInfo);
         }
@@ -115,6 +115,7 @@ public class LrcGetter {
         if (lyricsDatabase.insertLyricIntoDatabase(currentResult, mediaInfo, packageName)) {
             GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
             lyricsDatabase.close();
+            currentResult.mSource += " (Internet)";
             return LyricUtils.parseLyric(currentResult, currentResult.resultInfo);
         }
         GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));

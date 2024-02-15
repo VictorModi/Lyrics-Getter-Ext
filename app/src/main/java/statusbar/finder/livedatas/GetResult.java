@@ -1,6 +1,5 @@
 package statusbar.finder.livedatas;
 
-import android.util.Pair;
 import androidx.lifecycle.LiveData;
 import statusbar.finder.provider.ILrcProvider;
 

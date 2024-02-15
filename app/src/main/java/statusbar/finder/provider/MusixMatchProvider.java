@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import static statusbar.finder.provider.utils.LyricSearchUtil.extractLyric;
+
 public class MusixMatchProvider implements ILrcProvider {
 
     private static final String MUSIXMATCH_BASE_URL = "https://apic.musixmatch.com/ws/1.1/";
@@ -93,7 +95,7 @@ public class MusixMatchProvider implements ILrcProvider {
                 result.mDistance = result.mDistance == 0 ? LyricSearchUtil.calculateSongInfoDistance(mediaInfo, soundName, artistName, albumName) : result.mDistance;
                 result.mSource = "MusixMatch";
                 result.resultInfo = new MediaInfo(soundName, artistName, albumName, -1, result.mDistance);
-                if (Constants.isTranslateCheck){result.mTranslatedLyric = getTranslatedLyric(result.mLyric, trackId);};
+                if (Constants.isTranslateCheck){result.mTranslatedLyric = getTranslatedLyric(result.mLyric, trackId);}
                 return result;
             }
         } catch (JSONException e) {
@@ -191,20 +193,6 @@ public class MusixMatchProvider implements ILrcProvider {
         }
         return null;
     }
-
-    private String[] extractLyric(String lyricLine) { // 解析歌词行 [0] 时间戳 [1] 歌词文本
-        int startIndex = lyricLine.indexOf("[");
-        int endIndex = lyricLine.indexOf("]");
-
-        if (startIndex != -1 && endIndex != -1) {
-            String timeStamp = lyricLine.substring(startIndex + 1, endIndex);
-            String lyricText = lyricLine.substring(endIndex + 1).trim();
-            return new String[]{timeStamp, lyricText};
-        }
-
-        return null;
-    }
-
 
 
     private JSONArray getTranslationsList(long trackId, String selectLang) { // 获取翻译歌词列表

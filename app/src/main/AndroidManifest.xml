@@ -47,7 +47,7 @@
                 android:value="true"/>
         <meta-data
                 android:name="xposeddescription"
-                android:value="Push lyrics to Lyrics Getter from the Internet." />
+                android:value="Push lyrics to Lyrics Getter from the Internet. (Incomplete)" />
         <meta-data
                 android:name="xposedminversion"
                 android:value="54"/>
