@@ -76,6 +76,7 @@ public class MusicListenerService extends NotificationListenerService {
                 mLyric = (Lyric) msg.obj;
 
                 if (mLyric == null) stopLyric();
+
             }
         }
     };
@@ -276,7 +277,7 @@ public class MusicListenerService extends NotificationListenerService {
         if (data.getTranslatedLyric() != null) {
             contentTextLyric += "\nTranslatedLyric: " + data.getTranslatedLyric();
         }
-        contentTextLyric += "\nLyricsDelay: " + data.getDelay();
+        contentTextLyric += "\nLyricDelay: " + data.getDelay() + " sec";
         contentTextLyric += "\nLyricsSource: " + mCurrentResult.getResult().mSource;
         return contentTextResult + "\n" + contentTextLyric;
     }
