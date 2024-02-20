@@ -270,10 +270,10 @@ public class MusicListenerService extends NotificationListenerService {
         String contentTextResult;
         contentTextResult = String.format("Result: %s - %s", mCurrentResult.getResult().mResultInfo.getTitle(),
                 mCurrentResult.getResult().mResultInfo.getArtist());
-        contentTextResult += String.format("Source: %s (%s)", mCurrentResult.getResult().mSource, mCurrentResult.getResult().mOrigin.getCapitalizedName());
         if (mCurrentResult.getResult().mResultInfo.getAlbum() != null) {
             contentTextResult += " - " +  mCurrentResult.getResult().mResultInfo.getAlbum();
         }
+        contentTextResult += "\n" + String.format("Source: %s (%s)", mCurrentResult.getResult().mSource, mCurrentResult.getResult().mOrigin.getCapitalizedName());
         return contentTextResult;
     }
 
