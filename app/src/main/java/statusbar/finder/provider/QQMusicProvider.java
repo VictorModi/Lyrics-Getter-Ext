@@ -23,12 +23,12 @@ public class QQMusicProvider implements ILrcProvider {
     private static final String QM_LRC_URL_FORMAT = QM_BASE_URL + "lyric/fcgi-bin/fcg_query_lyric_yqq.fcg?songmid=%s&format=json";
 
     @Override
-    public LyricResult getLyric(MediaMetadata data) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data));
+    public LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException {
+        return getLyric(new ILrcProvider.MediaInfo(data), requireTranslate);
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
+    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate) throws IOException {
         String searchUrl = String.format(Locale.getDefault(), QM_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo));
         JSONObject searchResult;
         try {
@@ -45,7 +45,7 @@ public class QQMusicProvider implements ILrcProvider {
                     result.mLyric = new String(Base64.decode(lrcJson.getString("lyric").getBytes(), Base64.DEFAULT));
                     result.mDistance = pair.second;
                     result.mSource = "QQ";
-                    result.resultInfo = mediaInfo; // 错误的使用方式，但目前整个类不可用，先这样，哪天更新再改。
+                    result.mResultInfo = mediaInfo; // 错误的使用方式，但目前整个类不可用，先这样，哪天更新再改。
                     return result;
                 } else {
                     return null;

@@ -64,8 +64,8 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                         packageName, originMediaInfo.getDuration(), -1, null, null, null, null, null, null, 0});
             } else {
                 db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
-                        packageName, originMediaInfo.getDuration(), lyricResult.mDistance, lyricResult.resultInfo.getTitle()
-                        , lyricResult.resultInfo.getArtist(), lyricResult.resultInfo.getAlbum(), lyricResult.mLyric, lyricResult.mTranslatedLyric,
+                        packageName, originMediaInfo.getDuration(), lyricResult.mDistance, lyricResult.mResultInfo.getTitle()
+                        , lyricResult.mResultInfo.getArtist(), lyricResult.mResultInfo.getAlbum(), lyricResult.mLyric, lyricResult.mTranslatedLyric,
                         lyricResult.mSource, 0});
             }
                 db.setTransactionSuccessful();
@@ -106,7 +106,7 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                 result.mDistance = cursor.getLong(cursor.getColumnIndex("distance"));
                 result.mOffset = (int) cursor.getLong(cursor.getColumnIndex("_offset"));
 
-                result.resultInfo = new ILrcProvider.MediaInfo(
+                result.mResultInfo = new ILrcProvider.MediaInfo(
                         cursor.getString(cursor.getColumnIndex("result_title")),
                         cursor.getString(cursor.getColumnIndex("result_artist")),
                         cursor.getString(cursor.getColumnIndex("result_album")),
@@ -115,6 +115,7 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                 );
 
                 cursor.close();
+                result.mOrigin = ILrcProvider.Origin.DATABASE;
                 return result;
             }
             cursor.close();

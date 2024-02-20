@@ -15,10 +15,7 @@ public class AppsListChanged extends LiveData<Void> {
     private static AppsListChanged instance;
 
     public static AppsListChanged getInstance() {
-        if (instance == null) {
-            instance = new AppsListChanged();
-        }
-        return instance;
+        return instance != null ? instance : (instance = new AppsListChanged());
     }
 
     public void notifyChange() {

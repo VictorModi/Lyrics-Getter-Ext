@@ -12,7 +12,7 @@
             android:title="@string/lyricsGetterStatus_title"
             android:summary="false"/>
         <SwitchPreference
-            android:key="translate"
+            android:key="require_translate"
             android:title="原译文双层歌词"
             android:summary="仅供简中 墨•息 用户。"/>
         <statusbar.finder.preferences.PackageListPreference

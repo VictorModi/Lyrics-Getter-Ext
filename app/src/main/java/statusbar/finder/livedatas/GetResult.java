@@ -15,10 +15,7 @@ public class GetResult extends LiveData<GetResult.Data> {
     private static GetResult instance;
 
     public static GetResult getInstance() {
-        if (instance == null) {
-            instance = new GetResult();
-        }
-        return instance;
+        return instance != null ? instance : (instance = new GetResult());
     }
 
     public void notifyResult(GetResult.Data data) {

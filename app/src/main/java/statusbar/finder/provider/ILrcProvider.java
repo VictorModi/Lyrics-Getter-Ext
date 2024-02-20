@@ -7,8 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public interface ILrcProvider {
-    LyricResult getLyric(MediaMetadata data) throws IOException;
-    LyricResult getLyric(MediaInfo mediaInfo) throws IOException;
+    LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException;
+    LyricResult getLyric(MediaInfo mediaInfo, boolean requireTranslate) throws IOException;
 
     class LyricResult {
         public String mLyric;
@@ -16,7 +16,8 @@ public interface ILrcProvider {
         public long mDistance = 0;
         public String mSource = "Local";
         public int mOffset = 0;
-        public MediaInfo resultInfo;
+        public MediaInfo mResultInfo;
+        public Origin mOrigin = Origin.UNDEFINED;
 
         public String toSting() {
             return "Distance: " + mDistance + "\n" +
@@ -24,7 +25,19 @@ public interface ILrcProvider {
                     "Offset: " + mOffset + "\n" +
                     "Lyric: " + mLyric + "\n" +
                     "TranslatedLyric: " + mTranslatedLyric + "\n" +
-                    "RealInfo: " + resultInfo;
+                    "RealInfo: " + mResultInfo;
+        }
+    }
+
+    enum Origin {
+        UNDEFINED,
+        INTERNET,
+        DATABASE;
+
+        public String getCapitalizedName() {
+            // 将枚举值转换为首字母大写的字符串
+            String enumName = this.name().toLowerCase();
+            return Character.toUpperCase(enumName.charAt(0)) + enumName.substring(1);
         }
     }
 

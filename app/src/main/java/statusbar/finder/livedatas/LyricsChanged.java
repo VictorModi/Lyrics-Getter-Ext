@@ -15,10 +15,7 @@ public class LyricsChanged extends LiveData<LyricsChanged.Data> {
     private static LyricsChanged instance;
 
     public static LyricsChanged getInstance() {
-        if (instance == null) {
-            instance = new LyricsChanged();
-        }
-        return instance;
+        return instance != null ? instance : (instance = new LyricsChanged());
     }
 
     public void notifyLyrics(LyricsChanged.Data data) {

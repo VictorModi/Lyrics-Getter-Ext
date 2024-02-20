@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import static statusbar.finder.misc.Constants.PREFERENCE_KEY_REQUIRE_TRANSLATE;
+
 public class MusicListenerService extends NotificationListenerService {
 
     private static final int NOTIFICATION_ID_LRC = 1;
@@ -122,7 +124,7 @@ public class MusicListenerService extends NotificationListenerService {
             requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
             mCurrentMediaInfo = new ILrcProvider.MediaInfo(metadata);
             if (curLrcUpdateThread == null || !curLrcUpdateThread.isAlive()) {
-                curLrcUpdateThread = new LrcUpdateThread(getApplicationContext(), mHandler, metadata, mMediaController.getPackageName());
+                curLrcUpdateThread = new LrcUpdateThread(getApplicationContext(), mHandler, metadata, mMediaController.getPackageName(), mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false));
                 curLrcUpdateThread.start();
             }
         }
@@ -247,7 +249,10 @@ public class MusicListenerService extends NotificationListenerService {
             }
         } else {
             builder.setContentTitle("Failed to retrieve current playback media information");
-            builder.setContentText("Please check if the target application is correctly configured and if the target application is currently playing media.");
+            builder.setContentText("Please check if the target application is correctly configured and if the target application is currently playing media.")
+                    .setStyle(new NotificationCompat.BigTextStyle()
+                    .bigText("Please check if the target application is correctly configured and if the target application is currently playing media."))
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
         }
         Notification notification = builder.build();
         notification.extras.putLong("ticker_icon", R.drawable.ic_music);
@@ -263,10 +268,11 @@ public class MusicListenerService extends NotificationListenerService {
         }
 
         String contentTextResult;
-        contentTextResult = String.format("Result: %s - %s", mCurrentResult.getResult().resultInfo.getTitle(),
-                mCurrentResult.getResult().resultInfo.getArtist());
-        if (mCurrentResult.getResult().resultInfo.getAlbum() != null) {
-            contentTextResult += " - " +  mCurrentResult.getResult().resultInfo.getAlbum();
+        contentTextResult = String.format("Result: %s - %s", mCurrentResult.getResult().mResultInfo.getTitle(),
+                mCurrentResult.getResult().mResultInfo.getArtist());
+        contentTextResult += String.format("Source: %s (%s)", mCurrentResult.getResult().mSource, mCurrentResult.getResult().mOrigin.getCapitalizedName());
+        if (mCurrentResult.getResult().mResultInfo.getAlbum() != null) {
+            contentTextResult += " - " +  mCurrentResult.getResult().mResultInfo.getAlbum();
         }
         return contentTextResult;
     }
@@ -278,7 +284,6 @@ public class MusicListenerService extends NotificationListenerService {
             contentTextLyric += "\nTranslatedLyric: " + data.getTranslatedLyric();
         }
         contentTextLyric += "\nLyricDelay: " + data.getDelay() + " sec";
-        contentTextLyric += "\nLyricsSource: " + mCurrentResult.getResult().mSource;
         return contentTextResult + "\n" + contentTextLyric;
     }
 
@@ -334,7 +339,7 @@ public class MusicListenerService extends NotificationListenerService {
             }
             String curLyric = sentence.content.trim();
             Lyric.Sentence translatedSentence = null;
-            if (Constants.isTranslateCheck) { // 增添翻译
+            if (mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) { // 增添翻译
                 translatedSentence = getTranslatedSentence(position);
                 if (translatedSentence != null && !Objects.equals(translatedSentence.content, "") && !Objects.equals(sentence.content, "")) {
                     curLyric += "\n\r" + translatedSentence.content.trim();
@@ -385,19 +390,21 @@ public class MusicListenerService extends NotificationListenerService {
         private final MediaMetadata data;
         private final Context context;
         private final String packageName;
+        private final boolean requireTranslate;
 
-        public LrcUpdateThread(Context context, Handler handler, MediaMetadata data, String packageName) {
+        public LrcUpdateThread(Context context, Handler handler, MediaMetadata data, String packageName, boolean requireTranslate) {
             super();
             this.data = data;
             this.handler = handler;
             this.context = context;
             this.packageName = packageName;
+            this.requireTranslate = requireTranslate;
         }
 
         @Override
         public void run() {
             if (handler == null) return;
-            Lyric lrc = LrcGetter.getLyric(context, data, systemLanguage, packageName);
+            Lyric lrc = LrcGetter.getLyric(context, data, systemLanguage, packageName, requireTranslate);
             Message message = new Message();
             message.what = MSG_LYRIC_UPDATE_DONE;
             message.obj = lrc;

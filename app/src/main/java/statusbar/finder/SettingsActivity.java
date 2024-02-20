@@ -31,6 +31,7 @@ import java.util.Map;
 public class SettingsActivity extends FragmentActivity {
 
     private final static Map<String, String> mUrlMap = new HashMap<>();
+    public final static boolean lyricsGetterApiHasEnable = new API().getHasEnable();
 
 
     @Override
@@ -132,7 +133,7 @@ public class SettingsActivity extends FragmentActivity {
             implements Preference.OnPreferenceClickListener {
 
         private SwitchPreference mEnabledPreference;
-        private SwitchPreference mTranslate;
+        private SwitchPreference mTranslateSwitch;
         private Preference mConnectionStatusPreference;
 
         @Override
@@ -149,7 +150,7 @@ public class SettingsActivity extends FragmentActivity {
             manager.cancelAll();
             mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED);
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS);
-            mTranslate = findPreference(Constants.PREFERENCE_KEY_TRANSLATE);
+            mTranslateSwitch = findPreference(Constants.PREFERENCE_KEY_REQUIRE_TRANSLATE);
 //            try {
 //                mNotificationFields[0] =
 //                        Notification.class.getDeclaredField("FLAG_ALWAYS_SHOW_TICKER").getInt(null);
@@ -161,7 +162,6 @@ public class SettingsActivity extends FragmentActivity {
 //                mEnabledPreference.setSummary(R.string.unsupport_rom_summary);
 //            }
 //            );
-            final boolean lyricsGetterApiHasEnable = new API().getHasEnable();
             // boolean lyricsGetterApiHasEnable = true; For Debug
             if (mConnectionStatusPreference != null){
                 mConnectionStatusPreference.setSummary(String.valueOf(lyricsGetterApiHasEnable));
@@ -173,9 +173,8 @@ public class SettingsActivity extends FragmentActivity {
                 mEnabledPreference.setEnabled(true);
                 mEnabledPreference.setOnPreferenceClickListener(this);
             }
-            if (mTranslate != null) {
-                mTranslate.setOnPreferenceClickListener(this);
-                Constants.isTranslateCheck = mTranslate.isChecked();
+            if (mTranslateSwitch != null) {
+                mTranslateSwitch.setOnPreferenceClickListener(this);
             }
             Preference appInfoPreference = findPreference("app");
             if (appInfoPreference != null) {
@@ -202,7 +201,7 @@ public class SettingsActivity extends FragmentActivity {
         public boolean onPreferenceClick(@NotNull Preference preference) {
             if (preference == mEnabledPreference) {
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
-            } else if(preference == mConnectionStatusPreference) {
+            } else if (preference == mConnectionStatusPreference) {
                 Intent intent = new Intent();
                 // Open LyricsGetter
                 try {
@@ -213,8 +212,8 @@ public class SettingsActivity extends FragmentActivity {
                 }
                 // 启动活动
                 return true;
-            } else if (preference == mTranslate) {
-                Constants.isTranslateCheck = mTranslate.isChecked();
+            } else if (preference == mTranslateSwitch) {
+                Toast.makeText(requireContext(), "TranslateLyrics: " + (mTranslateSwitch.isChecked() ? "Enable" : "Disable"), Toast.LENGTH_SHORT).show();
             } else {
                 String url = mUrlMap.get(preference.getKey());
                 if (TextUtils.isEmpty(url)) return false;

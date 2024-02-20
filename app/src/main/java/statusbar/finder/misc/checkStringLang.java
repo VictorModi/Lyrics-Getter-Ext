@@ -4,6 +4,7 @@ import com.moji4j.MojiDetector;
 
 public class checkStringLang {
 
+    private static MojiDetector detector;
 //    public static boolean isJapenese(String text) {
 //        Set<Character.UnicodeBlock> japaneseUnicodeBlocks = new HashSet<Character.UnicodeBlock>() {{
 //            add(Character.UnicodeBlock.HIRAGANA);
@@ -20,7 +21,11 @@ public class checkStringLang {
 //        return false;
 //    }
 
+    private static MojiDetector getDetector() {
+        return detector != null ? detector : (detector = new MojiDetector());
+    }
+
     public static boolean isJapanese(String str) {
-        return new MojiDetector().hasKana(str);
+        return getDetector().hasKana(str);
     }
 }
