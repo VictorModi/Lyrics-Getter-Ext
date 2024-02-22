@@ -8,7 +8,7 @@ import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import com.moji4j.MojiConverter;
 import com.moji4j.MojiDetector;
 import statusbar.finder.livedatas.GetResult;
-import statusbar.finder.misc.checkStringLang;
+import statusbar.finder.misc.CheckStringLang;
 import statusbar.finder.provider.ILrcProvider;
 import statusbar.finder.provider.KugouProvider;
 import statusbar.finder.provider.MusixMatchProvider;
@@ -96,13 +96,13 @@ public class LrcGetter {
             allLyrics = LyricUtils.getAllLyrics(false, currentResult.mLyric);
         }
 
-        if (Objects.equals(sysLang, "zh-CN") && !checkStringLang.isJapanese(allLyrics)) {
+        if (Objects.equals(sysLang, "zh-CN") && !CheckStringLang.isJapanese(allLyrics)) {
             if (currentResult.mTranslatedLyric != null) {
                 currentResult.mTranslatedLyric = ZhConverterUtil.toSimple(currentResult.mTranslatedLyric);
             } else {
                 currentResult.mLyric = ZhConverterUtil.toSimple(currentResult.mLyric);
             }
-        } else if (Objects.equals(sysLang, "zh-TW") && !checkStringLang.isJapanese(allLyrics)) {
+        } else if (Objects.equals(sysLang, "zh-TW") && !CheckStringLang.isJapanese(allLyrics)) {
             if (currentResult.mTranslatedLyric != null) {
                 currentResult.mTranslatedLyric = ZhConverterUtil.toTraditional(currentResult.mTranslatedLyric);
             } else {

@@ -2,7 +2,7 @@ package statusbar.finder.misc;
 
 import com.moji4j.MojiDetector;
 
-public class checkStringLang {
+public class CheckStringLang {
 
     private static MojiDetector detector;
 //    public static boolean isJapenese(String text) {

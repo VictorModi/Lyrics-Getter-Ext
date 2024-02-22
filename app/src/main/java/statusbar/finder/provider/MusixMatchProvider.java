@@ -8,8 +8,7 @@ import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import statusbar.finder.misc.Constants;
-import statusbar.finder.misc.checkStringLang;
+import statusbar.finder.misc.CheckStringLang;
 import statusbar.finder.provider.utils.HttpRequestUtil;
 import statusbar.finder.provider.utils.LyricSearchUtil;
 import statusbar.finder.provider.utils.UnicodeUtil;
@@ -134,7 +133,7 @@ public class MusixMatchProvider implements ILrcProvider {
     private String toSimpleURLEncode(String input) {
         String result = input;
         if (input != null) {
-            if (!checkStringLang.isJapanese(input)) {
+            if (!CheckStringLang.isJapanese(input)) {
                 result = ZhConverterUtil.toSimple(result);
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
