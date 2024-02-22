@@ -17,7 +17,7 @@ public class Lyric {
     public int offset; // 偏移值
     public long length; // 歌曲长度
     public List<Sentence> sentenceList = new ArrayList<Sentence>(100);
-    public List<Sentence> transSentenceList = new ArrayList<Sentence>(100);
+    public List<Sentence> translatedSentenceList = new ArrayList<Sentence>(100);
 
     @NotNull
     public String toString() {
@@ -34,9 +34,9 @@ public class Lyric {
                 stringBuilder.append(sentence.toString()).append("\n");
             }
         }
-        if (transSentenceList != null) {
+        if (translatedSentenceList != null) {
             stringBuilder.append ("--- Translate Lyrics ---\n");
-            for (Sentence sentence : transSentenceList) {
+            for (Sentence sentence : translatedSentenceList) {
                 stringBuilder.append(sentence.toString()).append("\n");
             }
         }

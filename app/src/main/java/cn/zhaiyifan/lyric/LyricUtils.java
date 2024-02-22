@@ -72,9 +72,9 @@ public class LyricUtils {
                 BufferedReader tbr = new BufferedReader(new StringReader(lyricResult.mTranslatedLyric));
                 String transLine;
                 while ((transLine = tbr.readLine()) != null) {
-                    if (!parseLine(lyric.transSentenceList, transLine, lyric)) return null;
+                    if (!parseLine(lyric.translatedSentenceList, transLine, lyric)) return null;
                 }
-                lyric.transSentenceList.sort(new Lyric.SentenceComparator());
+                lyric.translatedSentenceList.sort(new Lyric.SentenceComparator());
             } catch (IOException e) {
                 e.fillInStackTrace();
             }

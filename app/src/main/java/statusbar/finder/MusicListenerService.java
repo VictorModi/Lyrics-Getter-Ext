@@ -365,21 +365,16 @@ public class MusicListenerService extends NotificationListenerService {
         }
     }
 
-    private int calculateDelay(long position) {  // 计算Delay
-        int delay = 0;
-        int nextFound = LyricUtils.getSentenceIndex(mLyric.sentenceList, position, 0, mLyric.offset) + 1; // 获取下一句歌词的 Sentence
-
-        if (nextFound < mLyric.sentenceList.size()) { //判断是否超出范围 防止崩溃
-            Lyric.Sentence nextSentence = mLyric.sentenceList.get(nextFound);
-            delay = (int) (nextSentence.fromTime - position) / 1000 / 3;
-        }
-
-        return delay;
+    private int calculateDelay(long position) {
+        int nextFoundIndex = LyricUtils.getSentenceIndex(mLyric.sentenceList, position, 0, mLyric.offset) + 1;
+        return  nextFoundIndex >= mLyric.sentenceList.size() ? 0 :
+                (int) (mLyric.sentenceList.get(nextFoundIndex)
+                        .fromTime - position / 1000) / 3;
     }
 
     private Lyric.Sentence getTranslatedSentence(long position) {  // 获取翻译歌词
-        if (!mLyric.transSentenceList.isEmpty()) {
-            return LyricUtils.getSentence(mLyric.transSentenceList, position, 0, mLyric.offset);
+        if (!mLyric.translatedSentenceList.isEmpty()) {
+            return LyricUtils.getSentence(mLyric.translatedSentenceList, position, 0, mLyric.offset);
         }
         return null;
     }
