@@ -27,7 +27,7 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import org.jetbrains.annotations.NotNull;
 import statusbar.finder.R;
-import statusbar.finder.livedatas.AppsListChanged;
+import statusbar.finder.livedata.AppsListChanged;
 import statusbar.finder.preferences.PackageListAdapter.PackageItem;
 
 import java.util.ArrayList;

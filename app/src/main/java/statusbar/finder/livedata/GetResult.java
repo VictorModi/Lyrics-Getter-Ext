@@ -1,10 +1,10 @@
-package statusbar.finder.livedatas;
+package statusbar.finder.livedata;
 
 import androidx.lifecycle.LiveData;
 import statusbar.finder.provider.ILrcProvider;
 
 /**
- * LyricGetterExt - statusbar.finder.livedatas
+ * LyricGetterExt - statusbar.finder.livedata
  *
  * @description: Coming soon.
  * @author: VictorModi

@@ -1,9 +1,9 @@
-package statusbar.finder.livedatas;
+package statusbar.finder.livedata;
 
 import androidx.lifecycle.LiveData;
 
 /**
- * LyricGetterExt - statusbar.finder.livedatas
+ * LyricGetterExt - statusbar.finder.livedata
  * @description: LiveData for notifying observers about changes in lyrics.
  * This LiveData emits a Pair object containing the updated lyric content and its position.
  * Singleton class, use getInstance() method to obtain the instance.

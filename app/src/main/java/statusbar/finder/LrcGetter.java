@@ -7,8 +7,8 @@ import cn.zhaiyifan.lyric.model.Lyric;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import com.moji4j.MojiConverter;
 import com.moji4j.MojiDetector;
-import statusbar.finder.livedatas.GetResult;
-import statusbar.finder.misc.CheckStringLang;
+import statusbar.finder.livedata.GetResult;
+import statusbar.finder.misc.CheckLanguageUtil;
 import statusbar.finder.provider.ILrcProvider;
 import statusbar.finder.provider.KugouProvider;
 import statusbar.finder.provider.MusixMatchProvider;
@@ -28,13 +28,17 @@ public class LrcGetter {
             // new QQMusicProvider()
     };
     private static MessageDigest messageDigest;
+    public static LyricsDatabase lyricsDatabase;
 
     public static Lyric getLyric(Context context, MediaMetadata mediaMetadata, String sysLang, String packageName, boolean requireTranslate) {
         return getLyric(context, new ILrcProvider.MediaInfo(mediaMetadata), sysLang, packageName, requireTranslate);
     }
 
     public static Lyric getLyric(Context context, ILrcProvider.MediaInfo mediaInfo, String sysLang, String packageName, boolean requireTranslate) {
-        LyricsDatabase lyricsDatabase = new LyricsDatabase(context);
+        lyricsDatabase = lyricsDatabase != null
+                ? lyricsDatabase
+                : new LyricsDatabase(context)
+        ;
         // Log.d(TAG, "curMediaData" + new SimpleSongInfo(mediaMetadata));
         ILrcProvider.MediaInfo hiraganaMediaInfo;
         if (messageDigest == null) {
@@ -96,13 +100,13 @@ public class LrcGetter {
             allLyrics = LyricUtils.getAllLyrics(false, currentResult.mLyric);
         }
 
-        if (Objects.equals(sysLang, "zh-CN") && !CheckStringLang.isJapanese(allLyrics)) {
+        if (Objects.equals(sysLang, "zh-CN") && !CheckLanguageUtil.isJapanese(allLyrics)) {
             if (currentResult.mTranslatedLyric != null) {
                 currentResult.mTranslatedLyric = ZhConverterUtil.toSimple(currentResult.mTranslatedLyric);
             } else {
                 currentResult.mLyric = ZhConverterUtil.toSimple(currentResult.mLyric);
             }
-        } else if (Objects.equals(sysLang, "zh-TW") && !CheckStringLang.isJapanese(allLyrics)) {
+        } else if (Objects.equals(sysLang, "zh-TW") && !CheckLanguageUtil.isJapanese(allLyrics)) {
             if (currentResult.mTranslatedLyric != null) {
                 currentResult.mTranslatedLyric = ZhConverterUtil.toTraditional(currentResult.mTranslatedLyric);
             } else {

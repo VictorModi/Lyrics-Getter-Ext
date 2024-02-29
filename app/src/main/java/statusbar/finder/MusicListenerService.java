@@ -28,9 +28,9 @@ import cn.lyric.getter.api.data.ExtraData;
 import cn.lyric.getter.api.tools.Tools;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
-import statusbar.finder.livedatas.AppsListChanged;
-import statusbar.finder.livedatas.GetResult;
-import statusbar.finder.livedatas.LyricsChanged;
+import statusbar.finder.livedata.AppsListChanged;
+import statusbar.finder.livedata.GetResult;
+import statusbar.finder.livedata.LyricsChanged;
 import statusbar.finder.misc.Constants;
 import statusbar.finder.provider.ILrcProvider;
 

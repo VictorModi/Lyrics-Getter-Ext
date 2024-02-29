@@ -6,7 +6,7 @@ import android.text.TextUtils;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
-import statusbar.finder.misc.CheckStringLang;
+import statusbar.finder.misc.CheckLanguageUtil;
 import statusbar.finder.provider.ILrcProvider;
 
 import java.io.UnsupportedEncodingException;
@@ -19,7 +19,7 @@ public class LyricSearchUtil {
     private static final Pattern LyricContentPattern = Pattern.compile("(\\[\\d\\d:\\d\\d\\.\\d{0,3}]|\\[\\d\\d:\\d\\d])[^\\r\\n]");
 
     private static void convertIfNecessary(String input) {
-        if (ZhConverterUtil.isTraditional(input) && !(CheckStringLang.isJapanese(input))) {
+        if (ZhConverterUtil.isTraditional(input) && !(CheckLanguageUtil.isJapanese(input))) {
             input = ZhConverterUtil.toSimple(input);
         }
     }
@@ -76,15 +76,15 @@ public class LyricSearchUtil {
 
     public static long calculateSongInfoDistance(String realTitle, String realArtist, String realAlbum, String title, String artist, String album) {
         if (ZhConverterUtil.isTraditional(realTitle)) {
-            if (!(CheckStringLang.isJapanese(realTitle)))
+            if (!(CheckLanguageUtil.isJapanese(realTitle)))
                 realTitle = ZhConverterUtil.toSimple(realTitle);
         }
         if (ZhConverterUtil.isTraditional(realArtist)) {
-            if (!(CheckStringLang.isJapanese(realArtist)))
+            if (!(CheckLanguageUtil.isJapanese(realArtist)))
                 realArtist = ZhConverterUtil.toSimple(realArtist);
         }
         if (ZhConverterUtil.isTraditional(realAlbum)) {
-            if (!(CheckStringLang.isJapanese(realAlbum)))
+            if (!(CheckLanguageUtil.isJapanese(realAlbum)))
                 realAlbum = ZhConverterUtil.toSimple(realAlbum);
         }
 
