@@ -347,7 +347,7 @@ public class MusicListenerService extends NotificationListenerService {
             }
             LyricsChanged.Data data = new LyricsChanged.Data(sentence.content.trim(), translatedSentence != null ? translatedSentence.content.trim() : null, delay);
             LyricsChanged.getInstance().notifyLyrics(data);
-            mLyricNotification = buildLrcNotification(data);
+            // mLyricNotification = buildLrcNotification(data);
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             // EventTools.INSTANCE.sendLyric(getApplicationContext(), curLyric, true, drawBase64, false, "", getPackageName(), delay);
             Log.d("updateLyric: ", String.format("Lyric: %s , delay: %d", curLyric, delay));
