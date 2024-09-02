@@ -16,7 +16,7 @@ public class LrcView extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lrcview);
 
-        preferences = getSharedPreferences("prefs", MODE_PRIVATE);
+        preferences = getSharedPreferences("offset", MODE_PRIVATE);
 
         TextView lrc =findViewById(R.id.lrc);
         String lrc1 = MusicListenerService.instance.getLyric().sentenceList.toString();

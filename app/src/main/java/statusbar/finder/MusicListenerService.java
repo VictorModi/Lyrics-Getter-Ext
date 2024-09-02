@@ -190,7 +190,7 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
         instance = this;
-        preferences = getSharedPreferences("prefs", MODE_PRIVATE);
+        preferences = getSharedPreferences("offset", MODE_PRIVATE);
         lyricsGetterApi = new API();
         drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         // Log.d("systemLanguage", systemLanguage);
