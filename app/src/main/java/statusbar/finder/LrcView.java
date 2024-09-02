@@ -22,6 +22,7 @@ public class LrcView extends FragmentActivity {
         lrc.setText(lrc4);
 
         TextView offset =findViewById(R.id.offset);
+        offset.setText("offset: " + String.valueOf((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
         Button plus =findViewById(R.id.plus);
         plus.setOnClickListener(new View.OnClickListener() {
             @Override
