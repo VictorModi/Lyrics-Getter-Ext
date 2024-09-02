@@ -41,6 +41,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="statusbar.finder.LrcView"
+            android:parentActivityName="statusbar.finder.SettingsActivity"/>
 
         <meta-data
                 android:name="xposedmodule"

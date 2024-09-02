@@ -3,8 +3,11 @@ package statusbar.finder;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
@@ -69,6 +72,7 @@ public class MusicListenerService extends NotificationListenerService {
     private String drawBase64;
     private Thread curLrcUpdateThread;
     private API lyricsGetterApi;
+    public static MusicListenerService instance;
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -184,6 +188,7 @@ public class MusicListenerService extends NotificationListenerService {
     @Override
     public void onListenerConnected() {
         super.onListenerConnected();
+        instance = this;
         lyricsGetterApi = new API();
         drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         // Log.d("systemLanguage", systemLanguage);
@@ -223,6 +228,9 @@ public class MusicListenerService extends NotificationListenerService {
     private Notification buildLrcNotification(Object data) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_LRC);
         builder.setSmallIcon(R.drawable.ic_music).setOngoing(true);
+        PendingIntent resultPendingIntent =
+                TaskStackBuilder.create(this).addNextIntentWithParentStack(new Intent(this, LrcView.class)).getPendingIntent(0,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         if (data != null) {
             String contentText = "Incorrect data type, please send this message to the developer.\nType: " + Object.class.getName();
             if (data instanceof LyricsChanged.Data) {
@@ -233,7 +241,8 @@ public class MusicListenerService extends NotificationListenerService {
             builder.setContentText("Tap to View Details")
                     .setStyle(new NotificationCompat.BigTextStyle()
                     .bigText(contentText))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setContentIntent(resultPendingIntent);
         } else {
             builder.setContentText("Still Searching...");
         }
@@ -322,6 +331,12 @@ public class MusicListenerService extends NotificationListenerService {
         lyricsGetterApi.clearLyric();
     }
 
+    public Lyric getLyric(){
+        return mLyric;
+    }
+    public void setLyricOffset(int offset){
+        mLyric.offset = offset;
+    }
     private void updateLyric(long position) {
         if (mNotificationManager == null || mLyric == null) {
             return;
@@ -347,7 +362,7 @@ public class MusicListenerService extends NotificationListenerService {
             }
             LyricsChanged.Data data = new LyricsChanged.Data(sentence.content.trim(), translatedSentence != null ? translatedSentence.content.trim() : null, delay);
             LyricsChanged.getInstance().notifyLyrics(data);
-            mLyricNotification = buildLrcNotification(data);
+            // mLyricNotification = buildLrcNotification(data);
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             // EventTools.INSTANCE.sendLyric(getApplicationContext(), curLyric, true, drawBase64, false, "", getPackageName(), delay);
             Log.d("updateLyric: ", String.format("Lyric: %s , delay: %d", curLyric, delay));
