@@ -19,36 +19,41 @@ public class LrcView extends FragmentActivity {
         preferences = getSharedPreferences("offset", MODE_PRIVATE);
 
         TextView lrc =findViewById(R.id.lrc);
-        String lrc1 = MusicListenerService.instance.getLyric().sentenceList.toString();
-        String lrc2 = lrc1.substring(1, lrc1.length() -1);
-        String lrc3 = lrc2.replaceAll("\\d+: ", "");
-        String lrc4 = lrc3.replaceAll(", ","\n");
-        lrc.setText(lrc4);
-
         TextView offset =findViewById(R.id.offset);
-        offset.setText("offset: " + String.valueOf((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
+        if (MusicListenerService.instance.getLyric() == null)
+            lrc.setText("none");
+        else {
+            String lrc1 = MusicListenerService.instance.getLyric().sentenceList.toString();
+            String lrc2 = lrc1.substring(1, lrc1.length() - 1);
+            String lrc3 = lrc2.replaceAll("\\d+: ", "");
+            String lrc4 = lrc3.replaceAll(", ", "\n");
+            lrc.setText(lrc4);
+            offset.setText("offset: " + String.valueOf((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
+        }
 
         Button plus =findViewById(R.id.plus);
         plus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MusicListenerService.instance.setLyricOffset(MusicListenerService.instance.getLyric().offset - 100);
-                offset.setText("offset: " + String.valueOf((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
-                if (MusicListenerService.instance.getLyric().offset == 0)
-                    preferences.edit().remove("Title:" + MusicListenerService.instance.getLyric().title
-                                    + " ,Artist:" + MusicListenerService.instance.getLyric().artist
-                                    + " ,Album:" + MusicListenerService.instance.getLyric().album
-                                    + " ,By:" + MusicListenerService.instance.getLyric().by
-                                    + " ,Author:" + MusicListenerService.instance.getLyric().author
-                                    + " ,Length:" + MusicListenerService.instance.getLyric().length).apply();
-                else
-                    preferences.edit().putInt("Title:" + MusicListenerService.instance.getLyric().title
+                if (MusicListenerService.instance.getLyric() != null) {
+                    MusicListenerService.instance.setLyricOffset(MusicListenerService.instance.getLyric().offset - 100);
+                    offset.setText("offset: " + String.valueOf((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
+                    if (MusicListenerService.instance.getLyric().offset == 0)
+                        preferences.edit().remove("Title:" + MusicListenerService.instance.getLyric().title
                                 + " ,Artist:" + MusicListenerService.instance.getLyric().artist
                                 + " ,Album:" + MusicListenerService.instance.getLyric().album
                                 + " ,By:" + MusicListenerService.instance.getLyric().by
                                 + " ,Author:" + MusicListenerService.instance.getLyric().author
-                                + " ,Length:" + MusicListenerService.instance.getLyric().length,
-                        MusicListenerService.instance.getLyric().offset).apply();
+                                + " ,Length:" + MusicListenerService.instance.getLyric().length).apply();
+                    else
+                        preferences.edit().putInt("Title:" + MusicListenerService.instance.getLyric().title
+                                        + " ,Artist:" + MusicListenerService.instance.getLyric().artist
+                                        + " ,Album:" + MusicListenerService.instance.getLyric().album
+                                        + " ,By:" + MusicListenerService.instance.getLyric().by
+                                        + " ,Author:" + MusicListenerService.instance.getLyric().author
+                                        + " ,Length:" + MusicListenerService.instance.getLyric().length,
+                                MusicListenerService.instance.getLyric().offset).apply();
+                }
             }
         });
 
@@ -56,23 +61,25 @@ public class LrcView extends FragmentActivity {
         minus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MusicListenerService.instance.setLyricOffset(MusicListenerService.instance.getLyric().offset + 100);
-                offset.setText("offset: " + String.valueOf((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
-                if (MusicListenerService.instance.getLyric().offset == 0)
-                    preferences.edit().remove("Title:" + MusicListenerService.instance.getLyric().title
-                            + " ,Artist:" + MusicListenerService.instance.getLyric().artist
-                            + " ,Album:" + MusicListenerService.instance.getLyric().album
-                            + " ,By:" + MusicListenerService.instance.getLyric().by
-                            + " ,Author:" + MusicListenerService.instance.getLyric().author
-                            + " ,Length:" + MusicListenerService.instance.getLyric().length).apply();
-                else
-                    preferences.edit().putInt("Title:" + MusicListenerService.instance.getLyric().title
-                                    + " ,Artist:" + MusicListenerService.instance.getLyric().artist
-                                    + " ,Album:" + MusicListenerService.instance.getLyric().album
-                                    + " ,By:" + MusicListenerService.instance.getLyric().by
-                                    + " ,Author:" + MusicListenerService.instance.getLyric().author
-                                    + " ,Length:" + MusicListenerService.instance.getLyric().length,
-                            MusicListenerService.instance.getLyric().offset).apply();
+                if (MusicListenerService.instance.getLyric() != null) {
+                    MusicListenerService.instance.setLyricOffset(MusicListenerService.instance.getLyric().offset + 100);
+                    offset.setText("offset: " + String.valueOf((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
+                    if (MusicListenerService.instance.getLyric().offset == 0)
+                        preferences.edit().remove("Title:" + MusicListenerService.instance.getLyric().title
+                                + " ,Artist:" + MusicListenerService.instance.getLyric().artist
+                                + " ,Album:" + MusicListenerService.instance.getLyric().album
+                                + " ,By:" + MusicListenerService.instance.getLyric().by
+                                + " ,Author:" + MusicListenerService.instance.getLyric().author
+                                + " ,Length:" + MusicListenerService.instance.getLyric().length).apply();
+                    else
+                        preferences.edit().putInt("Title:" + MusicListenerService.instance.getLyric().title
+                                        + " ,Artist:" + MusicListenerService.instance.getLyric().artist
+                                        + " ,Album:" + MusicListenerService.instance.getLyric().album
+                                        + " ,By:" + MusicListenerService.instance.getLyric().by
+                                        + " ,Author:" + MusicListenerService.instance.getLyric().author
+                                        + " ,Length:" + MusicListenerService.instance.getLyric().length,
+                                MusicListenerService.instance.getLyric().offset).apply();
+                }
             }
         });
     }
