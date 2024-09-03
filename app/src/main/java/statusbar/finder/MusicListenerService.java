@@ -300,8 +300,11 @@ public class MusicListenerService extends NotificationListenerService {
 
     private void bindMediaListeners() {
         ComponentName listener = new ComponentName(this, MusicListenerService.class);
-        mMediaSessionManager.addOnActiveSessionsChangedListener(onActiveSessionsChangedListener, listener);
-        onActiveSessionsChangedListener.onActiveSessionsChanged(mMediaSessionManager.getActiveSessions(listener));
+        try {
+            mMediaSessionManager.addOnActiveSessionsChangedListener(onActiveSessionsChangedListener, listener);
+            onActiveSessionsChangedListener.onActiveSessionsChanged(mMediaSessionManager.getActiveSessions(listener));
+        } catch (SecurityException se){
+        }
     }
 
     private void unBindMediaListeners() {
