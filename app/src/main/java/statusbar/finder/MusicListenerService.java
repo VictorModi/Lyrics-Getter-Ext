@@ -73,6 +73,7 @@ public class MusicListenerService extends NotificationListenerService {
     private Thread curLrcUpdateThread;
     private API lyricsGetterApi;
     public static MusicListenerService instance;
+    private SharedPreferences preferences;
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -189,6 +190,7 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
         instance = this;
+        preferences = getSharedPreferences("offset", MODE_PRIVATE);
         lyricsGetterApi = new API();
         drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         // Log.d("systemLanguage", systemLanguage);
@@ -298,8 +300,11 @@ public class MusicListenerService extends NotificationListenerService {
 
     private void bindMediaListeners() {
         ComponentName listener = new ComponentName(this, MusicListenerService.class);
-        mMediaSessionManager.addOnActiveSessionsChangedListener(onActiveSessionsChangedListener, listener);
-        onActiveSessionsChangedListener.onActiveSessionsChanged(mMediaSessionManager.getActiveSessions(listener));
+        try {
+            mMediaSessionManager.addOnActiveSessionsChangedListener(onActiveSessionsChangedListener, listener);
+            onActiveSessionsChangedListener.onActiveSessionsChanged(mMediaSessionManager.getActiveSessions(listener));
+        } catch (SecurityException se){
+        }
     }
 
     private void unBindMediaListeners() {
@@ -342,6 +347,12 @@ public class MusicListenerService extends NotificationListenerService {
             return;
         }
 
+        mLyric.offset = preferences.getInt("Title:" + mLyric.title
+                + " ,Artist:" + mLyric.artist
+                + " ,Album:" + mLyric.album
+                + " ,By:" + mLyric.by
+                + " ,Author:" + mLyric.author
+                + " ,Length:" + mLyric.length, mLyric.offset);
         Lyric.Sentence sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0, mLyric.offset);
         if (sentence == null) {
             return;
