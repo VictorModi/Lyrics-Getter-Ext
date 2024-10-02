@@ -23,9 +23,9 @@ import java.util.Objects;
 
 public class LrcGetter {
     private static final ILrcProvider[] providers = {
+            new NeteaseProvider(),
             new KugouProvider(),
             new QQMusicProvider(),
-            new NeteaseProvider(),
             new MusixMatchProvider()
     };
     private static MessageDigest messageDigest;
