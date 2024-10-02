@@ -12,10 +12,6 @@ import statusbar.finder.provider.utils.LyricSearchUtil;
 import java.io.IOException;
 import java.util.Locale;
 
-/**
- * @deprecated Can't Work.
- */
-@Deprecated(since = "1.0.7")
 public class QQMusicProvider implements ILrcProvider {
     private static final String QM_BASE_URL = "https://c.y.qq.com/";
     private static final String QM_REFERER = "https://y.qq.com";
