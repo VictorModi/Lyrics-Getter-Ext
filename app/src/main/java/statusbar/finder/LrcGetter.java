@@ -13,6 +13,7 @@ import statusbar.finder.provider.ILrcProvider;
 import statusbar.finder.provider.KugouProvider;
 import statusbar.finder.provider.MusixMatchProvider;
 import statusbar.finder.provider.NeteaseProvider;
+import statusbar.finder.provider.QQMusicProvider;
 import statusbar.finder.provider.utils.LyricSearchUtil;
 
 import java.io.IOException;
@@ -22,10 +23,10 @@ import java.util.Objects;
 
 public class LrcGetter {
     private static final ILrcProvider[] providers = {
-            new MusixMatchProvider(),
             new NeteaseProvider(),
             new KugouProvider(),
-            // new QQMusicProvider()
+            new QQMusicProvider(),
+            new MusixMatchProvider()
     };
     private static MessageDigest messageDigest;
     public static LyricsDatabase lyricsDatabase;

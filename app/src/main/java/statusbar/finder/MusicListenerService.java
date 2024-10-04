@@ -73,7 +73,9 @@ public class MusicListenerService extends NotificationListenerService {
     private Thread curLrcUpdateThread;
     private API lyricsGetterApi;
     public static MusicListenerService instance;
-    private SharedPreferences preferences;
+    private SharedPreferences offsetpreferences;
+    private SharedPreferences translationstatusreferences;
+    public String musicinfo;
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -190,7 +192,8 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
         instance = this;
-        preferences = getSharedPreferences("offset", MODE_PRIVATE);
+        offsetpreferences = getSharedPreferences("offset", MODE_PRIVATE);
+        translationstatusreferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
         lyricsGetterApi = new API();
         drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         // Log.d("systemLanguage", systemLanguage);
@@ -303,7 +306,7 @@ public class MusicListenerService extends NotificationListenerService {
         try {
             mMediaSessionManager.addOnActiveSessionsChangedListener(onActiveSessionsChangedListener, listener);
             onActiveSessionsChangedListener.onActiveSessionsChanged(mMediaSessionManager.getActiveSessions(listener));
-        } catch (SecurityException se){
+        } catch (SecurityException ignored){
         }
     }
 
@@ -339,21 +342,39 @@ public class MusicListenerService extends NotificationListenerService {
     public Lyric getLyric(){
         return mLyric;
     }
-    public void setLyricOffset(int offset){
-        mLyric.offset = offset;
+    public void sync(){
+        Lyric.Sentence sentence;
+        if (translationstatusreferences.getBoolean(musicinfo, false)) {
+            mLyric.offset = offsetpreferences.getInt(musicinfo + " ,tran", mLyric.offset);
+            sentence = LyricUtils.getSentence(mLyric.translatedSentenceList, mMediaController.getPlaybackState().getPosition(), 0, mLyric.offset);
+        } else {
+            mLyric.offset = offsetpreferences.getInt(musicinfo, mLyric.offset);
+            sentence = LyricUtils.getSentence(mLyric.sentenceList, mMediaController.getPlaybackState().getPosition(), 0, mLyric.offset);
+        }
+        String curLyric = sentence.content.trim();
+        mLyricNotification.tickerText = curLyric;
+        mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
     }
     private void updateLyric(long position) {
         if (mNotificationManager == null || mLyric == null) {
             return;
         }
 
-        mLyric.offset = preferences.getInt("Title:" + mLyric.title
+        musicinfo = "Title:" + mLyric.title
                 + " ,Artist:" + mLyric.artist
                 + " ,Album:" + mLyric.album
                 + " ,By:" + mLyric.by
                 + " ,Author:" + mLyric.author
-                + " ,Length:" + mLyric.length, mLyric.offset);
-        Lyric.Sentence sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0, mLyric.offset);
+                + " ,Length:" + mLyric.length;
+        if (translationstatusreferences.getBoolean(musicinfo, false))
+            mLyric.offset = offsetpreferences.getInt(musicinfo + " ,tran", mLyric.offset);
+        else
+            mLyric.offset = offsetpreferences.getInt(musicinfo, mLyric.offset);
+        Lyric.Sentence sentence;
+        if (translationstatusreferences.getBoolean(musicinfo, false) && !mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false))
+            sentence = LyricUtils.getSentence(mLyric.translatedSentenceList, position, 0, mLyric.offset);
+        else
+            sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0, mLyric.offset);
         if (sentence == null) {
             return;
         }
