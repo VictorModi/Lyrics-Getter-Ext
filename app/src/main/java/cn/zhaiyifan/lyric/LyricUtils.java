@@ -159,52 +159,51 @@ public class LyricUtils {
                 return false;
             String closedTag = line.substring(openBracketIndex + 1, closedBracketIndex);
             String[] colonSplited = closedTag.split(":", 2);
-            if (colonSplited.length < 2)
-                return false;
-
-            if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_TITLE)) {
-                lyric.title = colonSplited[1].trim();
-            } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_ARTIST)) {
-                lyric.artist = colonSplited[1].trim();
-            } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_ALBUM)) {
-                lyric.album = colonSplited[1].trim();
-            } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_LRCFILE)) {
-                lyric.by = colonSplited[1].trim();
-            } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_SONGTEXT)) {
-                lyric.author = colonSplited[1].trim();
-            } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_LENGTH)) {
-                lyric.length = parseTime(colonSplited[1].trim(), lyric);
-            } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_OFFSET)) {
-                lyric.offset = parseOffset(colonSplited[1].trim());
-            } else {
-                if (Character.isDigit(colonSplited[0].charAt(0))) {
-                    List<Long> timestampList = new LinkedList<Long>();
-                    long time = parseTime(closedTag, lyric);
-                    if (time != -1) {
-                        timestampList.add(time);
-                    }
-                    //Log.d(TAG, line);
-                    // We may have line like [01:38.33][01:44.01][03:22.05]Test Test
-                    // [03:55.00]
-                    while ((lineLength > closedBracketIndex + 2)
-                            && (line.charAt(closedBracketIndex + 1) == '[')) {
-                        //Log.d(TAG, String.valueOf(closedBracketIndex));
-                        int nextOpenBracketIndex = closedBracketIndex + 1;
-                        int nextClosedBracketIndex = line.indexOf(']', nextOpenBracketIndex + 1);
-                        time = parseTime(line.substring(nextOpenBracketIndex + 1, nextClosedBracketIndex), lyric);
+            if (colonSplited.length >= 2) {
+                if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_TITLE)) {
+                    lyric.title = colonSplited[1].trim();
+                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_ARTIST)) {
+                    lyric.artist = colonSplited[1].trim();
+                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_ALBUM)) {
+                    lyric.album = colonSplited[1].trim();
+                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_LRCFILE)) {
+                    lyric.by = colonSplited[1].trim();
+                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_SONGTEXT)) {
+                    lyric.author = colonSplited[1].trim();
+                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_LENGTH)) {
+                    lyric.length = parseTime(colonSplited[1].trim(), lyric);
+                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_OFFSET)) {
+                    lyric.offset = parseOffset(colonSplited[1].trim());
+                } else {
+                    if (Character.isDigit(colonSplited[0].charAt(0))) {
+                        List<Long> timestampList = new LinkedList<Long>();
+                        long time = parseTime(closedTag, lyric);
                         if (time != -1) {
                             timestampList.add(time);
                         }
-                        closedBracketIndex = nextClosedBracketIndex;
-                    }
+                        //Log.d(TAG, line);
+                        // We may have line like [01:38.33][01:44.01][03:22.05]Test Test
+                        // [03:55.00]
+                        while ((lineLength > closedBracketIndex + 2)
+                                && (line.charAt(closedBracketIndex + 1) == '[')) {
+                            //Log.d(TAG, String.valueOf(closedBracketIndex));
+                            int nextOpenBracketIndex = closedBracketIndex + 1;
+                            int nextClosedBracketIndex = line.indexOf(']', nextOpenBracketIndex + 1);
+                            time = parseTime(line.substring(nextOpenBracketIndex + 1, nextClosedBracketIndex), lyric);
+                            if (time != -1) {
+                                timestampList.add(time);
+                            }
+                            closedBracketIndex = nextClosedBracketIndex;
+                        }
 
-                    String content = line.substring(closedBracketIndex + 1);
-                    for (long timestamp : timestampList) {
-                        lyric.addSentence(sentenceList, content, timestamp);
+                        String content = line.substring(closedBracketIndex + 1);
+                        for (long timestamp : timestampList) {
+                            lyric.addSentence(sentenceList, content, timestamp);
+                        }
+                    } else {
+                        // Ignore unknown tag
+                        return true;
                     }
-                } else {
-                    // Ignore unknown tag
-                    return true;
                 }
             }
             // We may have line like [00:53.60]On a dark [00:54.85]desert highway
