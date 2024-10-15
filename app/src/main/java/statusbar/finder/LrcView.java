@@ -12,6 +12,11 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class LrcView extends FragmentActivity {
     private SharedPreferences offsetpreferences;
@@ -32,10 +37,12 @@ public class LrcView extends FragmentActivity {
         else {
             lrc.setText(format(MusicListenerService.instance.getLyric().sentenceList.toString()));
             offset.setText("offset: " + ((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
-            if (!PreferenceManager.getDefaultSharedPreferences(MusicListenerService.instance).getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false))
-                if (MusicListenerService.instance.getLyric().translatedSentenceList != null)
-                    if (!format(MusicListenerService.instance.getLyric().translatedSentenceList.toString()).isEmpty())
-                        tran.setVisibility(View.VISIBLE);
+            if (MusicListenerService.instance.getLyric().translatedSentenceList != null && !format(MusicListenerService.instance.getLyric().translatedSentenceList.toString()).isEmpty()) {
+                if (PreferenceManager.getDefaultSharedPreferences(MusicListenerService.instance).getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false))
+                    lrc.setText(mergeStrings(MusicListenerService.instance.getLyric().sentenceList.toString(), MusicListenerService.instance.getLyric().translatedSentenceList.toString()));
+                else
+                    tran.setVisibility(View.VISIBLE);
+            }
         }
 
         if (translationstatusreferences.getBoolean(MusicListenerService.instance.musicinfo, false) && !PreferenceManager.getDefaultSharedPreferences(MusicListenerService.instance).getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) {
@@ -87,6 +94,35 @@ public class LrcView extends FragmentActivity {
         String text1 = input.substring(1, input.length() - 1);
         String text2 = text1.replaceAll("\\d+: ", "");
         return text2.replaceAll(", ", "\n");
+    }
+    private static String mergeStrings(String s1, String s2) {
+        s1 = s1.substring(1, s1.length() - 1);
+        s2 = s2.substring(1, s2.length() - 1);
+        s1 = s1.replaceAll(", ", "\n");
+        s2 = s2.replaceAll(", ", "\n");
+        Map<String, String> map1 = parseString(s1);
+        Map<String, String> map2 = parseString(s2);
+
+        StringBuilder result = new StringBuilder();
+        for (String key : map1.keySet()) {
+            if (map2.containsKey(key)) {
+                result.append("\n");
+            }
+            result.append(key).append(": ").append(map1.get(key)).append("\n");
+            if (map2.containsKey(key)) {
+                result.append(key).append(": ").append(map2.get(key)).append("\n");
+            }
+        }
+        return result.toString().replaceAll("\\d+: ", "");
+    }
+    private static Map<String, String> parseString(String str) {
+        Map<String, String> map = new LinkedHashMap<>();
+        Pattern pattern = Pattern.compile("(\\d+): (.+)");
+        Matcher matcher = pattern.matcher(str);
+        while (matcher.find()) {
+            map.put(matcher.group(1), matcher.group(2));
+        }
+        return map;
     }
     private void writeoffset(){
         if (MusicListenerService.instance.getLyric().offset == 0) {
