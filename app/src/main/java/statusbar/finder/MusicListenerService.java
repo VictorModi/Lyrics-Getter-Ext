@@ -414,9 +414,13 @@ public class MusicListenerService extends NotificationListenerService {
 
     private int calculateDelay(long position) {
         int nextFoundIndex = LyricUtils.getSentenceIndex(mLyric.sentenceList, position, 0, mLyric.offset) + 1;
-        return  nextFoundIndex >= mLyric.sentenceList.size() ? 0 :
-                (int) (mLyric.sentenceList.get(nextFoundIndex)
-                        .fromTime - position / 1000) / 3;
+
+        if (nextFoundIndex >= mLyric.sentenceList.size()) {
+            return 0;
+        }
+
+        int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000) - 2;
+        return Math.max(delay, 0);
     }
 
     private Lyric.Sentence getTranslatedSentence(long position) {  // 获取翻译歌词
