@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import androidx.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 import statusbar.finder.provider.ILrcProvider;
 
 import java.util.Arrays;
@@ -45,7 +46,6 @@ public class LyricsDatabase extends SQLiteOpenHelper {
     }
 
     public boolean insertLyricIntoDatabase(ILrcProvider.LyricResult lyricResult, ILrcProvider.MediaInfo originMediaInfo, String packageName) {
-
         if (originMediaInfo.getTitle() == null) {
             return false;
         }
@@ -56,50 +56,61 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                 "lyric, translated_lyric, lyric_source, _offset) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction();
+
         if (searchLyricFromDatabase(originMediaInfo, packageName) != null) return true;
+
         try {
-            if (lyricResult == null) {
-                db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
-                        packageName, originMediaInfo.getDuration(), -1, null, null, null, null, null, null, 0});
-            } else {
-                db.execSQL(query, new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
-                        packageName, originMediaInfo.getDuration(), lyricResult.mDistance, lyricResult.mResultInfo.getTitle()
-                        , lyricResult.mResultInfo.getArtist(), lyricResult.mResultInfo.getAlbum(), lyricResult.mLyric, lyricResult.mTranslatedLyric,
-                        lyricResult.mSource, 0});
-            }
-                db.setTransactionSuccessful();
+            db.beginTransaction();
+
+            Object[] params = getParams(lyricResult, originMediaInfo, packageName);
+            db.execSQL(query, params);
+            db.setTransactionSuccessful();
             return true;
         } catch (Exception e) {
-            e.fillInStackTrace();
+            Log.e("DatabaseError", "Insert failed", e);
             return false;
         } finally {
             db.endTransaction();
         }
     }
 
+    private static Object[] getParams(ILrcProvider.LyricResult lyricResult, ILrcProvider.MediaInfo originMediaInfo, String packageName) {
+        Object[] params;
+        if (lyricResult == null) {
+            params = new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
+                    packageName, originMediaInfo.getDuration(), -1, null, null, null, null, null, null, 0};
+        } else {
+            params = new Object[]{originMediaInfo.getTitle(), originMediaInfo.getArtist(), originMediaInfo.getAlbum(),
+                    packageName, originMediaInfo.getDuration(), lyricResult.mDistance, lyricResult.mResultInfo.getTitle(),
+                    lyricResult.mResultInfo.getArtist(), lyricResult.mResultInfo.getAlbum(), lyricResult.mLyric,
+                    lyricResult.mTranslatedLyric, lyricResult.mSource, 0};
+        }
+        return params;
+    }
+
     @SuppressLint("Range")
     public ILrcProvider.LyricResult searchLyricFromDatabase(ILrcProvider.MediaInfo mediaInfo, String packageName) {
-        @SuppressLint("Recycle") Cursor cursor;
         if (mediaInfo.getTitle() == null || mediaInfo.getArtist() == null) {
             return null;
         }
 
-        ILrcProvider.LyricResult result = new ILrcProvider.LyricResult();
         SQLiteDatabase db = this.getReadableDatabase();
-        Log.d("searchLyricFromDatabase: ", String.format("SearchInfo : %s - %s - %s - %d", mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum(), mediaInfo.getDuration()));
-        String query = "SELECT lyric, translated_lyric, lyric_source, distance, duration, _offset, result_title, result_artist, result_album  FROM Lyrics WHERE origin_title = ? AND origin_artist = ? AND origin_package_name = ?";
+        Cursor cursor = null;
+        try {
+            String query = "SELECT lyric, translated_lyric, lyric_source, distance, duration, _offset, result_title, result_artist, result_album " +
+                    "FROM Lyrics WHERE origin_title = ? AND origin_artist = ? AND origin_package_name = ?";
 
-        String[] args = new String[]{mediaInfo.getTitle(), mediaInfo.getArtist(), packageName};
-        if (mediaInfo.getAlbum() != null) {
-            query += " AND origin_album = ?";
-            args = Arrays.copyOf(args, args.length + 1);
-            args[args.length - 1] = mediaInfo.getAlbum();
-        }
-        cursor = db.rawQuery(query, args);
+            String[] args = {mediaInfo.getTitle(), mediaInfo.getArtist(), packageName};
+            if (mediaInfo.getAlbum() != null) {
+                query += " AND origin_album = ?";
+                args = Arrays.copyOf(args, args.length + 1);
+                args[args.length - 1] = mediaInfo.getAlbum();
+            }
 
-        if (cursor != null) {
+            cursor = db.rawQuery(query, args);
+
             if (cursor.moveToFirst()) {
+                ILrcProvider.LyricResult result = new ILrcProvider.LyricResult();
                 result.mLyric = cursor.getString(cursor.getColumnIndex("lyric"));
                 result.mTranslatedLyric = cursor.getString(cursor.getColumnIndex("translated_lyric"));
                 result.mSource = cursor.getString(cursor.getColumnIndex("lyric_source"));
@@ -114,14 +125,19 @@ public class LyricsDatabase extends SQLiteOpenHelper {
                         cursor.getLong(cursor.getColumnIndex("distance"))
                 );
 
-                cursor.close();
                 result.mOrigin = ILrcProvider.Origin.DATABASE;
                 return result;
             }
-            cursor.close();
+        } catch (Exception e) {
+            Log.e("DatabaseError", "Search failed", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
         return null;
     }
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
