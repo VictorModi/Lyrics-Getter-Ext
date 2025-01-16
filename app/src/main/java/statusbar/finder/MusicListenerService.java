@@ -416,11 +416,15 @@ public class MusicListenerService extends NotificationListenerService {
         int nextFoundIndex = LyricUtils.getSentenceIndex(mLyric.sentenceList, position, 0, mLyric.offset) + 1;
 
         if (nextFoundIndex >= mLyric.sentenceList.size()) {
-            return 0;
+            return 1;
         }
 
-        int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000) - 2;
-        return Math.max(delay, 0);
+        int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000) - 3;
+
+        if (translationstatusreferences.getBoolean(musicinfo, false) && !mLyric.translatedSentenceList.isEmpty()) {
+            delay /= 2;
+        }
+        return Math.max(delay, 1);
     }
 
     private Lyric.Sentence getTranslatedSentence(long position) {  // 获取翻译歌词
