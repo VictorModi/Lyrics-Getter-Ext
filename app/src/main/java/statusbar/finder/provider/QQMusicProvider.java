@@ -31,7 +31,7 @@ public class QQMusicProvider implements ILrcProvider {
             searchResult = HttpRequestUtil.getJsonResponse(searchUrl, QM_REFERER);
             if (searchResult != null && searchResult.getLong("code") == 0) {
                 JSONArray array = searchResult.getJSONObject("data").getJSONObject("song").getJSONArray("list");
-                Pair<String, Long> pair = getLrcUrl(array, mediaInfo);
+                Pair<String, MediaInfo> pair = getLrcUrl(array, mediaInfo);
                 if (pair != null) {
                     JSONObject lrcJson = HttpRequestUtil.getJsonResponse(pair.first, QM_REFERER);
                     if (lrcJson == null) {
@@ -39,9 +39,9 @@ public class QQMusicProvider implements ILrcProvider {
                     }
                     LyricResult result = new LyricResult();
                     result.mLyric = new String(Base64.decode(lrcJson.getString("lyric").getBytes(), Base64.DEFAULT));
-                    result.mDistance = pair.second;
+                    result.mDistance = pair.second.getDistance();
                     result.mSource = "QQ";
-                    result.mResultInfo = mediaInfo; // 错误的使用方式，但目前整个类不可用，先这样，哪天更新再改。
+                    result.mResultInfo = pair.second;
                     return result;
                 } else {
                     return null;
@@ -54,13 +54,16 @@ public class QQMusicProvider implements ILrcProvider {
         return null;
     }
 
-    private static Pair<String, Long> getLrcUrl(JSONArray jsonArray, ILrcProvider.MediaInfo mediaInfo) throws JSONException {
+    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, ILrcProvider.MediaInfo mediaInfo) throws JSONException {
         return getLrcUrl(jsonArray, mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum());
     }
 
-    private static Pair<String, Long> getLrcUrl(JSONArray jsonArray, String songTitle, String songArtist, String songAlbum) throws JSONException {
+    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, String songTitle, String songArtist, String songAlbum) throws JSONException {
         String currentMID = "";
         long minDistance = 10000;
+        String resultSoundName = null;
+        String resultAlbumName = null;
+        JSONArray resultSingers = null;
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             String soundName = jsonObject.getString("songname");
@@ -69,10 +72,13 @@ public class QQMusicProvider implements ILrcProvider {
             long dis = LyricSearchUtil.calculateSongInfoDistance(songTitle, songArtist, songAlbum, soundName, LyricSearchUtil.parseArtists(singers, "name"), albumName);
             if (dis < minDistance) {
                 minDistance = dis;
+                resultSoundName = soundName;
+                resultAlbumName = albumName;
+                resultSingers = singers;
                 currentMID = jsonObject.getString("songmid");
             }
         }
         if (currentMID.isEmpty()) {return null;}
-        return new Pair<>(String.format(Locale.getDefault(), QM_LRC_URL_FORMAT, currentMID), minDistance);
+        return new Pair<>(String.format(Locale.getDefault(), QM_LRC_URL_FORMAT, currentMID), new MediaInfo(resultSoundName, resultSingers.join(", "), resultAlbumName, minDistance, -1));
     }
 }
