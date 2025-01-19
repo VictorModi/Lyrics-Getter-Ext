@@ -172,19 +172,19 @@ public class MusicListenerService extends NotificationListenerService {
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-        Notification notification = sbn.getNotification();
-            if (sbn.isClearable()){
-                if (notification != null) {
-                    String lyricText = String.format("%s : %s", notification.extras.getString(Notification.EXTRA_TITLE), notification.extras.getString(Notification.EXTRA_TEXT));
-                    lyricsGetterApi.sendLyric(lyricText,new ExtraData(
-                            true,
-                            drawBase64,
-                            false,
-                            getPackageName(),
-                            0
-                    ));
-                }
-        }
+    //        Notification notification = sbn.getNotification();
+    //            if (sbn.isClearable()){
+    //                if (notification != null) {
+    //                    String lyricText = String.format("%s : %s", notification.extras.getString(Notification.EXTRA_TITLE), notification.extras.getString(Notification.EXTRA_TEXT));
+    //                    lyricsGetterApi.sendLyric(lyricText,new ExtraData(
+    //                            true,
+    //                            drawBase64,
+    //                            false,
+    //                            getPackageName(),
+    //                            0
+    //                    ));
+    //                }
+    //        }
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
