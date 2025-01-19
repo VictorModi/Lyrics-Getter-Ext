@@ -73,9 +73,9 @@ public class MusicListenerService extends NotificationListenerService {
     private Thread curLrcUpdateThread;
     private API lyricsGetterApi;
     public static MusicListenerService instance;
-    private SharedPreferences offsetpreferences;
-    private SharedPreferences translationstatusreferences;
-    public String musicinfo;
+    private SharedPreferences offsetPreferences;
+    private SharedPreferences translationStatusReferences;
+    public String musicInfo;
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -192,8 +192,8 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
         instance = this;
-        offsetpreferences = getSharedPreferences("offset", MODE_PRIVATE);
-        translationstatusreferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
+        offsetPreferences = getSharedPreferences("offset", MODE_PRIVATE);
+        translationStatusReferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
         lyricsGetterApi = new API();
         drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         // Log.d("systemLanguage", systemLanguage);
@@ -344,11 +344,11 @@ public class MusicListenerService extends NotificationListenerService {
     }
     public void sync(){
         Lyric.Sentence sentence;
-        if (translationstatusreferences.getBoolean(musicinfo, false)) {
-            mLyric.offset = offsetpreferences.getInt(musicinfo + " ,tran", mLyric.offset);
+        if (translationStatusReferences.getBoolean(musicInfo, false)) {
+            mLyric.offset = offsetPreferences.getInt(musicInfo + " ,tran", mLyric.offset);
             sentence = LyricUtils.getSentence(mLyric.translatedSentenceList, mMediaController.getPlaybackState().getPosition(), 0, mLyric.offset);
         } else {
-            mLyric.offset = offsetpreferences.getInt(musicinfo, mLyric.offset);
+            mLyric.offset = offsetPreferences.getInt(musicInfo, mLyric.offset);
             sentence = LyricUtils.getSentence(mLyric.sentenceList, mMediaController.getPlaybackState().getPosition(), 0, mLyric.offset);
         }
         if (sentence == null) {return;}
@@ -360,18 +360,18 @@ public class MusicListenerService extends NotificationListenerService {
             return;
         }
 
-        musicinfo = "Title:" + mLyric.title
+        musicInfo = "Title:" + mLyric.title
                 + " ,Artist:" + mLyric.artist
                 + " ,Album:" + mLyric.album
                 + " ,By:" + mLyric.by
                 + " ,Author:" + mLyric.author
                 + " ,Length:" + mLyric.length;
-        if (translationstatusreferences.getBoolean(musicinfo, false))
-            mLyric.offset = offsetpreferences.getInt(musicinfo + " ,tran", mLyric.offset);
+        if (translationStatusReferences.getBoolean(musicInfo, false))
+            mLyric.offset = offsetPreferences.getInt(musicInfo + " ,tran", mLyric.offset);
         else
-            mLyric.offset = offsetpreferences.getInt(musicinfo, mLyric.offset);
+            mLyric.offset = offsetPreferences.getInt(musicInfo, mLyric.offset);
         Lyric.Sentence sentence;
-        if (translationstatusreferences.getBoolean(musicinfo, false) && !mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false))
+        if (translationStatusReferences.getBoolean(musicInfo, false) && !mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false))
             sentence = LyricUtils.getSentence(mLyric.translatedSentenceList, position, 0, mLyric.offset);
         else
             sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0, mLyric.offset);
@@ -431,7 +431,7 @@ public class MusicListenerService extends NotificationListenerService {
         int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000) - 3;
 
         // 如果开启翻译状态并且翻译歌词列表不为空，减半延迟
-        if (translationstatusreferences.getBoolean(musicinfo, false) && !mLyric.translatedSentenceList.isEmpty()) {
+        if (translationStatusReferences.getBoolean(musicInfo, false) && !mLyric.translatedSentenceList.isEmpty()) {
             delay /= 2;
         }
 

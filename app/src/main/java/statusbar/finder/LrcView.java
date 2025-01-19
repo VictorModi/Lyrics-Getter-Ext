@@ -2,6 +2,7 @@ package statusbar.finder;
 
 import static statusbar.finder.misc.Constants.PREFERENCE_KEY_REQUIRE_TRANSLATE;
 
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
@@ -19,19 +20,20 @@ import java.util.regex.Pattern;
 
 
 public class LrcView extends FragmentActivity {
-    private SharedPreferences offsetpreferences;
-    private SharedPreferences translationstatusreferences;
+    private SharedPreferences offsetPreferences;
+    private SharedPreferences translationStatusReferences;
+    @SuppressLint("SetTextI18n") // Just Test
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lrcview);
 
-        offsetpreferences = getSharedPreferences("offset", MODE_PRIVATE);
-        translationstatusreferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
+        offsetPreferences = getSharedPreferences("offset", MODE_PRIVATE);
+        translationStatusReferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
 
-        TextView lrc =findViewById(R.id.lrc);
-        TextView offset =findViewById(R.id.offset);
-        TextView tran =findViewById(R.id.tran);
+        TextView lrc = findViewById(R.id.lrc);
+        TextView offset = findViewById(R.id.offset);
+        TextView tran = findViewById(R.id.tran);
         if (MusicListenerService.instance.getLyric() == null)
             lrc.setText("none");
         else {
@@ -45,7 +47,7 @@ public class LrcView extends FragmentActivity {
             }
         }
 
-        if (translationstatusreferences.getBoolean(MusicListenerService.instance.musicinfo, false) && !PreferenceManager.getDefaultSharedPreferences(MusicListenerService.instance).getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) {
+        if (translationStatusReferences.getBoolean(MusicListenerService.instance.musicInfo, false) && !PreferenceManager.getDefaultSharedPreferences(MusicListenerService.instance).getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) {
             tran.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.teal_700));
             lrc.setText(format(MusicListenerService.instance.getLyric().translatedSentenceList.toString()));
         }
@@ -54,11 +56,11 @@ public class LrcView extends FragmentActivity {
             public void onClick(View view) {
                 if (tran.getCurrentTextColor() == ContextCompat.getColor(getApplicationContext(), R.color.teal_700)) {
                     tran.setTextColor(ContextCompat.getColor(getApplicationContext(), android.R.color.tab_indicator_text));
-                    translationstatusreferences.edit().remove(MusicListenerService.instance.musicinfo).apply();
+                    translationStatusReferences.edit().remove(MusicListenerService.instance.musicInfo).apply();
                     lrc.setText(format(MusicListenerService.instance.getLyric().sentenceList.toString()));
                 } else {
                     tran.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.teal_700));
-                    translationstatusreferences.edit().putBoolean(MusicListenerService.instance.musicinfo, true).apply();
+                    translationStatusReferences.edit().putBoolean(MusicListenerService.instance.musicInfo, true).apply();
                     lrc.setText(format(MusicListenerService.instance.getLyric().translatedSentenceList.toString()));
                 }
                 MusicListenerService.instance.sync();
@@ -72,7 +74,7 @@ public class LrcView extends FragmentActivity {
                 if (MusicListenerService.instance.getLyric() != null) {
                     MusicListenerService.instance.getLyric().offset = (MusicListenerService.instance.getLyric().offset - 100);
                     offset.setText("offset: " + ((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
-                    writeoffset();
+                    writeOffset();
                 }
             }
         });
@@ -84,7 +86,7 @@ public class LrcView extends FragmentActivity {
                 if (MusicListenerService.instance.getLyric() != null) {
                     MusicListenerService.instance.getLyric().offset = (MusicListenerService.instance.getLyric().offset + 100);
                     offset.setText("offset: " + ((MusicListenerService.instance.getLyric().offset > 0) ? -MusicListenerService.instance.getLyric().offset : Math.abs(MusicListenerService.instance.getLyric().offset)));
-                    writeoffset();
+                    writeOffset();
                 }
             }
         });
@@ -124,18 +126,18 @@ public class LrcView extends FragmentActivity {
         }
         return map;
     }
-    private void writeoffset(){
+    private void writeOffset(){
         if (MusicListenerService.instance.getLyric().offset == 0) {
-            if (translationstatusreferences.getBoolean(MusicListenerService.instance.musicinfo, false))
-                offsetpreferences.edit().remove(MusicListenerService.instance.musicinfo + " ,tran").apply();
+            if (translationStatusReferences.getBoolean(MusicListenerService.instance.musicInfo, false))
+                offsetPreferences.edit().remove(MusicListenerService.instance.musicInfo + " ,tran").apply();
             else
-                offsetpreferences.edit().remove(MusicListenerService.instance.musicinfo).apply();
+                offsetPreferences.edit().remove(MusicListenerService.instance.musicInfo).apply();
         } else {
-            if (translationstatusreferences.getBoolean(MusicListenerService.instance.musicinfo, false))
-                offsetpreferences.edit().putInt(MusicListenerService.instance.musicinfo + " ,tran",
+            if (translationStatusReferences.getBoolean(MusicListenerService.instance.musicInfo, false))
+                offsetPreferences.edit().putInt(MusicListenerService.instance.musicInfo + " ,tran",
                         MusicListenerService.instance.getLyric().offset).apply();
             else
-                offsetpreferences.edit().putInt(MusicListenerService.instance.musicinfo,
+                offsetPreferences.edit().putInt(MusicListenerService.instance.musicInfo,
                         MusicListenerService.instance.getLyric().offset).apply();
         }
     }
