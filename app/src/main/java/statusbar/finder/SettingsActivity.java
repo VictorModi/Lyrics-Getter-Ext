@@ -17,10 +17,7 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.FragmentActivity;
-import androidx.preference.Preference;
-import androidx.preference.PreferenceCategory;
-import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.SwitchPreference;
+import androidx.preference.*;
 import cn.lyric.getter.api.API;
 import org.jetbrains.annotations.NotNull;
 import statusbar.finder.misc.Constants;
@@ -133,8 +130,8 @@ public class SettingsActivity extends FragmentActivity {
             implements Preference.OnPreferenceClickListener {
 
         private SwitchPreference mEnabledPreference;
-        private SwitchPreference mTranslateSwitch;
-        private Preference mConnectionStatusPreference;
+        private SwitchPreference mConnectionStatusPreference;
+        private ListPreference mTranslateListPreference;
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -150,7 +147,7 @@ public class SettingsActivity extends FragmentActivity {
             manager.cancelAll();
             mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED);
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS);
-            mTranslateSwitch = findPreference(Constants.PREFERENCE_KEY_REQUIRE_TRANSLATE);
+            mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_REQUIRE_TRANSLATE);
 //            try {
 //                mNotificationFields[0] =
 //                        Notification.class.getDeclaredField("FLAG_ALWAYS_SHOW_TICKER").getInt(null);
@@ -163,6 +160,7 @@ public class SettingsActivity extends FragmentActivity {
 //            }
 //            );
             // boolean lyricsGetterApiHasEnable = true; For Debug
+
             if (mConnectionStatusPreference != null){
                 mConnectionStatusPreference.setSummary(String.valueOf(lyricsGetterApiHasEnable));
                 mConnectionStatusPreference.setOnPreferenceClickListener(this);
@@ -173,8 +171,8 @@ public class SettingsActivity extends FragmentActivity {
                 mEnabledPreference.setEnabled(true);
                 mEnabledPreference.setOnPreferenceClickListener(this);
             }
-            if (mTranslateSwitch != null) {
-                mTranslateSwitch.setOnPreferenceClickListener(this);
+            if (mTranslateListPreference != null) {
+                mTranslateListPreference.setOnPreferenceClickListener(this);
             }
             Preference appInfoPreference = findPreference("app");
             if (appInfoPreference != null) {
@@ -202,6 +200,7 @@ public class SettingsActivity extends FragmentActivity {
             if (preference == mEnabledPreference) {
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
             } else if (preference == mConnectionStatusPreference) {
+                mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
                 Intent intent = new Intent();
                 // Open LyricsGetter
                 try {
@@ -212,8 +211,9 @@ public class SettingsActivity extends FragmentActivity {
                 }
                 // 启动活动
                 return true;
-            } else if (preference == mTranslateSwitch) {
-                Toast.makeText(requireContext(), "TranslateLyrics: " + (mTranslateSwitch.isChecked() ? "Enable" : "Disable"), Toast.LENGTH_SHORT).show();
+            } else if (preference == mTranslateListPreference) {
+//                Toast.makeText(requireContext(), "TranslateLyrics: " + (mTranslateSwitch.isChecked() ? "Enable" : "Disable"), Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "TranslateLyrics: " + mTranslateListPreference.getValue(), Toast.LENGTH_SHORT).show();
             } else {
                 String url = mUrlMap.get(preference.getKey());
                 if (TextUtils.isEmpty(url)) return false;

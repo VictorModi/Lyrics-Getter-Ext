@@ -7,14 +7,18 @@
         <SwitchPreference
             android:key="enabled"
             android:title="@string/enabled_title" />
-        <Preference
+        <SwitchPreference
             android:key="connection_status"
             android:title="@string/lyricsGetterStatus_title"
-            android:summary="false"/>
-        <SwitchPreference
-            android:key="require_translate"
+        />
+        <ListPreference
+            android:key="translate_type"
             android:title="原译文双层歌词"
-            android:summary="仅供简中 墨•息 用户。"/>
+            android:summary="仅供简中 墨•息 用户。"
+            android:entries="@array/translate_choose_display"
+            android:entryValues="@array/translate_choose_value"
+            android:defaultValue="origin"
+        />
         <statusbar.finder.preferences.PackageListPreference
             android:title="@string/target_apps_title"
             android:key="target_packages"

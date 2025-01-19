@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import static statusbar.finder.misc.Constants.PREFERENCE_KEY_REQUIRE_TRANSLATE;
+import static statusbar.finder.misc.Constants.PREFERENCE_KEY_TRANSLATE_TYPE;
 
 public class MusicListenerService extends NotificationListenerService {
 
@@ -384,14 +385,24 @@ public class MusicListenerService extends NotificationListenerService {
             if (sentence.content.isEmpty()) {
                 return;
             }
-            String curLyric = sentence.content.trim();
-            Lyric.Sentence translatedSentence = null;
-            if (mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) { // 增添翻译
-                translatedSentence = getTranslatedSentence(position);
-                if (translatedSentence != null && !Objects.equals(translatedSentence.content, "") && !Objects.equals(sentence.content, "")) {
-                    curLyric += "\n\r" + translatedSentence.content.trim();
-                }
-            }
+            String curLyric;
+            Lyric.Sentence translatedSentence = getTranslatedSentence(position);
+            curLyric = switch (mSharedPreferences.getString(PREFERENCE_KEY_TRANSLATE_TYPE, "origin")) {
+                case "translated" ->
+                        translatedSentence != null ? translatedSentence.content.trim() : sentence.content.trim();
+                case "both" ->
+                        sentence.content.trim() + (
+                                translatedSentence != null ?
+                                        ("\n\r" + translatedSentence.content.trim()) :
+                                        "");
+                default -> sentence.content.trim();
+            };
+//            if (mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) { // 增添翻译
+//                translatedSentence = getTranslatedSentence(position);
+//                if (translatedSentence != null && !Objects.equals(translatedSentence.content, "") && !Objects.equals(sentence.content, "")) {
+//                    curLyric += "\n\r" + translatedSentence.content.trim();
+//                }
+//            }
             LyricsChanged.Data data = new LyricsChanged.Data(sentence.content.trim(), translatedSentence != null ? translatedSentence.content.trim() : null, delay);
             LyricsChanged.getInstance().notifyLyrics(data);
             // mLyricNotification = buildLrcNotification(data);
@@ -428,12 +439,12 @@ public class MusicListenerService extends NotificationListenerService {
         }
 
         // 计算延迟时间
-        int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000) - 3;
+        int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000);
 
-        // 如果开启翻译状态并且翻译歌词列表不为空，减半延迟
-        if (translationStatusReferences.getBoolean(musicInfo, false) && !mLyric.translatedSentenceList.isEmpty()) {
-            delay /= 2;
-        }
+//        // 如果开启翻译状态并且翻译歌词列表不为空，减半延迟
+//        if (translationStatusReferences.getBoolean(musicInfo, false) && getTranslatedSentence(position) != null) {
+//            delay /= 2;
+//        }
 
         // 确保延迟时间最小为 1
         return Math.max(delay, 1);

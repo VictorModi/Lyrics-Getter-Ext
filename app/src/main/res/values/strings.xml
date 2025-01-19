@@ -22,4 +22,14 @@
     <string name="toast_get_notification_permission">Notification permission not granted. Please allow notification permission for this app in the next screen.</string>
     <string name="target_apps_title">Target apps</string>
 
+    <string-array name="translate_choose_display">
+        <item>仅原文</item>
+        <item>仅译文</item>
+        <item>原文 + 译文</item>
+    </string-array>
+    <string-array name="translate_choose_value">
+        <item>origin</item>
+        <item>translated</item>
+        <item>both</item>
+    </string-array>
 </resources>
