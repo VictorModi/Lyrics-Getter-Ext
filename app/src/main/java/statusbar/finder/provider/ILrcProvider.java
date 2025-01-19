@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public interface ILrcProvider {
-    LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException;
+    @Deprecated LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException;
     LyricResult getLyric(MediaInfo mediaInfo, boolean requireTranslate) throws IOException;
 
     class LyricResult {

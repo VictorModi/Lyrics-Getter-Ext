@@ -172,19 +172,19 @@ public class MusicListenerService extends NotificationListenerService {
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-//        Notification notification = sbn.getNotification();
-//            if (sbn.isClearable()){
-//                if (notification != null) {
-//                    String lyricText = String.format("%s : %s", notification.extras.getString(Notification.EXTRA_TITLE), notification.extras.getString(Notification.EXTRA_TEXT));
-//                    lyricsGetterApi.sendLyric(lyricText,new ExtraData(
-//                            true,
-//                            drawBase64,
-//                            false,
-//                            getPackageName(),
-//                            0
-//                    ));
-//                }
-//        }
+        Notification notification = sbn.getNotification();
+            if (sbn.isClearable()){
+                if (notification != null) {
+                    String lyricText = String.format("%s : %s", notification.extras.getString(Notification.EXTRA_TITLE), notification.extras.getString(Notification.EXTRA_TEXT));
+                    lyricsGetterApi.sendLyric(lyricText,new ExtraData(
+                            true,
+                            drawBase64,
+                            false,
+                            getPackageName(),
+                            0
+                    ));
+                }
+        }
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -351,8 +351,8 @@ public class MusicListenerService extends NotificationListenerService {
             mLyric.offset = offsetpreferences.getInt(musicinfo, mLyric.offset);
             sentence = LyricUtils.getSentence(mLyric.sentenceList, mMediaController.getPlaybackState().getPosition(), 0, mLyric.offset);
         }
-        String curLyric = sentence.content.trim();
-        mLyricNotification.tickerText = curLyric;
+        if (sentence == null) {return;}
+        mLyricNotification.tickerText = sentence.content.trim();
         mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
     }
     private void updateLyric(long position) {
@@ -403,8 +403,14 @@ public class MusicListenerService extends NotificationListenerService {
                     drawBase64,
                     false,
                     getPackageName(),
-                    delay
+                    delay // 单位: 秒 (Second)
+                    // 文档里写毫秒骗人呢，别信，信我，我怎么可能骗你呢
             ));
+            CSLyricHelper.updateLyric(
+                    getApplicationContext(),
+                    new CSLyricHelper.PlayInfo(drawBase64, getPackageName()),
+                    new CSLyricHelper.LyricData(curLyric)
+            );
             mLyricNotification.tickerText = curLyric;
             mLyricNotification.when = System.currentTimeMillis();
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
@@ -413,11 +419,26 @@ public class MusicListenerService extends NotificationListenerService {
     }
 
     private int calculateDelay(long position) {
+        // 注意: 结果的单位为秒 (Second)
         int nextFoundIndex = LyricUtils.getSentenceIndex(mLyric.sentenceList, position, 0, mLyric.offset) + 1;
-        return  nextFoundIndex >= mLyric.sentenceList.size() ? 0 :
-                (int) (mLyric.sentenceList.get(nextFoundIndex)
-                        .fromTime - position / 1000) / 3;
+
+        // 如果没有更多的歌词，直接返回 1
+        if (nextFoundIndex >= mLyric.sentenceList.size()) {
+            return 1;
+        }
+
+        // 计算延迟时间
+        int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000) - 3;
+
+        // 如果开启翻译状态并且翻译歌词列表不为空，减半延迟
+        if (translationstatusreferences.getBoolean(musicinfo, false) && !mLyric.translatedSentenceList.isEmpty()) {
+            delay /= 2;
+        }
+
+        // 确保延迟时间最小为 1
+        return Math.max(delay, 1);
     }
+
 
     private Lyric.Sentence getTranslatedSentence(long position) {  // 获取翻译歌词
         if (!mLyric.translatedSentenceList.isEmpty()) {

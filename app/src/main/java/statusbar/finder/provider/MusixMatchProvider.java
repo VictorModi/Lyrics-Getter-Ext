@@ -17,10 +17,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 import static statusbar.finder.provider.utils.LyricSearchUtil.extractLyric;
 
@@ -29,10 +26,10 @@ public class MusixMatchProvider implements ILrcProvider {
     private static final String MUSIXMATCH_BASE_URL = "https://apic.musixmatch.com/ws/1.1/";
     private static final String MUSIXMATCH_TOKEN_URL_FORMAT = MUSIXMATCH_BASE_URL + "token.get?guid=%s&app_id=android-player-v1.0&format=json";
     private static final String MUSIXMATCH_LRC_URL_FORMAT = MUSIXMATCH_BASE_URL + "macro.subtitles.get?tags=playing&subtitle_format=lrc&usertoken=%s&track_id=%d&app_id=android-player-v1.0&format=json";
-    private static final String MUSIXMATCH_SERACH_URL_FORMAT = MUSIXMATCH_BASE_URL + "macro.search?app_id=android-player-v1.0&usertoken=%s&q=%s";
-    private static final String MUSIXMATCH_LRC_SERACH_URL_FORMAT = MUSIXMATCH_BASE_URL + "macro.subtitles.get?tags=playing&subtitle_format=lrc&usertoken=%s&q_track=%s&q_artist=%s&q_album=%s&app_id=android-player-v1.0&format=json";
+    private static final String MUSIXMATCH_SEARCH_URL_FORMAT = MUSIXMATCH_BASE_URL + "macro.search?app_id=android-player-v1.0&usertoken=%s&q=%s";
+    private static final String MUSIXMATCH_LRC_SEARCH_URL_FORMAT = MUSIXMATCH_BASE_URL + "macro.subtitles.get?tags=playing&subtitle_format=lrc&usertoken=%s&q_track=%s&q_artist=%s&q_album=%s&app_id=android-player-v1.0&format=json";
     private static final String MUSIXMATCH_TRANSLATED_LRC_URL_FORMAT = MUSIXMATCH_BASE_URL + "crowd.track.translations.get?usertoken=%s&translation_fields_set=minimal&selected_language=%s&track_id=%d&comment_format=text&part=user&format=json&app_id=android-player-v1.0&tags=playing";
-    private static String MUSIXMATCH_USERTOKEN;
+    private static String musixMatchUserToken;
 
     @Override
     public LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException {
@@ -41,13 +38,13 @@ public class MusixMatchProvider implements ILrcProvider {
 
     @Override
     public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate) throws IOException {
-        if (MUSIXMATCH_USERTOKEN  == null) {
-            MUSIXMATCH_USERTOKEN = getMusixMatchUserToken("");
-            if (MUSIXMATCH_USERTOKEN  == null) {
+        if (musixMatchUserToken  == null) {
+            musixMatchUserToken = getMusixMatchUserToken(getRandomId());
+            if (musixMatchUserToken  == null) {
                 return null;
             }
         }
-        String searchUrl = String.format(Locale.getDefault(), MUSIXMATCH_SERACH_URL_FORMAT, MUSIXMATCH_USERTOKEN , LyricSearchUtil.getSearchKey(mediaInfo));
+        String searchUrl = String.format(Locale.getDefault(), MUSIXMATCH_SEARCH_URL_FORMAT, musixMatchUserToken , LyricSearchUtil.getSearchKey(mediaInfo));
         JSONObject searchResult;
         try{
             searchResult = HttpRequestUtil.getJsonResponse(searchUrl);
@@ -74,8 +71,8 @@ public class MusixMatchProvider implements ILrcProvider {
                     String track = toSimpleURLEncode(mediaInfo.getTitle());
                     String artist = toSimpleURLEncode(mediaInfo.getArtist());
                     String album = toSimpleURLEncode(mediaInfo.getAlbum());
-                    lrcUrl = String.format(Locale.getDefault(), MUSIXMATCH_LRC_SERACH_URL_FORMAT,
-                            MUSIXMATCH_USERTOKEN,
+                    lrcUrl = String.format(Locale.getDefault(), MUSIXMATCH_LRC_SEARCH_URL_FORMAT,
+                            musixMatchUserToken,
                             track,
                             artist,
                             album);
@@ -127,7 +124,7 @@ public class MusixMatchProvider implements ILrcProvider {
             }
         }
         if (currentID == -1) {return null;}
-        return new Pair<>(String.format(Locale.getDefault(), MUSIXMATCH_LRC_URL_FORMAT, MUSIXMATCH_USERTOKEN, currentID), minDistance);
+        return new Pair<>(String.format(Locale.getDefault(), MUSIXMATCH_LRC_URL_FORMAT, musixMatchUserToken, currentID), minDistance);
     }
 
     private String toSimpleURLEncode(String input) {
@@ -195,7 +192,7 @@ public class MusixMatchProvider implements ILrcProvider {
 
 
     private JSONArray getTranslationsList(long trackId, String selectLang) { // 获取翻译歌词列表
-        String transLyricURL = String.format(Locale.getDefault(), MUSIXMATCH_TRANSLATED_LRC_URL_FORMAT, MUSIXMATCH_USERTOKEN, selectLang, trackId);
+        String transLyricURL = String.format(Locale.getDefault(), MUSIXMATCH_TRANSLATED_LRC_URL_FORMAT, musixMatchUserToken, selectLang, trackId);
 
         try {
             JSONObject transResult = HttpRequestUtil.getJsonResponse(transLyricURL);
@@ -227,5 +224,27 @@ public class MusixMatchProvider implements ILrcProvider {
             return null;
         }
         return result;
+    }
+
+    private static String getRandomId() {
+        long value = (long) (new Random().nextDouble() * Long.MAX_VALUE);
+        String code = convertToBase36(value);
+        code = code.replaceAll("[^a-zA-Z]", ""); // Keep only letters
+        return code.substring(2, Math.min(8, code.length() - 2));
+    }
+
+    private static String convertToBase36(long value) {
+        // https://github.com/WXRIW/Lyricify-Lyrics-Helper/blob/master/Lyricify.Lyrics.Helper/Providers/Web/MusixMatch/Api.cs
+        final char[] chars = "0123456789abcdefghijklmnopqrstuvwxyz".toCharArray();
+        int radix = chars.length;
+        char[] result = new char[13];
+        int index = 12;
+
+        do {
+            result[index--] = chars[(int) (value % radix)];
+            value /= radix;
+        } while (value > 0 && index >= 0);
+
+        return new String(result, index + 1, 12 - index);
     }
 }
