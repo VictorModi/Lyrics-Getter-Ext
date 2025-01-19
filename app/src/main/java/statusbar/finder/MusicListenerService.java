@@ -386,10 +386,12 @@ public class MusicListenerService extends NotificationListenerService {
                 return;
             }
             String curLyric;
+            String translateType = mSharedPreferences.getString(PREFERENCE_KEY_TRANSLATE_TYPE, "origin");
             Lyric.Sentence translatedSentence = getTranslatedSentence(position);
-            curLyric = switch (mSharedPreferences.getString(PREFERENCE_KEY_TRANSLATE_TYPE, "origin")) {
+            curLyric = switch (translateType) {
                 case "translated" ->
-                        translatedSentence != null ? translatedSentence.content.trim() : sentence.content.trim();
+                        translatedSentence != null ? translatedSentence.content.trim() :
+                                sentence.content.trim();
                 case "both" ->
                         sentence.content.trim() + (
                                 translatedSentence != null ?
@@ -397,12 +399,15 @@ public class MusicListenerService extends NotificationListenerService {
                                         "");
                 default -> sentence.content.trim();
             };
+            int adjustment = "both".equals(translateType) && translatedSentence != null ? delay / 2 : delay;
+            delay = adjustment - 3;
 //            if (mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) { // 增添翻译
 //                translatedSentence = getTranslatedSentence(position);
 //                if (translatedSentence != null && !Objects.equals(translatedSentence.content, "") && !Objects.equals(sentence.content, "")) {
 //                    curLyric += "\n\r" + translatedSentence.content.trim();
 //                }
 //            }
+            delay = Math.max(delay, 1);
             LyricsChanged.Data data = new LyricsChanged.Data(sentence.content.trim(), translatedSentence != null ? translatedSentence.content.trim() : null, delay);
             LyricsChanged.getInstance().notifyLyrics(data);
             // mLyricNotification = buildLrcNotification(data);

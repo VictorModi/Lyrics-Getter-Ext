@@ -147,7 +147,7 @@ public class SettingsActivity extends FragmentActivity {
             manager.cancelAll();
             mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED);
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS);
-            mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_REQUIRE_TRANSLATE);
+            mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_TRANSLATE_TYPE);
 //            try {
 //                mNotificationFields[0] =
 //                        Notification.class.getDeclaredField("FLAG_ALWAYS_SHOW_TICKER").getInt(null);
