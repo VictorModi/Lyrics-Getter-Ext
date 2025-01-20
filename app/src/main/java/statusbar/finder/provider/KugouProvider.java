@@ -13,7 +13,8 @@ import statusbar.finder.provider.utils.LyricSearchUtil;
 import java.io.IOException;
 import java.util.Locale;
 
-import static org.apache.commons.lang3.StringEscapeUtils.unescapeHtml4;
+import static org.apache.commons.text.StringEscapeUtils.unescapeHtml4;
+
 
 public class KugouProvider implements ILrcProvider {
 
@@ -34,7 +35,7 @@ public class KugouProvider implements ILrcProvider {
             searchResult = HttpRequestUtil.getJsonResponse(searchUrl);
             if (searchResult != null && searchResult.getLong("status") == 200) {
                 JSONArray array = searchResult.getJSONArray("candidates");
-                Pair<String, MediaInfo> pair = getLrcUrl(array, mediaInfo);
+                Pair<String, ILrcProvider.MediaInfo> pair = getLrcUrl(array, mediaInfo);
                 if(pair != null){
                     JSONObject lrcJson = HttpRequestUtil.getJsonResponse(pair.first);
                     if (lrcJson == null) {

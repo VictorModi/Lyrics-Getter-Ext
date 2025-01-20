@@ -3,6 +3,8 @@ package statusbar.finder.provider;
 import android.media.MediaMetadata;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
+import statusbar.finder.Origin;
+import statusbar.finder.Result;
 
 import java.io.IOException;
 
@@ -17,7 +19,7 @@ public interface ILrcProvider {
         public String mSource = "Local";
         public int mOffset = 0;
         public MediaInfo mResultInfo;
-        public Origin mOrigin = Origin.UNDEFINED;
+        public DataOrigin mDataOrigin = DataOrigin.UNDEFINED;
 
         public String toSting() {
             return "Distance: " + mDistance + "\n" +
@@ -25,11 +27,29 @@ public interface ILrcProvider {
                     "Offset: " + mOffset + "\n" +
                     "Lyric: " + mLyric + "\n" +
                     "TranslatedLyric: " + mTranslatedLyric + "\n" +
-                    "RealInfo: " + mResultInfo;
+                    "ResultInfo: " + mResultInfo;
         }
+
+        public LyricResult(Result result) {
+            this.mLyric = result.getLyric();
+            this.mTranslatedLyric = result.getTranslated_lyric();
+            this.mDistance = result.getDistance() != null ? result.getDistance() : -1;
+            this.mOffset = Math.toIntExact(result.getLyric_offset());
+            this.mSource = result.getProvider();
+            this.mDataOrigin = DataOrigin.DATABASE;
+            this.mResultInfo = new MediaInfo(
+                    result.getTitle() != null ? result.getTitle() : "",
+                    result.getArtist() != null ? result.getArtist() : "",
+                    result.getAlbum() != null ? result.getAlbum() : "",
+                    result.getDistance() != null ? result.getDistance() : -1,
+                    -1
+            );
+        }
+
+        public LyricResult() {}
     }
 
-    enum Origin {
+    enum DataOrigin {
         UNDEFINED,
         INTERNET,
         DATABASE;
@@ -73,6 +93,14 @@ public interface ILrcProvider {
             if (this.album == null) {
                 this.album = "";
             }
+        }
+
+        public MediaInfo(Origin originData) {
+            this.title = originData.getTitle();
+            this.artist = originData.getArtist();
+            this.album = originData.getAlbum();
+            this.duration = originData.getDuration() != null ? originData.getDuration() : -1;
+            this.distance = -1;
         }
 
         @NotNull

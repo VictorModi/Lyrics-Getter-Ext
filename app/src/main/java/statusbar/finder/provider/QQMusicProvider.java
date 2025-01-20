@@ -12,6 +12,8 @@ import statusbar.finder.provider.utils.LyricSearchUtil;
 import java.io.IOException;
 import java.util.Locale;
 
+import static org.apache.commons.text.StringEscapeUtils.unescapeHtml4;
+
 public class QQMusicProvider implements ILrcProvider {
     private static final String QM_BASE_URL = "https://c.y.qq.com/";
     private static final String QM_REFERER = "https://y.qq.com";
@@ -38,7 +40,7 @@ public class QQMusicProvider implements ILrcProvider {
                         return null;
                     }
                     LyricResult result = new LyricResult();
-                    result.mLyric = new String(Base64.decode(lrcJson.getString("lyric").getBytes(), Base64.DEFAULT));
+                    result.mLyric = unescapeHtml4(new String(Base64.decode(lrcJson.getString("lyric").getBytes(), Base64.DEFAULT)));
                     result.mDistance = pair.second.getDistance();
                     result.mSource = "QQ";
                     result.mResultInfo = pair.second;

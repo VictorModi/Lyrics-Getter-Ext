@@ -1,0 +1,27 @@
+CREATE TABLE active (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    origin_id INTEGER NOT NULL UNIQUE,    -- 唯一关联 origin 的 ID
+    result_id INTEGER NOT NULL,           -- 选择的 result 的 ID
+    added_date INTEGER DEFAULT (strftime('%s', 'now')) NOT NULL, -- UTC
+    FOREIGN KEY (origin_id) REFERENCES origin (id) ON DELETE CASCADE,
+    FOREIGN KEY (result_id) REFERENCES result (id) ON DELETE CASCADE
+);
+
+-- 插入新的 active 记录
+insertActive:
+INSERT INTO active (origin_id, result_id)
+VALUES (?, ?);
+
+-- 更新已存在的 active 记录
+updateActive:
+UPDATE active
+SET result_id = ?
+WHERE origin_id = ?;
+
+getResultId:
+SELECT result_id
+FROM active
+WHERE origin_id = ?;
+
+getLastInsertId:
+SELECT last_insert_rowid() AS id;

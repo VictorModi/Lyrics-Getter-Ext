@@ -2,6 +2,7 @@ package statusbar.finder;
 
 import android.content.Context;
 import android.media.MediaMetadata;
+import androidx.core.util.Pair;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
@@ -15,6 +16,9 @@ import statusbar.finder.provider.MusixMatchProvider;
 import statusbar.finder.provider.NeteaseProvider;
 import statusbar.finder.provider.QQMusicProvider;
 import statusbar.finder.provider.utils.LyricSearchUtil;
+import statusbar.finder.sql.ActiveManager;
+import statusbar.finder.sql.OriginManager;
+import statusbar.finder.sql.ResultManager;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -29,117 +33,118 @@ public class LrcGetter {
             new MusixMatchProvider()
     };
     private static MessageDigest messageDigest;
-    public static LyricsDatabase lyricsDatabase;
 
     public static Lyric getLyric(Context context, MediaMetadata mediaMetadata, String sysLang, String packageName, boolean requireTranslate) {
         return getLyric(context, new ILrcProvider.MediaInfo(mediaMetadata), sysLang, packageName, requireTranslate);
     }
 
     public static Lyric getLyric(Context context, ILrcProvider.MediaInfo mediaInfo, String sysLang, String packageName, boolean requireTranslate) {
-        lyricsDatabase = lyricsDatabase != null
-                ? lyricsDatabase
-                : new LyricsDatabase(context)
-        ;
-        // Log.d(TAG, "curMediaData" + new SimpleSongInfo(mediaMetadata));
-        ILrcProvider.MediaInfo hiraganaMediaInfo;
+        DatabaseHelper.init(context);
+        MojiDetector detector = new MojiDetector();
+        MojiConverter converter = new MojiConverter();
+
         if (messageDigest == null) {
             try {
                 messageDigest = MessageDigest.getInstance("SHA");
             } catch (NoSuchAlgorithmException e) {
                 e.fillInStackTrace();
-                lyricsDatabase.close();
                 return null;
             }
         }
+        Pair<ILrcProvider.LyricResult, Long> databaseResult = getActiveLyricFromDatabase(mediaInfo, packageName);
+        ILrcProvider.LyricResult currentResult = databaseResult.first;
 
-        ILrcProvider.LyricResult currentResult = lyricsDatabase.searchLyricFromDatabase(mediaInfo, packageName);
+        if (currentResult == null) {
+            searchLyricsResultByInfo(mediaInfo, requireTranslate, databaseResult.second, sysLang);
+            currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second);
+        }
+
+        if (currentResult == null && (!detector.hasKana(mediaInfo.getTitle()) && detector.hasLatin(mediaInfo.getTitle()))) {
+            try {
+                ILrcProvider.MediaInfo hiraganaMediaInfo = mediaInfo.clone();
+                hiraganaMediaInfo.setTitle(converter.convertRomajiToHiragana(mediaInfo.getTitle()));
+                if (detector.hasLatin(hiraganaMediaInfo.getTitle())) {
+                    GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
+                    return null;
+                }
+                searchLyricsResultByInfo(hiraganaMediaInfo, requireTranslate, databaseResult.second, sysLang);
+                currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second);
+                if (currentResult == null) {
+                    hiraganaMediaInfo.setTitle(converter.convertRomajiToKatakana(mediaInfo.getTitle()));
+                    searchLyricsResultByInfo(hiraganaMediaInfo, requireTranslate, databaseResult.second, sysLang);
+                    currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second);
+                }
+            } catch (CloneNotSupportedException e) {
+                e.fillInStackTrace();
+            }
+        }
+
+
         if (currentResult != null) {
             GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
-            return LyricUtils.parseLyric(currentResult, mediaInfo);
-        }
-        currentResult = searchLyricsResultByInfo(mediaInfo, requireTranslate);
-        if  (currentResult == null) {
-            MojiDetector detector = new MojiDetector();
-            MojiConverter converter = new MojiConverter();
-            if (!detector.hasKana(mediaInfo.getTitle()) && detector.hasLatin(mediaInfo.getTitle())) {
-                try {
-                    hiraganaMediaInfo = mediaInfo.clone();
-                    hiraganaMediaInfo.setTitle(converter.convertRomajiToHiragana(mediaInfo.getTitle()));
-                    if (detector.hasLatin(hiraganaMediaInfo.getTitle())) {
-                        GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
-                        lyricsDatabase.close();
-                        return null;
-                    }
-                    currentResult = searchLyricsResultByInfo(hiraganaMediaInfo, requireTranslate);
-                } catch (CloneNotSupportedException e) {
-                    e.fillInStackTrace();
-                }
-                // Log.d(TAG, "newSearchInfo:" + new SimpleSongInfo(mediaMetadata))
-
-                if (currentResult == null) {
-                    mediaInfo.setTitle(converter.convertRomajiToKatakana(mediaInfo.getTitle()));
-                    // Log.d(TAG, "newSearchInfo:" + new SimpleSongInfo(mediaMetadata));
-                    currentResult = searchLyricsResultByInfo(mediaInfo, requireTranslate);
-                }
-
-            }
-            if (currentResult == null) {
-                GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
-                lyricsDatabase.insertLyricIntoDatabase(null, mediaInfo, packageName);
-                lyricsDatabase.close();
-                return null;
-            }
-        }
-        String allLyrics;
-        if (requireTranslate) {
-            if (currentResult.mTranslatedLyric != null) {
-                allLyrics = LyricUtils.getAllLyrics(false, currentResult.mTranslatedLyric);
-            } else {
-                allLyrics = LyricUtils.getAllLyrics(false, currentResult.mLyric);
-            }
+            return LyricUtils.parseLyric(currentResult);
         } else {
-            allLyrics = LyricUtils.getAllLyrics(false, currentResult.mLyric);
+            GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
+            return null;
         }
-
-        if (Objects.equals(sysLang, "zh-CN") && !CheckLanguageUtil.isJapanese(allLyrics)) {
-            if (currentResult.mTranslatedLyric != null) {
-                currentResult.mTranslatedLyric = ZhConverterUtil.toSimple(currentResult.mTranslatedLyric);
-            } else {
-                currentResult.mLyric = ZhConverterUtil.toSimple(currentResult.mLyric);
-            }
-        } else if (Objects.equals(sysLang, "zh-TW") && !CheckLanguageUtil.isJapanese(allLyrics)) {
-            if (currentResult.mTranslatedLyric != null) {
-                currentResult.mTranslatedLyric = ZhConverterUtil.toTraditional(currentResult.mTranslatedLyric);
-            } else {
-                currentResult.mLyric = ZhConverterUtil.toTraditional(currentResult.mLyric);
-            }
-        }
-
-        if (lyricsDatabase.insertLyricIntoDatabase(currentResult, mediaInfo, packageName)) {
-            GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
-            lyricsDatabase.close();
-            currentResult.mOrigin = ILrcProvider.Origin.INTERNET;
-            return LyricUtils.parseLyric(currentResult, currentResult.mResultInfo);
-        }
-        GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, null));
-        lyricsDatabase.close();
-        return null;
     }
 
-    private static ILrcProvider.LyricResult searchLyricsResultByInfo(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate) {
-        ILrcProvider.LyricResult currentResult = null;
+    private static void searchLyricsResultByInfo(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate, Long originId, String sysLang) {
+        String bestMatchSource = null;
+        long bestMatchDistance = 0;
         for (ILrcProvider provider : providers) {
             try {
                 ILrcProvider.LyricResult lyricResult = provider.getLyric(mediaInfo, requireTranslate);
                 if (lyricResult != null) {
-                    if (LyricSearchUtil.isLyricContent(lyricResult.mLyric) && (currentResult == null || currentResult.mDistance > lyricResult.mDistance)) {
-                        currentResult = lyricResult;
+                    String allLyrics;
+                    if (requireTranslate && lyricResult.mTranslatedLyric != null) {
+                        allLyrics = LyricUtils.getAllLyrics(false, lyricResult.mTranslatedLyric);
+                    } else {
+                        allLyrics = LyricUtils.getAllLyrics(false, lyricResult.mLyric);
+                    }
+                    if (!CheckLanguageUtil.isJapanese(allLyrics)) {
+                        switch (sysLang) {
+                            case "zh-CN":
+                                if (requireTranslate && lyricResult.mTranslatedLyric != null) {
+                                    lyricResult.mTranslatedLyric = ZhConverterUtil.toSimple(lyricResult.mTranslatedLyric);
+                                } else {
+                                    lyricResult.mLyric = ZhConverterUtil.toSimple(lyricResult.mLyric);
+                                }
+                                break;
+                            case "zh-TW":
+                                if (requireTranslate && lyricResult.mTranslatedLyric != null) {
+                                    lyricResult.mTranslatedLyric = ZhConverterUtil.toTraditional(lyricResult.mTranslatedLyric);
+                                } else {
+                                    lyricResult.mLyric = ZhConverterUtil.toTraditional(lyricResult.mLyric);
+                                }
+                            default:
+                                break;
+                        }
+                    }
+                    ResultManager.insertResultData(originId, lyricResult);
+                    if (LyricSearchUtil.isLyricContent(lyricResult.mLyric) && (bestMatchSource == null || bestMatchDistance > lyricResult.mDistance)) {
+                        bestMatchSource = lyricResult.mSource;
                     }
                 }
             } catch (IOException e) {
                 e.fillInStackTrace();
             }
         }
-        return currentResult;
+        Result bestMatchResult = ResultManager.getResultByOriginIdAndProvider(originId, bestMatchSource);
+        if (bestMatchResult != null) {
+            ActiveManager.insertActiveLog(originId, bestMatchResult.getId());
+        }
+    }
+
+    private static Pair<ILrcProvider.LyricResult, Long> getActiveLyricFromDatabase(ILrcProvider.MediaInfo mediaInfo, String packageName) {
+        Long originId = OriginManager.insertOrGetMediaInfoId(mediaInfo, packageName);
+        ILrcProvider.LyricResult lyricResult = getActiveLyricFromDatabaseByOriginId(originId);
+        return new Pair<>(lyricResult, originId);
+    }
+
+    private static ILrcProvider.LyricResult getActiveLyricFromDatabaseByOriginId(Long originId) {
+        Long resultId = ActiveManager.getResultIdByOriginId(originId);
+        if (resultId == null) {return null;}
+        return new ILrcProvider.LyricResult(ResultManager.getResultDataById(resultId));
     }
 }

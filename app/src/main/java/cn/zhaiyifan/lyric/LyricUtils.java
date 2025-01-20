@@ -54,6 +54,10 @@ public class LyricUtils {
         return parseLyric(lyricResult, new ILrcProvider.MediaInfo(mediaMetadata));
     }
 
+    public static Lyric parseLyric(ILrcProvider.LyricResult lyricResult) {
+        return parseLyric(lyricResult, lyricResult.mResultInfo);
+    }
+
     public static Lyric parseLyric(ILrcProvider.LyricResult lyricResult, ILrcProvider.MediaInfo mediaInfo) {
         if (lyricResult.mLyric == null) return null;
         Lyric lyric = new Lyric();

@@ -211,6 +211,7 @@ public class MusicListenerService extends NotificationListenerService {
              bindMediaListeners();
         };
         playInfo = new CSLyricHelper.PlayInfo(drawBase64, getPackageName());
+        DatabaseHelper.init(getApplicationContext());
         mGetResultObserver = data -> {
             mCurrentResult = data;
             mLyricNotification = buildLrcNotification(data);
@@ -292,7 +293,7 @@ public class MusicListenerService extends NotificationListenerService {
         if (mCurrentResult.getResult().mResultInfo.getAlbum() != null) {
             contentTextResult += " - " +  mCurrentResult.getResult().mResultInfo.getAlbum();
         }
-        contentTextResult += "\n" + String.format("Source: %s (%s)", mCurrentResult.getResult().mSource, mCurrentResult.getResult().mOrigin.getCapitalizedName());
+        contentTextResult += "\n" + String.format("Source: %s (%s)", mCurrentResult.getResult().mSource, mCurrentResult.getResult().mDataOrigin.getCapitalizedName());
         return contentTextResult;
     }
 

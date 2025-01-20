@@ -1,0 +1,30 @@
+CREATE TABLE origin (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    artist TEXT NOT NULL,
+    album TEXT,
+    duration INTEGER,
+    package_name TEXT,
+    added_date INTEGER DEFAULT (strftime('%s', 'now')) NOT NULL, -- UTC
+    UNIQUE (title, artist, album, package_name)
+);
+
+insertMediaInfo:
+INSERT INTO origin (title, artist, album, duration, package_name)
+VALUES (?, ?, ?, ?, ?);
+
+getMediaInfoId:
+SELECT id
+FROM origin
+WHERE title = ? AND artist = ?
+  AND (album = ? OR album IS NULL)
+  AND package_name = ?;
+
+getInfoById:
+SELECT *
+FROM origin
+WHERE id = ?
+LIMIT 1;
+
+getLastInsertId:
+SELECT last_insert_rowid() AS id;

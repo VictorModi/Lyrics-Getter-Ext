@@ -1,0 +1,44 @@
+CREATE TABLE result (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    origin_id INTEGER NOT NULL,
+    provider TEXT NOT NULL,
+    lyric TEXT NOT NULL,
+    translated_lyric TEXT,
+    title TEXT,
+    artist TEXT,
+    album TEXT,
+    distance INTEGER,
+    lyric_offset INTEGER DEFAULT 0 NOT NULL,
+    added_date INTEGER DEFAULT (strftime('%s', 'now')) NOT NULL, -- UTC
+    FOREIGN KEY (origin_id) REFERENCES origin (id) ON DELETE CASCADE,
+    UNIQUE(provider, origin_id)
+);
+
+insertResult:
+INSERT INTO result (origin_id, provider, lyric, translated_lyric, distance, title, artist, album)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+getResultByIdAndProvider:
+SELECT *
+FROM result
+WHERE origin_id = ? AND provider = ?
+LIMIT 1;
+
+getResultByOriginId:
+SELECT *
+FROM result
+WHERE origin_id = ?;
+
+getResultById:
+SELECT *
+FROM result
+WHERE id = ?
+LIMIT 1;
+
+updateLyricOffset:
+UPDATE result
+SET lyric_offset = ?
+WHERE id = ?;
+
+getLastInsertId:
+SELECT last_insert_rowid() AS id;
