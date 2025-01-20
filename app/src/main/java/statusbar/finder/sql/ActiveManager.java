@@ -2,7 +2,6 @@ package statusbar.finder.sql;
 
 import statusbar.finder.ActiveQueries;
 import statusbar.finder.DatabaseHelper;
-import statusbar.finder.OriginQueries;
 
 /**
  * LyricGetterExt - statusbar.finder.sql
@@ -15,10 +14,9 @@ import statusbar.finder.OriginQueries;
 public class ActiveManager {
     private static ActiveQueries queries = null;
 
-    public static Long insertActiveLog(Long originId, Long resultId) {
+    public static void insertActiveLog(Long originId, Long resultId) {
         if (queries == null) {queries = DatabaseHelper.getDatabase().getActiveQueries();}
         queries.insertActive(originId, resultId);
-        return queries.getLastInsertId().executeAsOne();
     }
 
     public static void updateActiveLog(Long originId, Long resultId) {

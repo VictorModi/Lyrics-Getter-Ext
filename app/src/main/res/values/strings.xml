@@ -32,4 +32,6 @@
         <item>translated</item>
         <item>both</item>
     </string-array>
+    <string name="force_repeat_title">Forced Repeat Lyrics</string>
+    <string name="force_repeat_summary">Randomly add zero-width spaces in the middle of repeating lyrics</string>
 </resources>

@@ -13,4 +13,6 @@
     <string name="toast_cannot_start_lyricsgetter">很抱歉， Lyrics Getter 启动失败。请检查是否正确安装LyricsGetter。</string>
     <string name="toast_cannot_get_rules">很抱歉，忽略应用规则更新失败，请检查您的网络配置。</string>
     <string name="toast_get_notification_permission">未获取到通知权限，请在下一界面允许本应用的通知权限。</string>
+    <string name="force_repeat_title">强制重复歌词</string>
+    <string name="force_repeat_summary">在重复的歌词中间随机加入零宽空格</string>
 </resources>

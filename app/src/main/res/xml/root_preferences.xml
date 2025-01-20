@@ -13,11 +13,16 @@
         />
         <ListPreference
             android:key="translate_type"
-            android:title="原译文双层歌词"
-            android:summary="仅供简中 墨•息 用户。"
+            android:title="原译文歌词"
+            android:summary="仅供简中用户。"
             android:entries="@array/translate_choose_display"
             android:entryValues="@array/translate_choose_value"
             android:defaultValue="origin"
+        />
+        <SwitchPreference
+            android:title="@string/force_repeat_title"
+            android:summary="@string/force_repeat_summary"
+            android:key="force_repeat"
         />
         <statusbar.finder.preferences.PackageListPreference
             android:title="@string/target_apps_title"
