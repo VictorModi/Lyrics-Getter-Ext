@@ -81,6 +81,7 @@ public class LrcGetter {
 
 
         if (currentResult != null) {
+            currentResult.mDataOrigin = ILrcProvider.DataOrigin.INTERNET;
             GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
             return LyricUtils.parseLyric(currentResult);
         } else {
