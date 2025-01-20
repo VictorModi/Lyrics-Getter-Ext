@@ -148,6 +148,8 @@ public class SettingsActivity extends FragmentActivity {
             mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED);
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS);
             mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_TRANSLATE_TYPE);
+
+            mConnectionStatusPreference.notifyDependencyChange(true);
 //            try {
 //                mNotificationFields[0] =
 //                        Notification.class.getDeclaredField("FLAG_ALWAYS_SHOW_TICKER").getInt(null);
@@ -191,6 +193,7 @@ public class SettingsActivity extends FragmentActivity {
         @Override
         public void onResume() {
             super.onResume();
+
             mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
             if (mEnabledPreference != null) {
                 mEnabledPreference.setChecked(isNotificationListenerEnabled(getContext()));

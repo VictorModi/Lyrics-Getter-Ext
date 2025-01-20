@@ -4,9 +4,10 @@
 <!-- <img src="https://github.com/VictorModi/LyricsGetterExt/edit/main/icon.svg" alt="icon" width="500"> -->
 <img src="https://raw.githubusercontent.com/VictorModi/Lyrics-Getter-Ext/main/icon.svg" alt="icon" width="150">
 <p>LyricsGetter · 擴充</p>
-</div>
 
 ( [English](https://github.com/VictorModi/LyricsGetterExt/blob/main/README.md) / [简体中文](https://github.com/VictorModi/LyricsGetterExt/blob/main/docs/README_zh-CN.md) / 繁體中文 )
+</div>
+
 
 # 這是什麼？
 這是一個用於獲取網絡歌詞的軟體。

@@ -3,9 +3,9 @@
 <div align="center">
     <img src="https://raw.githubusercontent.com/VictorModi/Lyrics-Getter-Ext/main/icon.svg" alt="icon" width="150">
     <p>LyricsGetter · 扩展</p>
-</div>
 
 ( [English](https://github.com/VictorModi/LyricsGetterExt/blob/main/README.md) / 简体中文 / [繁體中文](https://github.com/VictorModi/LyricsGetterExt/blob/main/docs/README_zh-TW.md) )
+</div>
 
 # 这是什么 ?
 这是一个用于获取网络歌词的软件。

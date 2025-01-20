@@ -3,9 +3,11 @@
 <div align="center">
     <img src="https://raw.githubusercontent.com/VictorModi/Lyrics-Getter-Ext/main/icon.svg" alt="icon" width="150">
     <p>Lyrics Getter · Ext</p>
-</div>
 
 ( English / [简体中文](https://github.com/VictorModi/LyricsGetterExt/blob/main/docs/README_zh-CN.md) / [繁體中文](https://github.com/VictorModi/LyricsGetterExt/blob/main/docs/README_zh-TW.md) )
+</div>
+
+
 
 # What's this ?
 It's a program to get internet lyrics.
