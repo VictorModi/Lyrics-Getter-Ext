@@ -79,6 +79,6 @@ public class QQMusicProvider implements ILrcProvider {
             }
         }
         if (currentMID.isEmpty()) {return null;}
-        return new Pair<>(String.format(Locale.getDefault(), QM_LRC_URL_FORMAT, currentMID), new MediaInfo(resultSoundName, resultSingers.join(", "), resultAlbumName, minDistance, -1));
+        return new Pair<>(String.format(Locale.getDefault(), QM_LRC_URL_FORMAT, currentMID), new MediaInfo(resultSoundName, LyricSearchUtil.parseArtists(resultSingers, "name"), resultAlbumName, minDistance, -1));
     }
 }
