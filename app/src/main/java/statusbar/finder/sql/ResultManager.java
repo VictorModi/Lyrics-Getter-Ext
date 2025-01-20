@@ -1,5 +1,6 @@
 package statusbar.finder.sql;
 
+import android.database.sqlite.SQLiteConstraintException;
 import statusbar.finder.DatabaseHelper;
 import statusbar.finder.Result;
 import statusbar.finder.ResultQueries;
@@ -18,20 +19,23 @@ import java.util.List;
 public class ResultManager {
     private static ResultQueries queries = null;
 
-    public static Long insertResultData(Long originId, ILrcProvider.LyricResult lyricResult) {
+    public static void insertResultData(Long originId, ILrcProvider.LyricResult lyricResult) {
         if (queries == null) { queries = DatabaseHelper.getDatabase().getResultQueries(); }
         assert lyricResult.mResultInfo != null;
-        queries.insertResult(
-                originId,
-                lyricResult.mSource,
-                lyricResult.mLyric,
-                lyricResult.mTranslatedLyric,
-                lyricResult.mDistance,
-                lyricResult.mResultInfo.getTitle(),
-                lyricResult.mResultInfo.getArtist(),
-                lyricResult.mResultInfo.getAlbum()
-        );
-        return queries.getLastInsertId().executeAsOne();
+        try {
+            queries.insertResult(
+                    originId,
+                    lyricResult.mSource,
+                    lyricResult.mLyric,
+                    lyricResult.mTranslatedLyric,
+                    lyricResult.mDistance,
+                    lyricResult.mResultInfo.getTitle(),
+                    lyricResult.mResultInfo.getArtist(),
+                    lyricResult.mResultInfo.getAlbum()
+            );
+        } catch (SQLiteConstraintException e) {
+            e.fillInStackTrace();
+        }
     }
 
     public static List<Result> getResultDatByOriginId(Long originId) {

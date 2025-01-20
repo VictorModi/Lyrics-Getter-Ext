@@ -1,6 +1,7 @@
 package statusbar.finder.sql;
 
 import LyricGetterExt.Database;
+import android.database.sqlite.SQLiteConstraintException;
 import statusbar.finder.DatabaseHelper;
 import statusbar.finder.Origin;
 import statusbar.finder.OriginQueries;
@@ -21,15 +22,20 @@ public class OriginManager {
         if (queries == null) {queries = DatabaseHelper.getDatabase().getOriginQueries();}
         Long result = getMediaInfoId(mediaInfo, packageName);
         if (result != null) {return result;}
-        queries.insertMediaInfo(
-                mediaInfo.getTitle(),
-                mediaInfo.getArtist(),
-                mediaInfo.getAlbum(),
-                mediaInfo.getDuration(),
-                packageName
-        );
-        result = queries.getLastInsertId().executeAsOne();
-        return result;
+        try {
+            queries.insertMediaInfo(
+                    mediaInfo.getTitle(),
+                    mediaInfo.getArtist(),
+                    mediaInfo.getAlbum(),
+                    mediaInfo.getDuration(),
+                    packageName
+            );
+            result = queries.getLastInsertId().executeAsOne();
+            return result;
+        } catch (SQLiteConstraintException e) {
+            e.fillInStackTrace();
+            return (long) -1;
+        }
     }
 
     private static Long getMediaInfoId(ILrcProvider.MediaInfo mediaInfo, String packageName) {
