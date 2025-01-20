@@ -134,8 +134,8 @@ public class LrcGetter {
                 e.fillInStackTrace();
             }
         }
-        Result bestMatchResult = ResultManager.getResultByOriginIdAndProvider(originId, bestMatchSource);
-        if (bestMatchResult != null) {
+        if (bestMatchSource != null) {
+            Result bestMatchResult = ResultManager.getResultByOriginIdAndProvider(originId, bestMatchSource);
             ActiveManager.insertActiveLog(originId, bestMatchResult.getId());
         }
     }
