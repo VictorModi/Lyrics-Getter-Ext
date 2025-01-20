@@ -95,10 +95,13 @@ public class MusicListenerService extends NotificationListenerService {
     private final Runnable mLyricUpdateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mMediaController == null || Objects.requireNonNull(mMediaController.getPlaybackState()).getState() != PlaybackState.STATE_PLAYING) {
+            if (mMediaController == null ||
+                    mMediaController.getPlaybackState() == null ||
+                    mMediaController.getPlaybackState().getState() != PlaybackState.STATE_PLAYING) {
                 stopLyric();
                 return;
             }
+
             updateLyric(mMediaController.getPlaybackState().getPosition());
             mHandler.postDelayed(mLyricUpdateRunnable, 250);
         }
