@@ -57,6 +57,9 @@ public class LrcGetter {
         if (currentResult == null) {
             searchLyricsResultByInfo(mediaInfo, requireTranslate, databaseResult.second, sysLang);
             currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second);
+        } else {
+            GetResult.getInstance().notifyResult(new GetResult.Data(mediaInfo, currentResult));
+            return LyricUtils.parseLyric(currentResult);
         }
 
         if (currentResult == null && (!detector.hasKana(mediaInfo.getTitle()) && detector.hasLatin(mediaInfo.getTitle()))) {
