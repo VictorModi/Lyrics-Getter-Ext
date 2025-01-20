@@ -147,85 +147,86 @@ public class LyricUtils {
     }
 
     private static boolean parseLine(List<Sentence> sentenceList, String line, Lyric lyric) {
-        int lineLength = line.length();
+        if (line == null || line.isEmpty()) {
+            return false;
+        }
         line = line.trim();
-        int openBracketIndex, closedBracketIndex;
-        openBracketIndex = line.indexOf('[');
+        int lineLength = line.length();
+        int openBracketIndex = line.indexOf('[');
 
         while (openBracketIndex != -1) {
-            closedBracketIndex = line.indexOf(']', openBracketIndex);
-            // (1) ']' does not exist, (2) is the first character
-            if (closedBracketIndex < 1)
+            int closedBracketIndex = line.indexOf(']', openBracketIndex);
+            if (closedBracketIndex < 1) {
                 return false;
+            }
+
             String closedTag = line.substring(openBracketIndex + 1, closedBracketIndex);
-            String[] colonSplited = closedTag.split(":", 2);
-            if (colonSplited.length >= 2) {
-                if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_TITLE)) {
-                    lyric.title = colonSplited[1].trim();
-                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_ARTIST)) {
-                    lyric.artist = colonSplited[1].trim();
-                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_ALBUM)) {
-                    lyric.album = colonSplited[1].trim();
-                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_LRCFILE)) {
-                    lyric.by = colonSplited[1].trim();
-                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_SONGTEXT)) {
-                    lyric.author = colonSplited[1].trim();
-                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_LENGTH)) {
-                    lyric.length = parseTime(colonSplited[1].trim(), lyric);
-                } else if (colonSplited[0].equalsIgnoreCase(Constants.ID_TAG_OFFSET)) {
-                    lyric.offset = parseOffset(colonSplited[1].trim());
+            String[] colonSplit = closedTag.split(":", 2);
+
+            if (colonSplit.length >= 2) {
+                // 标签解析逻辑
+                if (colonSplit[0].equalsIgnoreCase(Constants.ID_TAG_TITLE)) {
+                    lyric.title = colonSplit[1].trim();
+                } else if (colonSplit[0].equalsIgnoreCase(Constants.ID_TAG_ARTIST)) {
+                    lyric.artist = colonSplit[1].trim();
+                } else if (colonSplit[0].equalsIgnoreCase(Constants.ID_TAG_ALBUM)) {
+                    lyric.album = colonSplit[1].trim();
+                } else if (colonSplit[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_LRCFILE)) {
+                    lyric.by = colonSplit[1].trim();
+                } else if (colonSplit[0].equalsIgnoreCase(Constants.ID_TAG_CREATOR_SONGTEXT)) {
+                    lyric.author = colonSplit[1].trim();
+                } else if (colonSplit[0].equalsIgnoreCase(Constants.ID_TAG_LENGTH)) {
+                    lyric.length = parseTime(colonSplit[1].trim(), lyric);
+                } else if (colonSplit[0].equalsIgnoreCase(Constants.ID_TAG_OFFSET)) {
+                    lyric.offset = parseOffset(colonSplit[1].trim());
                 } else {
-                    if (Character.isDigit(colonSplited[0].charAt(0))) {
-                        List<Long> timestampList = new LinkedList<Long>();
+                    // 时间戳解析逻辑
+                    if (Character.isDigit(colonSplit[0].charAt(0))) {
+                        List<Long> timestampList = new LinkedList<>();
                         long time = parseTime(closedTag, lyric);
                         if (time != -1) {
                             timestampList.add(time);
                         }
-                        //Log.d(TAG, line);
-                        // We may have line like [01:38.33][01:44.01][03:22.05]Test Test
-                        // [03:55.00]
-//                        while ((lineLength > closedBracketIndex + 2)
-//                                && (line.charAt(closedBracketIndex + 1) == '[')) {
-//                            //Log.d(TAG, String.valueOf(closedBracketIndex));
-//                            int nextOpenBracketIndex = closedBracketIndex + 1;
-//                            int nextClosedBracketIndex = line.indexOf(']', nextOpenBracketIndex + 1);
-//                            time = parseTime(line.substring(nextOpenBracketIndex + 1, nextClosedBracketIndex), lyric);
-//                            if (time != -1) {
-//                                timestampList.add(time);
-//                            }
-//                            closedBracketIndex = nextClosedBracketIndex;
-//                        }
-                        while ((lineLength > closedBracketIndex + 2)
-                                && (closedBracketIndex + 1 < lineLength)
-                                && (line.charAt(closedBracketIndex + 1) == '[')) {
+
+                        while (closedBracketIndex + 2 < lineLength
+                                && closedBracketIndex + 1 < lineLength
+                                && line.charAt(closedBracketIndex + 1) == '[') {
                             int nextOpenBracketIndex = closedBracketIndex + 1;
                             int nextClosedBracketIndex = line.indexOf(']', nextOpenBracketIndex + 1);
+
                             if (nextClosedBracketIndex == -1 || nextClosedBracketIndex <= nextOpenBracketIndex + 1) {
+                                break; // 不合法的索引或找不到匹配的 ']'
+                            }
+
+                            try {
+                                String timeString = line.substring(nextOpenBracketIndex + 1, nextClosedBracketIndex);
+                                time = parseTime(timeString, lyric);
+                                if (time != -1) {
+                                    timestampList.add(time);
+                                }
+                            } catch (StringIndexOutOfBoundsException e) {
+                                e.printStackTrace();
                                 break;
                             }
-                            time = parseTime(line.substring(nextOpenBracketIndex + 1, nextClosedBracketIndex), lyric);
-                            if (time != -1) {
-                                timestampList.add(time);
-                            }
+
                             closedBracketIndex = nextClosedBracketIndex;
                         }
 
-
-                        String content = line.substring(closedBracketIndex + 1);
+                        String content = line.substring(closedBracketIndex + 1).trim();
                         for (long timestamp : timestampList) {
                             lyric.addSentence(sentenceList, content, timestamp);
                         }
                     } else {
-                        // Ignore unknown tag
-                        return true;
+                        return true; // 忽略未知标签
                     }
                 }
             }
-            // We may have line like [00:53.60]On a dark [00:54.85]desert highway
+
             openBracketIndex = line.indexOf('[', closedBracketIndex + 1);
         }
         return true;
     }
+
 
     /**
      * 把如00:00.00这样的字符串转化成 毫秒数的时间，比如 01:10.34就是一分钟加上10秒再加上340毫秒 也就是返回70340毫秒
