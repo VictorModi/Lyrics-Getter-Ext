@@ -163,6 +163,7 @@ public class SettingsActivity extends FragmentActivity {
 
             if (mConnectionStatusPreference != null){
                 mConnectionStatusPreference.setSummary(String.valueOf(lyricsGetterApiHasEnable));
+                mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
                 mConnectionStatusPreference.setOnPreferenceClickListener(this);
             }
             if (mEnabledPreference != null) {
@@ -190,6 +191,7 @@ public class SettingsActivity extends FragmentActivity {
         @Override
         public void onResume() {
             super.onResume();
+            mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
             if (mEnabledPreference != null) {
                 mEnabledPreference.setChecked(isNotificationListenerEnabled(getContext()));
             }

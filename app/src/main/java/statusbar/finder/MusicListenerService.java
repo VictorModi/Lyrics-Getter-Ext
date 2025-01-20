@@ -77,6 +77,7 @@ public class MusicListenerService extends NotificationListenerService {
     private SharedPreferences offsetPreferences;
     private SharedPreferences translationStatusReferences;
     public String musicInfo;
+    public CSLyricHelper.PlayInfo playInfo;
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -206,7 +207,7 @@ public class MusicListenerService extends NotificationListenerService {
              updateTargetPackageList();
              bindMediaListeners();
         };
-
+        playInfo = new CSLyricHelper.PlayInfo(drawBase64, getPackageName());
         mGetResultObserver = data -> {
             mCurrentResult = data;
             mLyricNotification = buildLrcNotification(data);
@@ -338,6 +339,8 @@ public class MusicListenerService extends NotificationListenerService {
         mHandler.removeCallbacks(mLyricUpdateRunnable);
         mNotificationManager.cancel(NOTIFICATION_ID_LRC);
         lyricsGetterApi.clearLyric();
+        playInfo.isPlaying = false;
+        CSLyricHelper.pause(getApplicationContext(), playInfo);
     }
 
     public Lyric getLyric(){
@@ -422,9 +425,10 @@ public class MusicListenerService extends NotificationListenerService {
                     delay // 单位: 秒 (Second)
                     // 文档里写毫秒骗人呢，别信，信我，我怎么可能骗你呢
             ));
+            playInfo.isPlaying = true;
             CSLyricHelper.updateLyric(
                     getApplicationContext(),
-                    new CSLyricHelper.PlayInfo(drawBase64, getPackageName()),
+                    playInfo,
                     new CSLyricHelper.LyricData(curLyric)
             );
             mLyricNotification.tickerText = curLyric;
