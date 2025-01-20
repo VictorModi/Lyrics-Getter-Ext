@@ -184,17 +184,32 @@ public class LyricUtils {
                         //Log.d(TAG, line);
                         // We may have line like [01:38.33][01:44.01][03:22.05]Test Test
                         // [03:55.00]
+//                        while ((lineLength > closedBracketIndex + 2)
+//                                && (line.charAt(closedBracketIndex + 1) == '[')) {
+//                            //Log.d(TAG, String.valueOf(closedBracketIndex));
+//                            int nextOpenBracketIndex = closedBracketIndex + 1;
+//                            int nextClosedBracketIndex = line.indexOf(']', nextOpenBracketIndex + 1);
+//                            time = parseTime(line.substring(nextOpenBracketIndex + 1, nextClosedBracketIndex), lyric);
+//                            if (time != -1) {
+//                                timestampList.add(time);
+//                            }
+//                            closedBracketIndex = nextClosedBracketIndex;
+//                        }
                         while ((lineLength > closedBracketIndex + 2)
+                                && (closedBracketIndex + 1 < lineLength)
                                 && (line.charAt(closedBracketIndex + 1) == '[')) {
-                            //Log.d(TAG, String.valueOf(closedBracketIndex));
                             int nextOpenBracketIndex = closedBracketIndex + 1;
                             int nextClosedBracketIndex = line.indexOf(']', nextOpenBracketIndex + 1);
+                            if (nextClosedBracketIndex == -1 || nextClosedBracketIndex <= nextOpenBracketIndex + 1) {
+                                break;
+                            }
                             time = parseTime(line.substring(nextOpenBracketIndex + 1, nextClosedBracketIndex), lyric);
                             if (time != -1) {
                                 timestampList.add(time);
                             }
                             closedBracketIndex = nextClosedBracketIndex;
                         }
+
 
                         String content = line.substring(closedBracketIndex + 1);
                         for (long timestamp : timestampList) {
