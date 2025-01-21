@@ -27,6 +27,11 @@ android {
     }
     namespace = 'statusbar.finder'
 
+
+    buildFeatures {
+        buildConfig = true
+        compose = true
+    }
 }
 
 dependencies {

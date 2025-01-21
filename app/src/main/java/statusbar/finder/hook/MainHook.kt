@@ -1,12 +1,12 @@
 package statusbar.finder.hook
 
-import cn.lyric.getter.api.BuildConfig
 import cn.xiaowine.xkt.LogTool
 import cn.xiaowine.xkt.LogTool.log
 import com.github.kyuubiran.ezxhelper.EzXHelper
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage
+import statusbar.finder.BuildConfig
 
 /**
  * LyricGetterExt - statusbar.finder.hook
