@@ -1,12 +1,14 @@
 package statusbar.finder.hook
 
-import cn.xiaowine.xkt.LogTool
-import cn.xiaowine.xkt.LogTool.log
 import com.github.kyuubiran.ezxhelper.EzXHelper
+import com.github.kyuubiran.ezxhelper.Log
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage
+
+
 import statusbar.finder.BuildConfig
+import statusbar.finder.hook.app.SystemUI
 
 /**
  * LyricGetterExt - statusbar.finder.hook
@@ -17,8 +19,11 @@ import statusbar.finder.BuildConfig
  */
 abstract class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        LogTool.init("Lyrics Getter Ext", { BuildConfig.DEBUG }, BuildConfig.DEBUG)
-        if (lpparam.packageName != "com.android.systemui") return
+//        LogTool.init("Lyrics Getter Ext", { BuildConfig.DEBUG }, true)
+        when (lpparam.packageName) {
+            "com.android.systemui" -> initHooks(SystemUI)
+            else -> return
+        }
     }
 
     override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
@@ -31,10 +36,10 @@ abstract class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 if (it.isInit) return@forEach
                 it.init()
                 it.isInit = true
-                "Inited hook: ${it.javaClass.name}".log()
+                Log.i("Init hook ${it.javaClass.name} completed")
             } catch (e: Exception) {
                 e.printStackTrace()
-                "Init hook ${it.javaClass.name} failed".log()
+                Log.i("Init hook ${it.javaClass.name} failed")
             }
         }
     }

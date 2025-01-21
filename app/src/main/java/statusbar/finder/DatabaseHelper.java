@@ -11,7 +11,7 @@ public class DatabaseHelper {
     private static LyricDatabase database;
 
     public static synchronized void init(Context context) {
-        if (database != null) {return;}
+        if (database != null || context == null) {return;}
         SqlDriver driver = new AndroidSqliteDriver(LyricDatabase.Companion.getSchema(), context, DATABASE_NAME);
         database = LyricDatabase.Companion.invoke(driver);
     }
