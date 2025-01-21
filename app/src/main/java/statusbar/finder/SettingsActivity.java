@@ -131,7 +131,6 @@ public class SettingsActivity extends FragmentActivity {
 
         private SwitchPreference mEnabledPreference;
         private SwitchPreference mConnectionStatusPreference;
-        private SwitchPreference mForceRepeatPreference;
         private ListPreference mTranslateListPreference;
 
         @Override
@@ -149,7 +148,6 @@ public class SettingsActivity extends FragmentActivity {
             mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED);
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS);
             mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_TRANSLATE_TYPE);
-            mForceRepeatPreference = findPreference(Constants.PREFERENCE_KEY_FORCE_REPEAT);
             mConnectionStatusPreference.notifyDependencyChange(true);
 //            try {
 //                mNotificationFields[0] =
@@ -181,6 +179,7 @@ public class SettingsActivity extends FragmentActivity {
             Preference appInfoPreference = findPreference("app");
             if (appInfoPreference != null) {
                 appInfoPreference.setSummary(getAppVersionName(getContext()));
+                appInfoPreference.setEnabled(true);
             }
             PreferenceCategory aboutCategory = findPreference(Constants.PREFERENCE_KEY_ABOUT);
             if (aboutCategory != null) {
@@ -194,7 +193,6 @@ public class SettingsActivity extends FragmentActivity {
         @Override
         public void onResume() {
             super.onResume();
-
             mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
             if (mEnabledPreference != null) {
                 mEnabledPreference.setChecked(isNotificationListenerEnabled(getContext()));

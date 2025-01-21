@@ -1,6 +1,5 @@
 package statusbar.finder.sql;
 
-import LyricGetterExt.Database;
 import android.database.sqlite.SQLiteConstraintException;
 import statusbar.finder.DatabaseHelper;
 import statusbar.finder.Origin;
