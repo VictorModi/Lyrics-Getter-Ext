@@ -20,12 +20,12 @@ public class NeteaseProvider implements ILrcProvider {
     private static final String NETEASE_LRC_URL_FORMAT = NETEASE_BASE_URL + "song/lyric?os=pc&id=%d&lv=-1&kv=-1&tv=-1";
 
     @Override
-    public LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data), requireTranslate);
+    public LyricResult getLyric(MediaMetadata data) throws IOException {
+        return getLyric(new ILrcProvider.MediaInfo(data));
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate) throws IOException {
+    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
         String searchUrl = String.format(NETEASE_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo));
         Log.d("searchUrl", searchUrl);
         JSONObject searchResult;

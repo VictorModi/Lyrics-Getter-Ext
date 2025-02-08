@@ -1,24 +1,28 @@
-package statusbar.finder.livedata;
+package statusbar.finder.livedata
 
-import androidx.lifecycle.LiveData;
+import androidx.lifecycle.LiveData
 
 /**
  * LyricGetterExt - statusbar.finder.livedata
- * @description: Used for notifying observers about changes in the list of apps.
- * This LiveData emits a null value to indicate that the list of apps has been changed.
- * Singleton class, use getInstance() method to obtain the instance.
- * @author: VictorModi
- * @email: victormodi@outlook.com
- * @date: 2024/2/10 12:33
+ * @description TODO: coming soon.
+ * @author VictorModi
+ * @email victormodi@outlook.com
+ * @date 2025/2/8 19:55
  */
-public class AppsListChanged extends LiveData<Void> {
-    private static AppsListChanged instance;
+class AppsListChanged private constructor() : LiveData<Void?>() {
 
-    public static AppsListChanged getInstance() {
-        return instance != null ? instance : (instance = new AppsListChanged());
+    companion object {
+        @Volatile
+        private var instance: AppsListChanged? = null
+
+        fun getInstance(): AppsListChanged {
+            return instance ?: synchronized(this) {
+                instance ?: AppsListChanged().also { instance = it }
+            }
+        }
     }
 
-    public void notifyChange() {
-        setValue(null);
+    fun notifyChange() {
+        postValue(null)
     }
 }

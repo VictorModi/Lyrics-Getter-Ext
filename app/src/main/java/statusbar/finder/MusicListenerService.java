@@ -32,8 +32,9 @@ import cn.lyric.getter.api.tools.Tools;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
 import statusbar.finder.livedata.AppsListChanged;
-import statusbar.finder.livedata.GetResult;
-import statusbar.finder.livedata.LyricsChanged;
+import statusbar.finder.livedata.LyricsChange;
+import statusbar.finder.livedata.LyricsResultChange;
+import statusbar.finder.livedata.LyricSentenceUpdate;
 import statusbar.finder.misc.Constants;
 import statusbar.finder.provider.ILrcProvider;
 
@@ -53,14 +54,15 @@ public class MusicListenerService extends NotificationListenerService {
 
     private final ArrayList<String> mTargetPackageList = new ArrayList<>();
     private Observer<Void> mAppsListChangedObserver;
-    private Observer<GetResult.Data> mGetResultObserver;
+    private Observer<LyricsResultChange.Data> mGetResultObserver;
+    private Observer<LyricsChange.Data> mLyricsChangeObserver;
 
     private SharedPreferences mSharedPreferences;
 
     private Lyric mLyric;
     private String requiredLrcTitle;
     private Notification mLyricNotification;
-    private GetResult.Data mCurrentResult;
+    private LyricsResultChange.Data mCurrentResult;
     private ILrcProvider.MediaInfo mCurrentMediaInfo;
     private long mLastSentenceFromTime = -1;
 
@@ -70,8 +72,6 @@ public class MusicListenerService extends NotificationListenerService {
     private Thread curLrcUpdateThread;
     private API lyricsGetterApi;
     public static MusicListenerService instance;
-    private SharedPreferences offsetPreferences;
-    private SharedPreferences translationStatusReferences;
     public String musicInfo;
     public CSLyricHelper.PlayInfo playInfo;
     private static String lastLyric = "";
@@ -81,10 +81,7 @@ public class MusicListenerService extends NotificationListenerService {
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             if (msg.what == MSG_LYRIC_UPDATE_DONE && msg.getData().getString("title", "").equals(requiredLrcTitle)) {
-                mLyric = (Lyric) msg.obj;
-
-                if (mLyric == null) stopLyric();
-
+                LyricsChange.Companion.getInstance().notifyResult(new LyricsChange.Data((Lyric) msg.obj));
             }
         }
     };
@@ -133,7 +130,7 @@ public class MusicListenerService extends NotificationListenerService {
             requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
             mCurrentMediaInfo = new ILrcProvider.MediaInfo(metadata);
             if (curLrcUpdateThread == null || !curLrcUpdateThread.isAlive()) {
-                curLrcUpdateThread = new LrcUpdateThread(getApplicationContext(), mHandler, metadata, mMediaController.getPackageName(), mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false));
+                curLrcUpdateThread = new LrcUpdateThread(getApplicationContext(), mHandler, metadata, mMediaController.getPackageName());
                 curLrcUpdateThread.start();
             }
         }
@@ -194,8 +191,8 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
         instance = this;
-        offsetPreferences = getSharedPreferences("offset", MODE_PRIVATE);
-        translationStatusReferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
+//        offsetPreferences = getSharedPreferences("offset", MODE_PRIVATE);
+//        translationStatusReferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
         lyricsGetterApi = new API();
         drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         // Log.d("systemLanguage", systemLanguage);
@@ -207,6 +204,7 @@ public class MusicListenerService extends NotificationListenerService {
              updateTargetPackageList();
              bindMediaListeners();
         };
+
         playInfo = new CSLyricHelper.PlayInfo(drawBase64, getPackageName());
         DatabaseHelper.init(getApplicationContext());
         mGetResultObserver = data -> {
@@ -214,8 +212,13 @@ public class MusicListenerService extends NotificationListenerService {
             mLyricNotification = buildLrcNotification(data);
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
         };
-        AppsListChanged.getInstance().observeForever(mAppsListChangedObserver);
-        GetResult.getInstance().observeForever(mGetResultObserver);
+
+        mLyricsChangeObserver = data -> {
+            mLyric = data.getLyric();
+        };
+        AppsListChanged.Companion.getInstance().observeForever(mAppsListChangedObserver);
+        LyricsResultChange.Companion.getInstance().observeForever(mGetResultObserver);
+        LyricsChange.Companion.getInstance().observeForever(mLyricsChangeObserver);
         updateTargetPackageList();
         bindMediaListeners();
     }
@@ -224,8 +227,8 @@ public class MusicListenerService extends NotificationListenerService {
     public void onListenerDisconnected() {
         stopLyric();
         unBindMediaListeners();
-        AppsListChanged.getInstance().removeObserver(mAppsListChangedObserver);
-        GetResult.getInstance().removeObserver(mGetResultObserver);
+        AppsListChanged.Companion.getInstance().removeObserver(mAppsListChangedObserver);
+        LyricsResultChange.Companion.getInstance().removeObserver(mGetResultObserver);
         super.onListenerDisconnected();
     }
 
@@ -237,14 +240,14 @@ public class MusicListenerService extends NotificationListenerService {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_LRC);
         builder.setSmallIcon(R.drawable.ic_music).setOngoing(true);
         PendingIntent resultPendingIntent =
-                TaskStackBuilder.create(this).addNextIntentWithParentStack(new Intent(this, LrcView.class)).getPendingIntent(0,
+                TaskStackBuilder.create(this).addNextIntentWithParentStack(new Intent(this, LyricsActivity.class)).getPendingIntent(0,
                         PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         if (data != null) {
             String contentText = "Incorrect data type, please send this message to the developer.\nType: " + Object.class.getName();
-            if (data instanceof LyricsChanged.Data) {
-                contentText = notificationLyricsContentText((LyricsChanged.Data) data);
-            } else if (data instanceof GetResult.Data) {
-                contentText = notificationResultContentText((GetResult.Data) data);
+            if (data instanceof LyricSentenceUpdate.Data) {
+                contentText = notificationLyricsContentText((LyricSentenceUpdate.Data) data);
+            } else if (data instanceof LyricsResultChange.Data) {
+                contentText = notificationResultContentText((LyricsResultChange.Data) data);
             }
             builder.setContentText("Tap to View Details")
                     .setStyle(new NotificationCompat.BigTextStyle()
@@ -279,7 +282,7 @@ public class MusicListenerService extends NotificationListenerService {
         return notification;
     }
 
-    private String notificationResultContentText(GetResult.Data data) {
+    private String notificationResultContentText(LyricsResultChange.Data data) {
         if (data.getResult() == null) {
             return "Failed to retrieve lyrics! Bad luck!";
         }
@@ -294,7 +297,7 @@ public class MusicListenerService extends NotificationListenerService {
         return contentTextResult;
     }
 
-    private String notificationLyricsContentText(LyricsChanged.Data data) {
+    private String notificationLyricsContentText(LyricSentenceUpdate.Data data) {
         String contentTextResult = notificationResultContentText(mCurrentResult);
         String contentTextLyric = String.format("Lyric: %s", data.getLyric());
         if (data.getTranslatedLyric() != null) {
@@ -347,19 +350,6 @@ public class MusicListenerService extends NotificationListenerService {
     public Lyric getLyric(){
         return mLyric;
     }
-    public void sync(){
-        Lyric.Sentence sentence;
-        if (translationStatusReferences.getBoolean(musicInfo, false)) {
-            mLyric.offset = offsetPreferences.getInt(musicInfo + " ,tran", mLyric.offset);
-            sentence = LyricUtils.getSentence(mLyric.translatedSentenceList, mMediaController.getPlaybackState().getPosition(), 0, mLyric.offset);
-        } else {
-            mLyric.offset = offsetPreferences.getInt(musicInfo, mLyric.offset);
-            sentence = LyricUtils.getSentence(mLyric.sentenceList, mMediaController.getPlaybackState().getPosition(), 0, mLyric.offset);
-        }
-        if (sentence == null) {return;}
-        mLyricNotification.tickerText = sentence.content.trim();
-        mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
-    }
     private void updateLyric(long position) {
         if (mNotificationManager == null || mLyric == null) {
             return;
@@ -371,24 +361,11 @@ public class MusicListenerService extends NotificationListenerService {
                 + " ,By:" + mLyric.by
                 + " ,Author:" + mLyric.author
                 + " ,Length:" + mLyric.length;
-        if (translationStatusReferences.getBoolean(musicInfo, false))
-            mLyric.offset = offsetPreferences.getInt(musicInfo + " ,tran", mLyric.offset);
-        else
-            mLyric.offset = offsetPreferences.getInt(musicInfo, mLyric.offset);
-        Lyric.Sentence sentence;
-        if (translationStatusReferences.getBoolean(musicInfo, false) && !mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false))
-            sentence = LyricUtils.getSentence(mLyric.translatedSentenceList, position, 0, mLyric.offset);
-        else
-            sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0, mLyric.offset);
-        if (sentence == null) {
-            return;
-        }
-
+        Lyric.Sentence sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0 ,mLyric.offset);
+        if (sentence == null) return;
         int delay = calculateDelay(position);
         if (sentence.fromTime != mLastSentenceFromTime) {
-            if (sentence.content.isEmpty()) {
-                return;
-            }
+            if (sentence.content.isBlank()) return;
             String curLyric;
             String translateType = mSharedPreferences.getString(PREFERENCE_KEY_TRANSLATE_TYPE, "origin");
             Lyric.Sentence translatedSentence = getTranslatedSentence(position);
@@ -414,9 +391,12 @@ public class MusicListenerService extends NotificationListenerService {
             delay = Math.max(delay, 1);
             curLyric = mSharedPreferences.getBoolean(PREFERENCE_KEY_FORCE_REPEAT, false)
                     && lastLyric.equals(curLyric) ? insertZeroWidthSpace(curLyric) : curLyric;
-            LyricsChanged.Data data = new LyricsChanged.Data(
-                    sentence.content.trim(), translatedSentence != null ? translatedSentence.content.trim() : null, delay);
-            LyricsChanged.getInstance().notifyLyrics(data);
+            LyricSentenceUpdate.Data data = new LyricSentenceUpdate.Data(
+                    sentence.content.trim(),
+                    translatedSentence != null ? translatedSentence.content.trim() : null,
+                    LyricUtils.getSentenceIndex(mLyric.sentenceList, position, 0 ,mLyric.offset),
+                    delay);
+            LyricSentenceUpdate.Companion.getInstance().notifyLyrics(data);
             // mLyricNotification = buildLrcNotification(data);
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             // EventTools.INSTANCE.sendLyric(getApplicationContext(), curLyric, true, drawBase64, false, "", getPackageName(), delay);
@@ -489,21 +469,19 @@ public class MusicListenerService extends NotificationListenerService {
         private final MediaMetadata data;
         private final Context context;
         private final String packageName;
-        private final boolean requireTranslate;
 
-        public LrcUpdateThread(Context context, Handler handler, MediaMetadata data, String packageName, boolean requireTranslate) {
+        public LrcUpdateThread(Context context, Handler handler, MediaMetadata data, String packageName) {
             super();
             this.data = data;
             this.handler = handler;
             this.context = context;
             this.packageName = packageName;
-            this.requireTranslate = requireTranslate;
         }
 
         @Override
         public void run() {
             if (handler == null) return;
-            Lyric lrc = LrcGetter.getLyric(context, data, systemLanguage, packageName, requireTranslate);
+            Lyric lrc = LrcGetter.getLyric(context, data, systemLanguage, packageName);
             Message message = new Message();
             message.what = MSG_LYRIC_UPDATE_DONE;
             message.obj = lrc;

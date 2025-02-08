@@ -32,12 +32,12 @@ public class MusixMatchProvider implements ILrcProvider {
     private static String musixMatchUserToken;
 
     @Override
-    public LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data), requireTranslate);
+    public LyricResult getLyric(MediaMetadata data) throws IOException {
+        return getLyric(new ILrcProvider.MediaInfo(data));
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate) throws IOException {
+    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
         if (musixMatchUserToken  == null) {
             musixMatchUserToken = getMusixMatchUserToken(getRandomId());
             if (musixMatchUserToken  == null) {
@@ -92,7 +92,7 @@ public class MusixMatchProvider implements ILrcProvider {
                 result.mDistance = result.mDistance == 0 ? LyricSearchUtil.calculateSongInfoDistance(mediaInfo, soundName, artistName, albumName) : result.mDistance;
                 result.mSource = "MusixMatch";
                 result.mResultInfo = new MediaInfo(soundName, artistName, albumName, -1, result.mDistance);
-                if (requireTranslate){result.mTranslatedLyric = getTranslatedLyric(result.mLyric, trackId);}
+                result.mTranslatedLyric = getTranslatedLyric(result.mLyric, trackId);
                 return result;
             }
         } catch (JSONException e) {

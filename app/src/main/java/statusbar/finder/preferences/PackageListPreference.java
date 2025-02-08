@@ -96,7 +96,7 @@ public class PackageListPreference extends PreferenceCategory implements
         String packageListData;
         packageListData = String.join(";", mPackages);
         persistString(packageListData);
-        AppsListChanged.getInstance().notifyChange();
+        AppsListChanged.Companion.getInstance().notifyChange();
         // this.getContext().sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
         // LocalBroadcastManager.getInstance(this.getContext()).sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
     }

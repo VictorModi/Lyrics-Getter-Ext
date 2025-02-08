@@ -23,12 +23,12 @@ public class KugouProvider implements ILrcProvider {
     private static final String KUGOU_LRC_URL_FORMAT = KUGOU_BASE_URL + "download?ver=1&client=pc&id=%d&accesskey=%s&fmt=lrc&charset=utf8";
 
     @Override
-    public LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data), requireTranslate);
+    public LyricResult getLyric(MediaMetadata data) throws IOException {
+        return getLyric(new ILrcProvider.MediaInfo(data));
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate) throws IOException {
+    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
         String searchUrl = String.format(Locale.getDefault(), KUGOU_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo), mediaInfo.getDuration());
         JSONObject searchResult;
         try {

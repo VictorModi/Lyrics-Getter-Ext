@@ -21,12 +21,12 @@ public class QQMusicProvider implements ILrcProvider {
     private static final String QM_LRC_URL_FORMAT = QM_BASE_URL + "lyric/fcgi-bin/fcg_query_lyric_yqq.fcg?songmid=%s&format=json";
 
     @Override
-    public LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data), requireTranslate);
+    public LyricResult getLyric(MediaMetadata data) throws IOException {
+        return getLyric(new ILrcProvider.MediaInfo(data));
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo, boolean requireTranslate) throws IOException {
+    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
         String searchUrl = String.format(Locale.getDefault(), QM_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo));
         JSONObject searchResult;
         try {

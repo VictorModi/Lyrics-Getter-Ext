@@ -9,8 +9,8 @@ import statusbar.finder.Result;
 import java.io.IOException;
 
 public interface ILrcProvider {
-    @Deprecated LyricResult getLyric(MediaMetadata data, boolean requireTranslate) throws IOException;
-    LyricResult getLyric(MediaInfo mediaInfo, boolean requireTranslate) throws IOException;
+    @Deprecated LyricResult getLyric(MediaMetadata data) throws IOException;
+    LyricResult getLyric(MediaInfo mediaInfo) throws IOException;
 
     class LyricResult {
         public String mLyric;

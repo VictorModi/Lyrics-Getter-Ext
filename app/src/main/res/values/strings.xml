@@ -34,4 +34,7 @@
     </string-array>
     <string name="force_repeat_title">Forced Repeat Lyrics</string>
     <string name="force_repeat_summary">Randomly add zero-width spaces in the middle of repeating lyrics</string>
+    <string name="offset_label">Offset (ms):</string>
+    <string name="hint_enter_offset">Enter offset</string>
+    <string name="submit_button">Submit</string>
 </resources>

@@ -41,12 +41,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="statusbar.finder.LrcView"
-            android:parentActivityName="statusbar.finder.SettingsActivity"/>
+        <activity
+                android:name="statusbar.finder.LyricsActivity"
+                android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+        />
 
         <meta-data
                 android:name="xposedmodule"
-                android:value="true"/>
+                android:value="false"/>
         <meta-data
                 android:name="xposeddescription"
                 android:value="Push lyrics to Lyrics Getter from the Internet. (Incomplete)" />
