@@ -2,7 +2,54 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
+              android:gravity="center"
               android:orientation="vertical">
+
+    <TextView
+            android:id="@+id/tvSongName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:padding="8dp"
+            android:gravity="center"
+            android:textStyle="bold"/>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+    >
+
+        <TextView
+                android:id="@+id/tvSongArtist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:padding="6dp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:maxLines="1"
+        />
+
+        <Space
+                android:id="@+id/artistSpaceAlbumView"
+                android:layout_width="6dp"
+                android:layout_height="wrap_content"
+        />
+
+        <TextView
+                android:id="@+id/tvSongAlbum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:padding="6dp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:maxLines="1"
+        />
+    </LinearLayout>
+
 
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvLyrics"

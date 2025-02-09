@@ -29,7 +29,7 @@ class LyricsResultChange private constructor() : LiveData<LyricsResultChange.Dat
 
     data class Data(
         val originInfo: ILrcProvider.MediaInfo,
-        val result: ILrcProvider.LyricResult
+        val result: ILrcProvider.LyricResult?
     )
 }
 

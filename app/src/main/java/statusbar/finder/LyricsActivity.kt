@@ -2,6 +2,9 @@ package statusbar.finder
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.View
+import android.widget.Space
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -42,7 +45,9 @@ class LyricsActivity : AppCompatActivity() {
         registerObservers()
 
         // 更新歌词列表
-        updateLyricList(MusicListenerService.instance.lyric)
+        MusicListenerService.instance.lyric?.let {
+            updateLyricList(it)
+        }
     }
 
     private fun registerObservers() {
@@ -83,6 +88,22 @@ class LyricsActivity : AppCompatActivity() {
                     translation = matchedTranslation
                 )
             )
+        }
+
+        val tvSongName = findViewById<TextView>(R.id.tvSongName)
+        val tvSongArtist = findViewById<TextView>(R.id.tvSongArtist)
+        val tvSongAlbum = findViewById<TextView>(R.id.tvSongAlbum)
+        val artistSpaceAlbumView = findViewById<Space>(R.id.artistSpaceAlbumView)
+
+        tvSongName.text = lyric.title
+        tvSongArtist.text = lyric.artist
+        lyric.album?.let {
+            tvSongAlbum.text = it
+            artistSpaceAlbumView.visibility = View.VISIBLE
+            tvSongAlbum.visibility = View.VISIBLE
+        } ?: run {
+            artistSpaceAlbumView.visibility = View.GONE
+            tvSongAlbum.visibility = View.GONE
         }
 
         adapter.notifyDataSetChanged()
