@@ -1,7 +1,5 @@
 package statusbar.finder.data
 
-import android.media.MediaMetadata
-import statusbar.finder.Origin
 import statusbar.finder.Res
 
 /**

@@ -9,13 +9,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
-import com.github.kyuubiran.ezxhelper.Log
 import statusbar.finder.livedata.LyricSentenceUpdate
 import statusbar.finder.livedata.LyricsChange
-import statusbar.finder.livedata.LyricsResultChange
-import statusbar.finder.provider.ILrcProvider
 
 /**
  * LyricGetterExt - statusbar.finder
@@ -77,7 +73,6 @@ class LyricsActivity : AppCompatActivity() {
         var translatedIndex = 0
 
         originLines.forEachIndexed { _, origin ->
-            // 查找当前 origin 对应的 translated
             var matchedTranslation: String? = null
             while (translatedIndex < translatedLines.size && translatedLines[translatedIndex].fromTime <= origin.fromTime) {
                 matchedTranslation = translatedLines[translatedIndex].content

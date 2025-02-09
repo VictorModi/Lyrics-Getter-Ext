@@ -143,7 +143,7 @@ public class MusixMatchProvider implements ILrcProvider {
             }
         }
         if (currentID == -1) {return null;}
-        return new Pair<>(String.format(Locale.getDefault(), MUSIXMATCH_LRC_URL_FORMAT, musixMatchUserToken, currentID), new MediaInfo(resultSoundName, resultArtistName, resultAlbumName, minDistance, -1));
+        return new Pair<>(String.format(Locale.getDefault(), MUSIXMATCH_LRC_URL_FORMAT, musixMatchUserToken, currentID), new MediaInfo(resultSoundName, resultArtistName, resultAlbumName, -1, minDistance));
     }
 
     private static String toSimpleURLEncode(String input) {

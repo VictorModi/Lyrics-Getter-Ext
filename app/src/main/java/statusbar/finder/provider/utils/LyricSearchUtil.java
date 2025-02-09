@@ -8,7 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import statusbar.finder.data.MediaInfo;
 import statusbar.finder.misc.CheckLanguageUtil;
-import statusbar.finder.provider.ILrcProvider;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -53,7 +52,7 @@ public class LyricSearchUtil {
         }
     }
 
-    public static String getSearchKey(MediaMetadata metadata) {
+    @Deprecated public static String getSearchKey(MediaMetadata metadata) {
         return getSearchKey(metadata.getString(MediaMetadata.METADATA_KEY_TITLE), metadata.getString(MediaMetadata.METADATA_KEY_ALBUM), metadata.getString(MediaMetadata.METADATA_KEY_ARTIST));
     }
 
@@ -72,7 +71,7 @@ public class LyricSearchUtil {
         } catch (JSONException e) {
             e.fillInStackTrace();
         }
-        return null;
+        return "";
     }
 
     public static long calculateSongInfoDistance(String realTitle, String realArtist, String realAlbum, String title, String artist, String album) {
@@ -99,10 +98,13 @@ public class LyricSearchUtil {
     }
 
     public static long calculateSongInfoDistance(MediaInfo mediaInfo, String title, String artist, String album) {
-        return calculateSongInfoDistance(mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum(), title, artist, album);
+        return calculateSongInfoDistance(
+                mediaInfo.getTitle(),
+                mediaInfo.getArtist(),
+                mediaInfo.getAlbum(), title, artist, album);
     }
 
-    public static long calculateSongInfoDistance(MediaMetadata metadata, String title, String artist, String album) {
+    @Deprecated public static long calculateSongInfoDistance(MediaMetadata metadata, String title, String artist, String album) {
         return calculateSongInfoDistance(
                 metadata.getString(MediaMetadata.METADATA_KEY_TITLE),
                 metadata.getString(MediaMetadata.METADATA_KEY_ARTIST),
@@ -121,7 +123,7 @@ public class LyricSearchUtil {
         }
         final int lenA = a.length(), lenB = b.length();
         int[][] dp = new int[lenA+1][lenB+1];
-        int flag = 0;
+        int flag;
         for (int i = 0; i <= lenA; i++) {
             for (int j = 0; j <= lenB; j++) dp[i][j] = lenA + lenB;
         }

@@ -90,6 +90,6 @@ public class NeteaseProvider implements ILrcProvider {
         if (currentID == -1) {
             return null;
         }
-        return new Pair<>(String.format(Locale.getDefault(), NETEASE_LRC_URL_FORMAT, currentID), new MediaInfo(resultSoundName, LyricSearchUtil.parseArtists(resultArtists, "name"), resultAlbumName, minDistance, -1));
+        return new Pair<>(String.format(Locale.getDefault(), NETEASE_LRC_URL_FORMAT, currentID), new MediaInfo(resultSoundName, LyricSearchUtil.parseArtists(resultArtists, "name"), resultAlbumName, -1, minDistance));
     }
 }
