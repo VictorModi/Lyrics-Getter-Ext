@@ -6,6 +6,8 @@ import android.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import statusbar.finder.data.LyricResult;
+import statusbar.finder.data.MediaInfo;
 import statusbar.finder.provider.utils.HttpRequestUtil;
 import statusbar.finder.provider.utils.LyricSearchUtil;
 
@@ -22,11 +24,11 @@ public class QQMusicProvider implements ILrcProvider {
 
     @Override
     public LyricResult getLyric(MediaMetadata data) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data));
+        return getLyric(new MediaInfo(data));
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
+    public LyricResult getLyric(MediaInfo mediaInfo) throws IOException {
         String searchUrl = String.format(Locale.getDefault(), QM_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo));
         JSONObject searchResult;
         try {
@@ -40,10 +42,10 @@ public class QQMusicProvider implements ILrcProvider {
                         return null;
                     }
                     LyricResult result = new LyricResult();
-                    result.mLyric = unescapeHtml4(new String(Base64.decode(lrcJson.getString("lyric").getBytes(), Base64.DEFAULT)));
-                    result.mDistance = pair.second.getDistance();
-                    result.mSource = "QQ";
-                    result.mResultInfo = pair.second;
+                    result.setLyric(unescapeHtml4(new String(Base64.decode(lrcJson.getString("lyric").getBytes(), Base64.DEFAULT))));
+                    result.setDistance(pair.second.getDistance());
+                    result.setSource("QQ");
+                    result.setResultInfo(pair.second);
                     return result;
                 } else {
                     return null;
@@ -56,7 +58,7 @@ public class QQMusicProvider implements ILrcProvider {
         return null;
     }
 
-    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, ILrcProvider.MediaInfo mediaInfo) throws JSONException {
+    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, MediaInfo mediaInfo) throws JSONException {
         return getLrcUrl(jsonArray, mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum());
     }
 

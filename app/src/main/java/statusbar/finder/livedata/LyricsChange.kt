@@ -29,6 +29,6 @@ class LyricsChange private constructor() : LiveData<LyricsChange.Data>() {
     }
 
     data class Data(
-        val lyric: Lyric,
+        val lyric: Lyric?,
     )
 }

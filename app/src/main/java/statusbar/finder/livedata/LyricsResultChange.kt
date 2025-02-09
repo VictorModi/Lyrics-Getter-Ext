@@ -8,6 +8,8 @@ package statusbar.finder.livedata
  * @date 2025/2/8 19:57
  */
 import androidx.lifecycle.LiveData
+import statusbar.finder.data.LyricResult
+import statusbar.finder.data.MediaInfo
 import statusbar.finder.provider.ILrcProvider
 
 class LyricsResultChange private constructor() : LiveData<LyricsResultChange.Data>() {
@@ -28,8 +30,8 @@ class LyricsResultChange private constructor() : LiveData<LyricsResultChange.Dat
     }
 
     data class Data(
-        val originInfo: ILrcProvider.MediaInfo,
-        val result: ILrcProvider.LyricResult?
+        val originInfo: MediaInfo,
+        val result: LyricResult?
     )
 }
 

@@ -4,6 +4,8 @@ import android.media.MediaMetadata;
 import android.util.Log;
 import cn.zhaiyifan.lyric.model.Lyric;
 import cn.zhaiyifan.lyric.model.Lyric.Sentence;
+import statusbar.finder.data.LyricResult;
+import statusbar.finder.data.MediaInfo;
 import statusbar.finder.provider.ILrcProvider;
 
 import java.io.BufferedReader;
@@ -50,19 +52,19 @@ public class LyricUtils {
     }
 
     @Deprecated
-    public static Lyric parseLyric(ILrcProvider.LyricResult lyricResult, MediaMetadata mediaMetadata) {
-        return parseLyric(lyricResult, new ILrcProvider.MediaInfo(mediaMetadata));
+    public static Lyric parseLyric(LyricResult lyricResult, MediaMetadata mediaMetadata) {
+        return parseLyric(lyricResult, new MediaInfo(mediaMetadata));
     }
 
-    public static Lyric parseLyric(ILrcProvider.LyricResult lyricResult) {
-        return parseLyric(lyricResult, lyricResult.mResultInfo);
+    public static Lyric parseLyric(LyricResult lyricResult) {
+        return parseLyric(lyricResult, lyricResult.getResultInfo());
     }
 
-    public static Lyric parseLyric(ILrcProvider.LyricResult lyricResult, ILrcProvider.MediaInfo mediaInfo) {
-        if (lyricResult.mLyric == null) return null;
+    public static Lyric parseLyric(LyricResult lyricResult, MediaInfo mediaInfo) {
+        if (lyricResult.getLyric() == null) return null;
         Lyric lyric = new Lyric();
         try {
-            BufferedReader br = new BufferedReader(new StringReader(lyricResult.mLyric));
+            BufferedReader br = new BufferedReader(new StringReader(lyricResult.getLyric()));
             String line;
             while ((line = br.readLine()) != null) {
                 if (!parseLine(lyric.sentenceList, line, lyric)) return null;
@@ -71,9 +73,9 @@ public class LyricUtils {
         } catch (IOException e) {
             e.fillInStackTrace();
         }
-        if (lyricResult.mTranslatedLyric != null) {
+        if (lyricResult.getTranslatedLyric() != null) {
             try {
-                BufferedReader tbr = new BufferedReader(new StringReader(lyricResult.mTranslatedLyric));
+                BufferedReader tbr = new BufferedReader(new StringReader(lyricResult.getTranslatedLyric()));
                 String transLine;
                 while ((transLine = tbr.readLine()) != null) {
                     if (!parseLine(lyric.translatedSentenceList, transLine, lyric)) return null;
@@ -87,7 +89,7 @@ public class LyricUtils {
         lyric.artist = mediaInfo.getArtist();
         lyric.album = mediaInfo.getAlbum();
         lyric.length = mediaInfo.getDuration();
-        lyric.offset = lyricResult.mOffset;
+        lyric.offset = lyricResult.getOffset();
         return lyric;
     }
 

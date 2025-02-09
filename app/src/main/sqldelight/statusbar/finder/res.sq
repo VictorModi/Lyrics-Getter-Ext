@@ -1,8 +1,8 @@
-CREATE TABLE result (
+CREATE TABLE res (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     origin_id INTEGER NOT NULL,
     provider TEXT NOT NULL,
-    lyric TEXT NOT NULL,
+    lyric TEXT,
     translated_lyric TEXT,
     title TEXT,
     artist TEXT,
@@ -14,29 +14,29 @@ CREATE TABLE result (
     UNIQUE(provider, origin_id)
 );
 
-insertResult:
-INSERT INTO result (origin_id, provider, lyric, translated_lyric, distance, title, artist, album)
+insertRes:
+INSERT INTO res (origin_id, provider, lyric, translated_lyric, distance, title, artist, album)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
-getResultByIdAndProvider:
+getResByIdAndProvider:
 SELECT *
-FROM result
+FROM res
 WHERE origin_id = ? AND provider = ?
 LIMIT 1;
 
-getResultByOriginId:
+getResByOriginId:
 SELECT *
-FROM result
+FROM res
 WHERE origin_id = ?;
 
-getResultById:
+getResById:
 SELECT *
-FROM result
+FROM res
 WHERE id = ?
 LIMIT 1;
 
-updateLyricOffset:
-UPDATE result
+updateResOffset:
+UPDATE res
 SET lyric_offset = ?
 WHERE id = ?;
 

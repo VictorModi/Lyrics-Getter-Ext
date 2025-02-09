@@ -8,6 +8,8 @@ import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import statusbar.finder.data.LyricResult;
+import statusbar.finder.data.MediaInfo;
 import statusbar.finder.misc.CheckLanguageUtil;
 import statusbar.finder.provider.utils.HttpRequestUtil;
 import statusbar.finder.provider.utils.LyricSearchUtil;
@@ -33,11 +35,11 @@ public class MusixMatchProvider implements ILrcProvider {
 
     @Override
     public LyricResult getLyric(MediaMetadata data) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data));
+        return getLyric(new MediaInfo(data));
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
+    public LyricResult getLyric(MediaInfo mediaInfo) throws IOException {
         if (musixMatchUserToken  == null) {
             musixMatchUserToken = getMusixMatchUserToken(getRandomId());
             if (musixMatchUserToken  == null) {
@@ -61,10 +63,18 @@ public class MusixMatchProvider implements ILrcProvider {
                     if (lrcJson == null) {
                         return null;
                     }
-                    result.mLyric = lrcJson.getJSONObject("message").getJSONObject("body").getJSONObject("macro_calls").getJSONObject("track.subtitles.get").getJSONObject("message").getJSONObject("body").getJSONArray("subtitle_list").getJSONObject(0).getJSONObject("subtitle").getString("subtitle_body");
-                    infoJson = lrcJson.getJSONObject("message").getJSONObject("body").getJSONObject("macro_calls").getJSONObject("matcher.track.get").getJSONObject("message").getJSONObject("body").getJSONObject("track");
-                    result.mDistance = pair.second.getDistance();
-                    result.mResultInfo = pair.second;
+                    result.setLyric(
+                            lrcJson.getJSONObject("message").getJSONObject("body")
+                                    .getJSONObject("macro_calls").getJSONObject("track.subtitles.get")
+                                    .getJSONObject("message").getJSONObject("body")
+                                    .getJSONArray("subtitle_list").getJSONObject(0)
+                                    .getJSONObject("subtitle").getString("subtitle_body")
+                    );
+                    infoJson = lrcJson.getJSONObject("message").getJSONObject("body")
+                            .getJSONObject("macro_calls").getJSONObject("matcher.track.get")
+                            .getJSONObject("message").getJSONObject("body").getJSONObject("track");
+                    result.setDistance(pair.second.getDistance());
+                    result.setResultInfo(pair.second);
                 } else {
                     // 无法通过 id 寻找到歌词时
                     // 则尝试使用直接搜索歌词的方法
@@ -84,15 +94,17 @@ public class MusixMatchProvider implements ILrcProvider {
                     }
                     JSONObject subTitleJson = lrcJson.getJSONObject("message").getJSONObject("body").getJSONObject("macro_calls").getJSONObject("track.subtitles.get").getJSONObject("message").getJSONObject("body").getJSONArray("subtitle_list").getJSONObject(0).getJSONObject("subtitle");
                     infoJson = lrcJson.getJSONObject("message").getJSONObject("body").getJSONObject("macro_calls").getJSONObject("matcher.track.get").getJSONObject("message").getJSONObject("body").getJSONObject("track");
-                    result.mLyric = subTitleJson.getString("subtitle_body");
+                    result.setLyric(subTitleJson.getString("subtitle_body"));
                 }
                 String soundName = infoJson.getString("track_name");
                 String albumName = infoJson.getString("album_name");
                 String artistName = infoJson.getString("artist_name");
-                result.mDistance = result.mDistance == 0 ? LyricSearchUtil.calculateSongInfoDistance(mediaInfo, soundName, artistName, albumName) : result.mDistance;
-                result.mSource = "MusixMatch";
-                result.mResultInfo = new MediaInfo(soundName, artistName, albumName, -1, result.mDistance);
-                result.mTranslatedLyric = getTranslatedLyric(result.mLyric, trackId);
+                if (result.getDistance() == 0) {
+                    result.setDistance(LyricSearchUtil.calculateSongInfoDistance(mediaInfo, soundName, artistName, albumName));
+                }
+                result.setSource("MusixMatch");
+                result.setResultInfo(new MediaInfo(soundName, artistName, albumName, -1, result.getDistance()));
+                result.setTranslatedLyric(getTranslatedLyric(result.getLyric(), trackId));
                 return result;
             }
         } catch (JSONException e) {
@@ -106,7 +118,7 @@ public class MusixMatchProvider implements ILrcProvider {
 //        return getLrcUrl(jsonArray, mediaMetadata.getString(MediaMetadata.METADATA_KEY_TITLE), mediaMetadata.getString(MediaMetadata.METADATA_KEY_ALBUM), mediaMetadata.getString(MediaMetadata.METADATA_KEY_ARTIST));
 //    }
 
-    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, ILrcProvider.MediaInfo mediaInfo) throws JSONException {
+    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, MediaInfo mediaInfo) throws JSONException {
         return getLrcUrl(jsonArray, mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum());
     }
 

@@ -4,7 +4,7 @@ CREATE TABLE active (
     result_id INTEGER NOT NULL,           -- 选择的 result 的 ID
     added_date INTEGER DEFAULT (strftime('%s', 'now')) NOT NULL, -- UTC
     FOREIGN KEY (origin_id) REFERENCES origin (id) ON DELETE CASCADE,
-    FOREIGN KEY (result_id) REFERENCES result (id) ON DELETE CASCADE
+    FOREIGN KEY (result_id) REFERENCES res (id) ON DELETE CASCADE
 );
 
 -- 插入新的 active 记录

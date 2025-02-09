@@ -16,8 +16,8 @@ public class Lyric {
     public String author;
     public int offset; // 偏移值
     public long length; // 歌曲长度
-    public List<Sentence> sentenceList = new ArrayList<Sentence>(100);
-    public List<Sentence> translatedSentenceList = new ArrayList<Sentence>(100);
+    public List<Sentence> sentenceList = new ArrayList<>(100);
+    public List<Sentence> translatedSentenceList = new ArrayList<>(100);
 
     @NotNull
     public String toString() {

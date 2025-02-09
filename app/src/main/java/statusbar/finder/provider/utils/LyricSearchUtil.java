@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
+import statusbar.finder.data.MediaInfo;
 import statusbar.finder.misc.CheckLanguageUtil;
 import statusbar.finder.provider.ILrcProvider;
 
@@ -56,7 +57,7 @@ public class LyricSearchUtil {
         return getSearchKey(metadata.getString(MediaMetadata.METADATA_KEY_TITLE), metadata.getString(MediaMetadata.METADATA_KEY_ALBUM), metadata.getString(MediaMetadata.METADATA_KEY_ARTIST));
     }
 
-    public static String getSearchKey(ILrcProvider.MediaInfo mediaInfo) {
+    public static String getSearchKey(MediaInfo mediaInfo) {
         return getSearchKey(mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum());
     }
 
@@ -97,7 +98,7 @@ public class LyricSearchUtil {
         return res;
     }
 
-    public static long calculateSongInfoDistance(ILrcProvider.MediaInfo mediaInfo, String title, String artist, String album) {
+    public static long calculateSongInfoDistance(MediaInfo mediaInfo, String title, String artist, String album) {
         return calculateSongInfoDistance(mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum(), title, artist, album);
     }
 

@@ -6,6 +6,8 @@ import android.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import statusbar.finder.data.LyricResult;
+import statusbar.finder.data.MediaInfo;
 import statusbar.finder.provider.utils.HttpRequestUtil;
 import statusbar.finder.provider.utils.LyricSearchUtil;
 
@@ -21,11 +23,11 @@ public class NeteaseProvider implements ILrcProvider {
 
     @Override
     public LyricResult getLyric(MediaMetadata data) throws IOException {
-        return getLyric(new ILrcProvider.MediaInfo(data));
+        return getLyric(new MediaInfo(data));
     }
 
     @Override
-    public LyricResult getLyric(ILrcProvider.MediaInfo mediaInfo) throws IOException {
+    public LyricResult getLyric(MediaInfo mediaInfo) throws IOException {
         String searchUrl = String.format(NETEASE_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo));
         Log.d("searchUrl", searchUrl);
         JSONObject searchResult;
@@ -40,15 +42,15 @@ public class NeteaseProvider implements ILrcProvider {
                         return null;
                     }
                     LyricResult result = new LyricResult();
-                    result.mLyric = lrcJson.getJSONObject("lrc").getString("lyric");
+                    result.setLyric(lrcJson.getJSONObject("lrc").getString("lyric"));
                     try {
-                        result.mTranslatedLyric = lrcJson.getJSONObject("tlyric").getString("lyric");
+                        result.setTranslatedLyric(lrcJson.getJSONObject("tlyric").getString("lyric"));
                     } catch (JSONException e) {
-                        result.mTranslatedLyric = null;
+                        result.setTranslatedLyric(null);
                     }
-                    result.mDistance = pair.second.getDistance();
-                    result.mSource = "Netease";
-                    result.mResultInfo = pair.second;
+                    result.setDistance(pair.second.getDistance());
+                    result.setSource("Netease");
+                    result.setResultInfo(pair.second);
                     return result;
                 } else {
                     return null;
@@ -61,7 +63,7 @@ public class NeteaseProvider implements ILrcProvider {
         return null;
     }
 
-    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, ILrcProvider.MediaInfo mediaInfo) throws JSONException {
+    private static Pair<String, MediaInfo> getLrcUrl(JSONArray jsonArray, MediaInfo mediaInfo) throws JSONException {
         return getLrcUrl(jsonArray, mediaInfo.getTitle(), mediaInfo.getArtist(), mediaInfo.getAlbum());
     }
 

@@ -42,8 +42,9 @@ class LyricsAdapter(private val lyrics: List<LyricItem>) :
 
         // 高亮样式
         val context = holder.itemView.context
-        val highlightColor = MaterialColors.getColor(context, R.attr.colorSecondary, Color.BLACK)
-        val normalColor = MaterialColors.getColor(context, R.attr.colorControlHighlight, Color.GRAY)
+        val isDark = isDarkMode(context)
+        val highlightColor = if (isDark) Color.WHITE else Color.BLACK
+        val normalColor = if (isDark) Color.GRAY else Color.LTGRAY
 
         if (item.isHighlight) {
             holder.tvOrigin.setTextColor(highlightColor)

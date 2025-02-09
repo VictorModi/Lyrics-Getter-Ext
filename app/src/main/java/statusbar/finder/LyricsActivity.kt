@@ -3,6 +3,7 @@ package statusbar.finder
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
 import android.widget.Space
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -45,7 +46,7 @@ class LyricsActivity : AppCompatActivity() {
         registerObservers()
 
         // 更新歌词列表
-        MusicListenerService.instance.lyric?.let {
+        MusicListenerService.instance?.lyric?.let {
             updateLyricList(it)
         }
     }
@@ -61,7 +62,7 @@ class LyricsActivity : AppCompatActivity() {
         // 当前歌词行更新观察
         LyricSentenceUpdate.getInstance().observe(this) { updateData ->
             updateData?.let {
-                it.lyricsIndex?.let { pos -> updateHighlightPosition(pos) }
+                updateHighlightPosition(it.lyricsIndex)
             }
         }
     }
@@ -90,6 +91,14 @@ class LyricsActivity : AppCompatActivity() {
             )
         }
 
+        updateSongInfo(lyric)
+        syncOffset(lyric)
+
+        adapter.notifyDataSetChanged()
+        currentHighlightPos = -1
+    }
+
+    private fun updateSongInfo(lyric: Lyric) {
         val tvSongName = findViewById<TextView>(R.id.tvSongName)
         val tvSongArtist = findViewById<TextView>(R.id.tvSongArtist)
         val tvSongAlbum = findViewById<TextView>(R.id.tvSongAlbum)
@@ -105,11 +114,12 @@ class LyricsActivity : AppCompatActivity() {
             artistSpaceAlbumView.visibility = View.GONE
             tvSongAlbum.visibility = View.GONE
         }
-
-        adapter.notifyDataSetChanged()
-        currentHighlightPos = -1
     }
 
+    private fun syncOffset(lyric: Lyric) {
+        val etOffset = findViewById<EditText>(R.id.etOffset)
+        etOffset.setText(lyric.offset.toString())
+    }
 
     private fun updateHighlightPosition(newPosition: Int) {
         if (newPosition == currentHighlightPos) return
