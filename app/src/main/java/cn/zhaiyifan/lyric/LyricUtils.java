@@ -51,16 +51,9 @@ public class LyricUtils {
         }
     }
 
-    @Deprecated
-    public static Lyric parseLyric(LyricResult lyricResult, MediaMetadata mediaMetadata) {
-        return parseLyric(lyricResult, new MediaInfo(mediaMetadata));
-    }
-
-    public static Lyric parseLyric(LyricResult lyricResult) {
-        return parseLyric(lyricResult, lyricResult.getResultInfo());
-    }
-
-    public static Lyric parseLyric(LyricResult lyricResult, MediaInfo mediaInfo) {
+    public static Lyric parseLyric(LyricResult lyricResult,
+                                   MediaInfo originalMediaInfo,
+                                   String packageName) {
         if (lyricResult.getLyric() == null) return null;
         Lyric lyric = new Lyric();
         try {
@@ -85,18 +78,22 @@ public class LyricUtils {
                 e.fillInStackTrace();
             }
         }
+        MediaInfo mediaInfo = lyricResult.getResultInfo();
+        assert mediaInfo != null;
         lyric.title = mediaInfo.getTitle();
         lyric.artist = mediaInfo.getArtist();
         lyric.album = mediaInfo.getAlbum();
         lyric.length = mediaInfo.getDuration();
         lyric.offset = lyricResult.getOffset();
+        lyric.originalMediaInfo = originalMediaInfo;
+        lyric.packageName = packageName;
         return lyric;
     }
 
     /**
      * Get sentence according to timestamp, current index, offset.
      */
-    public static Sentence getSentence(List<Sentence> lyricList, long ts, int index, int offset) {
+    public static Sentence getSentence(List<Sentence> lyricList, long ts, int index, long offset) {
         int found = getSentenceIndex(lyricList, ts, index, offset);
         if (found == -1)
             return null;
@@ -112,7 +109,7 @@ public class LyricUtils {
      * @param offset Lyric offset.
      * @return current sentence index, -1 if before first, -2 if not found.
      */
-    public static int getSentenceIndex(List<Sentence> lyricList, long ts, int index, int offset) {
+    public static int getSentenceIndex(List<Sentence> lyricList, long ts, int index, long offset) {
         if (lyricList.isEmpty() || ts < 0 || index < -1) {
             Log.d(TAG, "-1");
             return -1;

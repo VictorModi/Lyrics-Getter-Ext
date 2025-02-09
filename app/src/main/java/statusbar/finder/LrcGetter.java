@@ -21,6 +21,7 @@ import statusbar.finder.provider.QQMusicProvider;
 import statusbar.finder.provider.utils.LyricSearchUtil;
 import statusbar.finder.sql.ActiveManager;
 import statusbar.finder.sql.OriginManager;
+import statusbar.finder.sql.QueryTool;
 import statusbar.finder.sql.ResManager;
 
 import java.io.IOException;
@@ -54,15 +55,15 @@ public class LrcGetter {
                 return null;
             }
         }
-        Pair<LyricResult, Long> databaseResult = getActiveLyricFromDatabase(mediaInfo, packageName);
+        Pair<LyricResult, Long> databaseResult = QueryTool.INSTANCE.getActiveLyricFromDatabase(mediaInfo, packageName);
         LyricResult currentResult = databaseResult.first;
 
         if (currentResult == null) {
             searchLyricsResultByInfo(mediaInfo, databaseResult.second, sysLang);
-            currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second);
+            currentResult = QueryTool.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.second);
         } else {
             LyricsResultChange.Companion.getInstance().notifyResult(new LyricsResultChange.Data(mediaInfo, currentResult));
-            return LyricUtils.parseLyric(currentResult);
+            return LyricUtils.parseLyric(currentResult, mediaInfo, packageName);
         }
 
         if (currentResult == null && (!detector.hasKana(mediaInfo.getTitle()) && detector.hasLatin(mediaInfo.getTitle()))) {
@@ -73,11 +74,11 @@ public class LrcGetter {
                 return null;
             }
             searchLyricsResultByInfo(hiraganaMediaInfo, databaseResult.second, sysLang);
-            currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second);
+            currentResult = QueryTool.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.second);
             if (currentResult == null) {
                 hiraganaMediaInfo.setTitle(converter.convertRomajiToKatakana(mediaInfo.getTitle()));
                 searchLyricsResultByInfo(hiraganaMediaInfo, databaseResult.second, sysLang);
-                currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second);
+                currentResult = QueryTool.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.second);
             }
         }
 
@@ -85,7 +86,7 @@ public class LrcGetter {
         if (currentResult != null) {
             currentResult.setDataOrigin(DataOrigin.INTERNET);
             LyricsResultChange.Companion.getInstance().notifyResult(new LyricsResultChange.Data(mediaInfo, currentResult));
-            return LyricUtils.parseLyric(currentResult);
+            return LyricUtils.parseLyric(currentResult, mediaInfo, packageName);
         } else {
             LyricsResultChange.Companion.getInstance().notifyResult(new LyricsResultChange.Data(mediaInfo, null));
             return null;
@@ -139,19 +140,5 @@ public class LrcGetter {
             assert bestMatchResult != null;
             ActiveManager.INSTANCE.insertActiveLog(originId, bestMatchResult.getId());
         }
-    }
-
-    private static Pair<LyricResult, Long> getActiveLyricFromDatabase(MediaInfo mediaInfo, String packageName) {
-        Long originId = OriginManager.insertOrGetMediaInfoId(mediaInfo, packageName);
-        LyricResult lyricResult = getActiveLyricFromDatabaseByOriginId(originId);
-        return new Pair<>(lyricResult, originId);
-    }
-
-    private static LyricResult getActiveLyricFromDatabaseByOriginId(Long originId) {
-        Long resultId = ActiveManager.INSTANCE.getResultIdByOriginId(originId);
-        if (resultId == null) {return null;}
-        Res res = ResManager.INSTANCE.getResById(resultId);
-        if (res == null) {return null;}
-        return new LyricResult(res);
     }
 }

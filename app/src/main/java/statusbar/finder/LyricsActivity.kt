@@ -3,15 +3,20 @@ package statusbar.finder
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Space
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.zhaiyifan.lyric.model.Lyric
 import statusbar.finder.livedata.LyricSentenceUpdate
 import statusbar.finder.livedata.LyricsChange
+import statusbar.finder.sql.ActiveManager
+import statusbar.finder.sql.QueryTool
+import statusbar.finder.sql.ResManager
 
 /**
  * LyricGetterExt - statusbar.finder
@@ -24,8 +29,12 @@ class LyricsActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: LyricsAdapter
+    private lateinit var etOffset: EditText
     private val lyricsList = mutableListOf<LyricItem>()
     private var currentHighlightPos = -1
+    private var currentLyricResId: Long = -1L
+    private var currentLyric: Lyric? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +42,7 @@ class LyricsActivity : AppCompatActivity() {
 
         // 在 setContentView 后初始化 recyclerView
         recyclerView = findViewById(R.id.rvLyrics)
+        etOffset = findViewById(R.id.etOffset)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         adapter = LyricsAdapter(lyricsList)
@@ -45,12 +55,27 @@ class LyricsActivity : AppCompatActivity() {
         MusicListenerService.instance?.lyric?.let {
             updateLyricList(it)
         }
+
+        val btnSubmit = findViewById<Button>(R.id.btnSubmit)
+
+        btnSubmit.setOnClickListener {
+            if (currentLyricResId != -1L) {
+                val newOffset = etOffset.getText().toString().toLong()
+                ResManager.updateResOffsetById(currentLyricResId, newOffset)
+                currentLyric?.offset = newOffset
+                LyricsChange.getInstance().notifyResult(LyricsChange.Data(currentLyric))
+                Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun registerObservers() {
         // 歌词结果变化观察
         LyricsChange.getInstance().observe(this) { resultData ->
             resultData?.lyric?.let { lyric ->
+                currentLyric = lyric
                 updateLyricList(lyric)
             }
         }
@@ -88,7 +113,7 @@ class LyricsActivity : AppCompatActivity() {
 
         updateSongInfo(lyric)
         syncOffset(lyric)
-
+        currentLyricResId = QueryTool.getActiveLyricFromDatabase(lyric.originalMediaInfo, lyric.packageName).second
         adapter.notifyDataSetChanged()
         currentHighlightPos = -1
     }
@@ -112,7 +137,6 @@ class LyricsActivity : AppCompatActivity() {
     }
 
     private fun syncOffset(lyric: Lyric) {
-        val etOffset = findViewById<EditText>(R.id.etOffset)
         etOffset.setText(lyric.offset.toString())
     }
 

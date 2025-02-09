@@ -50,4 +50,8 @@ object ResManager {
     fun getResByOriginIdAndProvider(originId: Long, provider: String): Res? {
         return queries.getResByIdAndProvider(originId, provider).executeAsOneOrNull()
     }
+
+    fun updateResOffsetById(id: Long, offset: Long) {
+        return queries.updateResOffset(offset, id)
+    }
 }

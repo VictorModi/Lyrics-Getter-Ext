@@ -1,6 +1,7 @@
 package cn.zhaiyifan.lyric.model;
 
 import org.jetbrains.annotations.NotNull;
+import statusbar.finder.data.MediaInfo;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -14,10 +15,12 @@ public class Lyric {
     public String album; // 歌曲专辑
     public String by;
     public String author;
-    public int offset; // 偏移值
+    public long offset; // 偏移值
     public long length; // 歌曲长度
     public List<Sentence> sentenceList = new ArrayList<>(100);
     public List<Sentence> translatedSentenceList = new ArrayList<>(100);
+    public MediaInfo originalMediaInfo;
+    public String packageName;
 
     @NotNull
     public String toString() {
