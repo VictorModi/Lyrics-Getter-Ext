@@ -1,9 +1,11 @@
 package statusbar.finder.sql
 
 import androidx.core.util.Pair
+import cn.zhaiyifan.lyric.model.Lyric
 import statusbar.finder.data.LyricResult
 import statusbar.finder.data.MediaInfo
 import statusbar.finder.sql.ActiveManager.getResultIdByOriginId
+import statusbar.finder.sql.OriginManager.getOriginId
 import statusbar.finder.sql.OriginManager.insertOrGetMediaInfoId
 import statusbar.finder.sql.ResManager.getResById
 
@@ -25,5 +27,10 @@ object QueryTool {
         val resultId = getResultIdByOriginId(originId) ?: return null
         val res = getResById(resultId) ?: return null
         return LyricResult(res)
+    }
+
+    fun getActiveResIdByLyric(lyric: Lyric): Long? {
+        val originId = getOriginId(lyric.originalMediaInfo, lyric.packageName) ?: return null
+        return getResultIdByOriginId(originId)
     }
 }

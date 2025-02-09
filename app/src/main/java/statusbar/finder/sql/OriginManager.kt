@@ -4,7 +4,6 @@ import android.database.sqlite.SQLiteConstraintException
 import statusbar.finder.DatabaseHelper
 import statusbar.finder.OriginQueries
 import statusbar.finder.data.MediaInfo
-import statusbar.finder.provider.ILrcProvider
 
 /**
  * LyricGetterExt - statusbar.finder.sql
@@ -21,7 +20,7 @@ object OriginManager {
 
     @JvmStatic
     fun insertOrGetMediaInfoId(mediaInfo: MediaInfo, packageName: String): Long {
-        getMediaInfoId(mediaInfo, packageName)?.let { return it }
+        getOriginId(mediaInfo, packageName)?.let { return it }
         return try {
             queries.insertMediaInfo(
                 mediaInfo.title,
@@ -37,7 +36,7 @@ object OriginManager {
         }
     }
 
-    private fun getMediaInfoId(mediaInfo: MediaInfo, packageName: String): Long? {
+    fun getOriginId(mediaInfo: MediaInfo, packageName: String): Long? {
         return queries.getMediaInfoId(
             mediaInfo.title,
             mediaInfo.artist,

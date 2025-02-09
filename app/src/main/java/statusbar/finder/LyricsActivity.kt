@@ -113,7 +113,7 @@ class LyricsActivity : AppCompatActivity() {
 
         updateSongInfo(lyric)
         syncOffset(lyric)
-        currentLyricResId = QueryTool.getActiveLyricFromDatabase(lyric.originalMediaInfo, lyric.packageName).second
+        currentLyricResId = QueryTool.getActiveResIdByLyric(lyric)!!
         adapter.notifyDataSetChanged()
         currentHighlightPos = -1
     }

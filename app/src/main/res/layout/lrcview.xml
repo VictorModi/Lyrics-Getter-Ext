@@ -83,7 +83,7 @@
                 android:autofillHints=""
                 android:importantForAccessibility="no"
                 android:hint="@string/hint_enter_offset"
-                android:inputType="number"
+                android:inputType="numberSigned"
                 android:layout_marginEnd="16dp" />
 
         <!-- 提交按钮 -->
