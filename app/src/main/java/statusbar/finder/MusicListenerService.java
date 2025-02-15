@@ -73,7 +73,7 @@ public class MusicListenerService extends NotificationListenerService {
     public static MusicListenerService instance;
     public String musicInfo;
     public CSLyricHelper.PlayInfo playInfo;
-    private static String lastLyric = "";
+    private static Lyric.Sentence lastSentence;
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -368,6 +368,7 @@ public class MusicListenerService extends NotificationListenerService {
                 + " ,Length:" + mLyric.length;
         Lyric.Sentence sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0 ,mLyric.offset);
         if (sentence == null) return;
+        if (sentence.equals(lastSentence)) return;
         int delay = calculateDelay(position);
         if (sentence.fromTime != mLastSentenceFromTime) {
             if (sentence.content.isBlank()) return;
@@ -387,15 +388,15 @@ public class MusicListenerService extends NotificationListenerService {
             };
             int adjustment = "both".equals(translateType) && translatedSentence != null ? delay / 2 : delay;
             delay = adjustment - 3;
-//            if (mSharedPreferences.getBoolean(PREFERENCE_KEY_REQUIRE_TRANSLATE, false)) { // 增添翻译
-//                translatedSentence = getTranslatedSentence(position);
-//                if (translatedSentence != null && !Objects.equals(translatedSentence.content, "") && !Objects.equals(sentence.content, "")) {
-//                    curLyric += "\n\r" + translatedSentence.content.trim();
-//                }
-//            }
             delay = Math.max(delay, 1);
-            curLyric = mSharedPreferences.getBoolean(PREFERENCE_KEY_FORCE_REPEAT, false)
-                    && lastLyric.equals(curLyric) ? insertZeroWidthSpace(curLyric) : curLyric;
+            if (mSharedPreferences.getBoolean(PREFERENCE_KEY_FORCE_REPEAT, false)
+                    && lastSentence != null
+                    && lastSentence.content != null
+                    && lastSentence.content.equals(sentence.content)) {
+
+                curLyric = insertZeroWidthSpace(curLyric);
+            }
+
             LyricSentenceUpdate.Data data = new LyricSentenceUpdate.Data(
                     sentence.content.trim(),
                     translatedSentence != null ? translatedSentence.content.trim() : null,
@@ -424,7 +425,7 @@ public class MusicListenerService extends NotificationListenerService {
             mLyricNotification.when = System.currentTimeMillis();
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             mLastSentenceFromTime = sentence.fromTime;
-            lastLyric = curLyric;
+            lastSentence = sentence;
         }
     }
 
@@ -440,10 +441,11 @@ public class MusicListenerService extends NotificationListenerService {
         // 计算延迟时间
         int delay = (int) ((mLyric.sentenceList.get(nextFoundIndex).fromTime - position) / 1000);
 
-//        // 如果开启翻译状态并且翻译歌词列表不为空，减半延迟
-//        if (translationStatusReferences.getBoolean(musicInfo, false) && getTranslatedSentence(position) != null) {
-//            delay /= 2;
-//        }
+        // 如果开启翻译状态并且翻译歌词列表不为空，减半延迟
+        if ("origin".equals(mSharedPreferences.getString(PREFERENCE_KEY_TRANSLATE_TYPE, "origin")) &&
+                        getTranslatedSentence(position) != null) {
+            delay /= 2;
+        }
 
         // 确保延迟时间最小为 1
         return Math.max(delay, 1);

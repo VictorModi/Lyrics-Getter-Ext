@@ -6,6 +6,7 @@ import statusbar.finder.data.MediaInfo;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 public class Lyric {
     private static final String TAG = Lyric.class.getSimpleName();
@@ -64,6 +65,18 @@ public class Lyric {
         public Sentence(String content, long fromTime) {
             this.content = content;
             this.fromTime = fromTime;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Sentence sentence = (Sentence) o;
+            return fromTime == sentence.fromTime && Objects.equals(content, sentence.content);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(content, fromTime);
         }
 
         @NotNull

@@ -65,6 +65,7 @@ class LyricsActivity : AppCompatActivity() {
                     newOffset = etOffset.getText().toString().toLong()
                 } catch (e: NumberFormatException) {
                     Toast.makeText(applicationContext, "Offset not valid", Toast.LENGTH_SHORT).show()
+
                 }
                 ResManager.updateResOffsetById(currentLyricResId, newOffset)
                 currentLyric?.offset = newOffset
