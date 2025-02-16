@@ -1,4 +1,4 @@
-package statusbar.finder.data
+package statusbar.finder.data.model
 
 /**
  * LyricGetterExt - statusbar.finder.data
