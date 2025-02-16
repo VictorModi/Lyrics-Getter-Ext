@@ -6,7 +6,6 @@ import com.github.kyuubiran.ezxhelper.Log
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage
-import statusbar.finder.hook.app.LyricsGetter
 import statusbar.finder.hook.app.SystemUI
 
 
@@ -22,7 +21,6 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
         EzXHelper.initHandleLoadPackage(lpparam)
         when (lpparam.packageName) {
             "com.android.systemui" -> initHooks(SystemUI)
-            "cn.lyric.getter" -> initHooks(LyricsGetter)
             else -> return
         }
     }

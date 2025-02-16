@@ -3,6 +3,7 @@ package statusbar.finder.hook.app
 import cn.lyric.getter.api.API
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.hook.BaseHook
+import statusbar.finder.hook.tool.EventTool
 import statusbar.finder.hook.tool.HookTool.getApplication
 
 /**
@@ -23,7 +24,16 @@ object SystemUI : BaseHook() {
     private fun hook(classloader: ClassLoader? = null) {
         getApplication {
             DatabaseHelper.init(it.baseContext)
+            EventTool.setContext(it.baseContext)
+            Thread {
+                var counter = 0
+                while (true) {
+                    EventTool.sendLyric("测试测试SystemUi测试 $counter")
+                    counter++
+                    Thread.sleep(1000)
+                }
+            }.start()
+
         }
-        assert(lyricsGetterApi.hasEnable)
     }
 }
