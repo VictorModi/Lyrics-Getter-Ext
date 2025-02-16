@@ -9,10 +9,11 @@ import cn.lyric.getter.api.data.type.OperateType
 import cn.xiaowine.xkt.Tool.isNull
 import cn.xiaowine.xkt.Tool.observableChange
 import com.github.kyuubiran.ezxhelper.Log
+import statusbar.finder.BuildConfig
 
 /**
  * LyricGetterExt - statusbar.finder.hook.tool
- * @description 抄袭 https://github.com/xiaowine/Lyric-Getter/blob/master/app/src/main/kotlin/cn/lyric/getter/tool/EventTools.kt
+ * @description 参考自 https://github.com/xiaowine/Lyric-Getter/blob/master/app/src/main/kotlin/cn/lyric/getter/tool/EventTools.kt
  * @author VictorModi
  * @email victormodi@outlook.com
  * @date 2025/2/17 00:09
@@ -24,7 +25,7 @@ object EventTool {
     private var lastLyricData: LyricData? by observableChange(null) { _, _, newValue ->
         newValue?.run {
             if (lyric.isBlank()) {
-                cleanLyric(newValue.extraData.packageName)
+                cleanLyric()
             } else {
                 lyricsGetterContext.sendBroadcast(Intent().apply {
                     action = "Lyric_Data"
@@ -43,7 +44,7 @@ object EventTool {
             this.lyric = refinedLyric
             if (extra.isNull()) {
                 this.extraData.mergeExtra(ExtraData().apply {
-                    this.packageName = "statusbar.finder"
+                    this.packageName = BuildConfig.APPLICATION_ID
                     this.customIcon = false
                     this.base64Icon = ""
                     this.useOwnMusicController = false
@@ -53,14 +54,13 @@ object EventTool {
         }
     }
 
-    fun cleanLyric(caller: String = "") {
+    fun cleanLyric() {
         lyricsGetterContext.sendBroadcast(Intent().apply {
             action = "Lyric_Data"
             val lyricData = LyricData().apply {
                 this.type = OperateType.STOP
                 this.extraData.mergeExtra(ExtraData().apply {
-                    this.packageName = caller.takeIf { it.isNotEmpty() }
-                        ?: lyricsGetterContext.packageName.takeIf { it != "com.android.systemui" } ?: ""
+                    this.packageName = BuildConfig.APPLICATION_ID
                 })
             }
             putExtra("Data", lyricData)

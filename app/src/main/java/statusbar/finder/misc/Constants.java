@@ -1,6 +1,9 @@
 package statusbar.finder.misc;
 
 public class Constants {
+    public static final int NOTIFICATION_ID_LRC = 1;
+    public static final int MSG_LYRIC_UPDATE_DONE = 2;
+
     public static final String PREFERENCE_KEY_ENABLED = "enabled";
     public static final String PREFERENCE_KEY_CONNECTION_STATUS = "connection_status";
     @Deprecated public static final String PREFERENCE_KEY_REQUIRE_TRANSLATE = "require_translate";
