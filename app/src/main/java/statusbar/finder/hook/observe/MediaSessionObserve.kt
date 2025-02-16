@@ -13,6 +13,7 @@ import android.service.notification.NotificationListenerService
 import cn.lyric.getter.api.data.ExtraData
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
+import com.github.kyuubiran.ezxhelper.Log
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
 import statusbar.finder.CSLyricHelper.PlayInfo
@@ -27,7 +28,7 @@ import statusbar.finder.misc.Constants.MSG_LYRIC_UPDATE_DONE
  * @email victormodi@outlook.com
  * @date 2025/2/17 02:41
  */
-open class MediaSessionObserve(context: Context) {
+class MediaSessionObserve(context: Context) {
     private var mediaSessionManager: MediaSessionManager? = null
     private val activeController: MediaController? = null
     private var requiredLrcTitle: String = ""
@@ -35,20 +36,24 @@ open class MediaSessionObserve(context: Context) {
     private var currentLyric: Lyric? = null
     private var lastSentenceFromTime: Long = -1
     private var playInfo: PlayInfo = PlayInfo("", BuildConfig.APPLICATION_ID)
-    private val handler = object : Handler(Looper.myLooper()!!) {
+
+    private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
+        controllers?.let {
+            Log.i("${BuildConfig.APPLICATION_ID} Active sessions changed, controllers count: ${controllers.size}")
+            if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
+            Log.i("${BuildConfig.APPLICATION_ID} ActiveController assigned: ${activeController?.packageName}")
+            activeController?.unregisterCallback(mediaControllerCallback)
+            controllers.firstOrNull()?.registerCallback(mediaControllerCallback)
+        } ?: Log.i("${BuildConfig.APPLICATION_ID} Session controller not found")
+    }
+
+    private val handler = object : Handler(Looper.getMainLooper()!!) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
             if (msg.what == MSG_LYRIC_UPDATE_DONE && msg.data.getString("title", "") == requiredLrcTitle) {
                 currentLyric = msg.obj as Lyric?
+                Log.i("${BuildConfig.APPLICATION_ID} Lyric updated: $currentLyric")
             }
-        }
-    }
-
-    private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
-        controllers?.let {
-            if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
-            activeController?.unregisterCallback(mediaControllerCallback)
-            controllers.firstOrNull()?.registerCallback(mediaControllerCallback)
         }
     }
 
@@ -57,6 +62,7 @@ open class MediaSessionObserve(context: Context) {
             super.onMetadataChanged(metadata)
             metadata?.let {
                 requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
+                Log.i("${BuildConfig.APPLICATION_ID} Metadata changed, new title: $requiredLrcTitle")
                 activeController?.let {
                     if (curLrcUpdateThread == null || !curLrcUpdateThread!!.isAlive) {
                         curLrcUpdateThread = LrcUpdateThread(
@@ -66,6 +72,7 @@ open class MediaSessionObserve(context: Context) {
                             activeController.packageName
                         )
                         curLrcUpdateThread!!.start()
+                        Log.i("${BuildConfig.APPLICATION_ID} Started LrcUpdateThread")
                     }
                 }
             }
@@ -74,6 +81,7 @@ open class MediaSessionObserve(context: Context) {
         override fun onPlaybackStateChanged(state: PlaybackState?) {
             super.onPlaybackStateChanged(state)
             state?.let {
+                Log.i("${BuildConfig.APPLICATION_ID} Playback state changed: ${state.state}")
                 if (state.state == PlaybackState.STATE_PLAYING) {
                     handler.post(lyricUpdateRunnable)
                 } else {
@@ -87,12 +95,12 @@ open class MediaSessionObserve(context: Context) {
 
     private val lyricUpdateRunnable: Runnable = object : Runnable {
         override fun run() {
-            if (activeController?.playbackState == null || activeController.playbackState!!
-                    .state != PlaybackState.STATE_PLAYING
-            ) {
+            Log.i("${BuildConfig.APPLICATION_ID} Updating lyrics...")
+            if (activeController?.playbackState == null || activeController.playbackState!!.state != PlaybackState.STATE_PLAYING) {
                 playInfo.isPlaying = false
                 CSLyricHelper.pause(context, playInfo)
                 EventTool.cleanLyric()
+                Log.i("${BuildConfig.APPLICATION_ID} Paused lyric updates")
                 return
             }
             updateLyric(activeController.playbackState!!.position, context)
@@ -108,6 +116,7 @@ open class MediaSessionObserve(context: Context) {
             val curLyric = sentence.content.trim()
             lastSentenceFromTime = sentence.fromTime
             playInfo.isPlaying = true
+            Log.i("${BuildConfig.APPLICATION_ID} Sending lyric: $curLyric with delay: $delay")
             EventTool.sendLyric(curLyric,
                 ExtraData(
                     customIcon = false,
@@ -129,14 +138,21 @@ open class MediaSessionObserve(context: Context) {
         val nextFoundIndex = LyricUtils.getSentenceIndex(this.sentenceList, position, 0, this.offset) + 1
         if (nextFoundIndex >= this.sentenceList.size) return 1
         val delay: Int = ((this.sentenceList[nextFoundIndex].fromTime - position) / 1000).toInt()
+        Log.i("${BuildConfig.APPLICATION_ID} Calculated delay: $delay")
         return delay
     }
 
     init {
+        Log.i("${BuildConfig.APPLICATION_ID} Initializing MediaSessionObserve")
         mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
-        mediaSessionManager?.addOnActiveSessionsChangedListener(
+        Log.i("${BuildConfig.APPLICATION_ID} MediaSessionManager: $mediaSessionManager")
+
+        Log.i("${BuildConfig.APPLICATION_ID} Trying to register OnActiveSessionsChangedListener")
+        mediaSessionManager!!.addOnActiveSessionsChangedListener(
             activeSessionsListener,
             ComponentName(context, NotificationListenerService::class.java)
         )
+        Log.i("${BuildConfig.APPLICATION_ID} OnActiveSessionsChangedListener registered")
     }
 }
+

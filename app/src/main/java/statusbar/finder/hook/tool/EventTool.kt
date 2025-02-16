@@ -3,6 +3,7 @@ package statusbar.finder.hook.tool
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.os.UserHandle
 import cn.lyric.getter.api.data.ExtraData
 import cn.lyric.getter.api.data.LyricData
 import cn.lyric.getter.api.data.type.OperateType
@@ -54,6 +55,7 @@ object EventTool {
         }
     }
 
+    @SuppressLint("MissingPermission")
     fun cleanLyric() {
         lyricsGetterContext.sendBroadcast(Intent().apply {
             action = "Lyric_Data"
