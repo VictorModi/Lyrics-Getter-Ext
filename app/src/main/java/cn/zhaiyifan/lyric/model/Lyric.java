@@ -1,7 +1,7 @@
 package cn.zhaiyifan.lyric.model;
 
 import org.jetbrains.annotations.NotNull;
-import statusbar.finder.data.model.MediaInfo;
+import statusbar.finder.data.MediaInfo;
 
 import java.util.ArrayList;
 import java.util.Comparator;

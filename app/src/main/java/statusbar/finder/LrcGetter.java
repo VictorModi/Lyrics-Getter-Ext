@@ -2,27 +2,32 @@ package statusbar.finder;
 
 import android.content.Context;
 import android.media.MediaMetadata;
+import androidx.core.util.Pair;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import com.moji4j.MojiConverter;
 import com.moji4j.MojiDetector;
-import kotlin.Pair;
-import statusbar.finder.app.event.LyricsResultChange;
-import statusbar.finder.data.db.DatabaseHelper;
-import statusbar.finder.data.model.DataOrigin;
-import statusbar.finder.data.model.LyricResult;
-import statusbar.finder.data.model.MediaInfo;
-import statusbar.finder.data.repository.ActiveRepository;
-import statusbar.finder.data.repository.LyricRepository;
-import statusbar.finder.data.repository.ResRepository;
-import statusbar.finder.provider.*;
-import statusbar.finder.utils.CheckLanguageUtil;
-import statusbar.finder.utils.LyricSearchUtil;
+import statusbar.finder.data.DataOrigin;
+import statusbar.finder.data.LyricResult;
+import statusbar.finder.data.MediaInfo;
+import statusbar.finder.livedata.LyricsResultChange;
+import statusbar.finder.misc.CheckLanguageUtil;
+import statusbar.finder.provider.ILrcProvider;
+import statusbar.finder.provider.KugouProvider;
+import statusbar.finder.provider.MusixMatchProvider;
+import statusbar.finder.provider.NeteaseProvider;
+import statusbar.finder.provider.QQMusicProvider;
+import statusbar.finder.provider.utils.LyricSearchUtil;
+import statusbar.finder.sql.ActiveManager;
+import statusbar.finder.sql.OriginManager;
+import statusbar.finder.sql.QueryTool;
+import statusbar.finder.sql.ResManager;
 
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 public class LrcGetter {
     private static final ILrcProvider[] providers = {
@@ -50,12 +55,12 @@ public class LrcGetter {
                 return null;
             }
         }
-        Pair<LyricResult, Long> databaseResult = LyricRepository.INSTANCE.getActiveLyricFromDatabase(mediaInfo, packageName);
-        LyricResult currentResult = databaseResult.getFirst();
+        Pair<LyricResult, Long> databaseResult = QueryTool.INSTANCE.getActiveLyricFromDatabase(mediaInfo, packageName);
+        LyricResult currentResult = databaseResult.first;
 
         if (currentResult == null) {
-            searchLyricsResultByInfo(mediaInfo, databaseResult.getSecond(), sysLang);
-            currentResult = LyricRepository.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.getSecond());
+            searchLyricsResultByInfo(mediaInfo, databaseResult.second, sysLang);
+            currentResult = QueryTool.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.second);
         } else {
             LyricsResultChange.Companion.getInstance().notifyResult(new LyricsResultChange.Data(mediaInfo, currentResult));
             return LyricUtils.parseLyric(currentResult, mediaInfo, packageName);
@@ -68,12 +73,12 @@ public class LrcGetter {
                 LyricsResultChange.Companion.getInstance().notifyResult(new LyricsResultChange.Data(mediaInfo, null));
                 return null;
             }
-            searchLyricsResultByInfo(hiraganaMediaInfo, databaseResult.getSecond(), sysLang);
-            currentResult = LyricRepository.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.getSecond());
+            searchLyricsResultByInfo(hiraganaMediaInfo, databaseResult.second, sysLang);
+            currentResult = QueryTool.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.second);
             if (currentResult == null) {
                 hiraganaMediaInfo.setTitle(converter.convertRomajiToKatakana(mediaInfo.getTitle()));
-                searchLyricsResultByInfo(hiraganaMediaInfo, databaseResult.getSecond(), sysLang);
-                currentResult = LyricRepository.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.getSecond());
+                searchLyricsResultByInfo(hiraganaMediaInfo, databaseResult.second, sysLang);
+                currentResult = QueryTool.INSTANCE.getActiveLyricFromDatabaseByOriginId(databaseResult.second);
             }
         }
 
@@ -120,7 +125,7 @@ public class LrcGetter {
                                 break;
                         }
                     }
-                    ResRepository.INSTANCE.insertResData(originId, lyricResult);
+                    ResManager.INSTANCE.insertResData(originId, lyricResult);
                     if (LyricSearchUtil.isLyricContent(lyricResult.getLyric())
                             && (bestMatchSource == null || bestMatchDistance > lyricResult.getDistance())) {
                         bestMatchSource = lyricResult.getSource();
@@ -131,9 +136,9 @@ public class LrcGetter {
             }
         }
         if (bestMatchSource != null) {
-            Res bestMatchResult = ResRepository.INSTANCE.getResByOriginIdAndProvider(originId, bestMatchSource);
+            Res bestMatchResult = ResManager.INSTANCE.getResByOriginIdAndProvider(originId, bestMatchSource);
             assert bestMatchResult != null;
-            ActiveRepository.INSTANCE.insertActiveLog(originId, bestMatchResult.getId());
+            ActiveManager.INSTANCE.insertActiveLog(originId, bestMatchResult.getId());
         }
     }
 }

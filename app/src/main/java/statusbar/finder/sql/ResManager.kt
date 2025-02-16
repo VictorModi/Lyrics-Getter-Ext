@@ -1,21 +1,23 @@
-package statusbar.finder.data.repository
+package statusbar.finder.sql
 
 import android.database.sqlite.SQLiteConstraintException
+import statusbar.finder.DatabaseHelper
 import statusbar.finder.Res
 import statusbar.finder.ResQueries
-import statusbar.finder.data.db.DatabaseHelper
-import statusbar.finder.data.model.LyricResult
+import statusbar.finder.data.LyricResult
+import statusbar.finder.provider.ILrcProvider
 
 /**
- * LyricGetterExt - statusbar.finder.data.repository
+ * LyricGetterExt - statusbar.finder.sql
  * @description TODO: coming soon.
  * @author VictorModi
  * @email victormodi@outlook.com
- * @date 2025/2/16 23:09
+ * @date 2025/2/9 13:18
  */
-object ResRepository {
+object ResManager {
     private val queries: ResQueries by lazy {
-        DatabaseHelper.getDatabase().resQueries
+        DatabaseHelper.database?.resQueries
+            ?: throw IllegalStateException("Database not initialized")
     }
 
     fun insertResData(originId: Long, lyricResult: LyricResult) {
@@ -45,11 +47,11 @@ object ResRepository {
         return queries.getResById(resId).executeAsOneOrNull()
     }
 
-    fun updateResOffsetById(id: Long, offset: Long) {
-        return queries.updateResOffset(offset, id)
-    }
-
     fun getResByOriginIdAndProvider(originId: Long, provider: String): Res? {
         return queries.getResByIdAndProvider(originId, provider).executeAsOneOrNull()
+    }
+
+    fun updateResOffsetById(id: Long, offset: Long) {
+        return queries.updateResOffset(offset, id)
     }
 }

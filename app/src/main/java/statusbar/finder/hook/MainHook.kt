@@ -1,13 +1,14 @@
 package statusbar.finder.hook
 
-
 import com.github.kyuubiran.ezxhelper.EzXHelper
 import com.github.kyuubiran.ezxhelper.Log
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage
-import statusbar.finder.hook.app.SystemUI
 
+
+import statusbar.finder.BuildConfig
+import statusbar.finder.hook.app.SystemUI
 
 /**
  * LyricGetterExt - statusbar.finder.hook
@@ -16,15 +17,14 @@ import statusbar.finder.hook.app.SystemUI
  * @email victormodi@outlook.com
  * @date 2024/2/23 0:17
  */
-class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
+abstract class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        EzXHelper.initHandleLoadPackage(lpparam)
+//        LogTool.init("Lyrics Getter Ext", { BuildConfig.DEBUG }, true)
         when (lpparam.packageName) {
             "com.android.systemui" -> initHooks(SystemUI)
             else -> return
         }
     }
-
 
     override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
         EzXHelper.initZygote(startupParam)

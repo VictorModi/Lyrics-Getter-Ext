@@ -23,7 +23,7 @@
         android:theme="@style/Theme.SubSettingsBase">
 
         <service
-            android:name="statusbar.finder.app.MusicListenerService"
+            android:name="statusbar.finder.MusicListenerService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
@@ -33,7 +33,7 @@
         </service>
 
         <activity
-            android:name="statusbar.finder.app.SettingsActivity"
+            android:name="statusbar.finder.SettingsActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,13 +42,13 @@
             </intent-filter>
         </activity>
         <activity
-                android:name="statusbar.finder.app.LyricsActivity"
+                android:name="statusbar.finder.LyricsActivity"
                 android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         />
 
         <meta-data
                 android:name="xposedmodule"
-                android:value="true"/>
+                android:value="false"/>
         <meta-data
                 android:name="xposeddescription"
                 android:value="Push lyrics to Lyrics Getter from the Internet. (Incomplete)" />

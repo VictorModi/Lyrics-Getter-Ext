@@ -6,10 +6,10 @@ import android.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import statusbar.finder.data.model.LyricResult;
-import statusbar.finder.data.model.MediaInfo;
-import statusbar.finder.utils.HttpRequestUtil;
-import statusbar.finder.utils.LyricSearchUtil;
+import statusbar.finder.data.LyricResult;
+import statusbar.finder.data.MediaInfo;
+import statusbar.finder.provider.utils.HttpRequestUtil;
+import statusbar.finder.provider.utils.LyricSearchUtil;
 
 import java.io.IOException;
 import java.util.Locale;

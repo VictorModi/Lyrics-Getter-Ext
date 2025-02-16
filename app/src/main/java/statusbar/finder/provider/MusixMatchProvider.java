@@ -8,12 +8,12 @@ import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import statusbar.finder.data.model.LyricResult;
-import statusbar.finder.data.model.MediaInfo;
-import statusbar.finder.utils.CheckLanguageUtil;
-import statusbar.finder.utils.HttpRequestUtil;
-import statusbar.finder.utils.LyricSearchUtil;
-import statusbar.finder.utils.UnicodeUtil;
+import statusbar.finder.data.LyricResult;
+import statusbar.finder.data.MediaInfo;
+import statusbar.finder.misc.CheckLanguageUtil;
+import statusbar.finder.provider.utils.HttpRequestUtil;
+import statusbar.finder.provider.utils.LyricSearchUtil;
+import statusbar.finder.provider.utils.UnicodeUtil;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -21,7 +21,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static statusbar.finder.utils.LyricSearchUtil.extractLyric;
+import static statusbar.finder.provider.utils.LyricSearchUtil.extractLyric;
 
 public class MusixMatchProvider implements ILrcProvider {
 

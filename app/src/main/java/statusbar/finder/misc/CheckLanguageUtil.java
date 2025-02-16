@@ -1,4 +1,4 @@
-package statusbar.finder.utils;
+package statusbar.finder.misc;
 
 import com.moji4j.MojiDetector;
 

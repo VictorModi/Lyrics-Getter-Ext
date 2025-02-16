@@ -1,4 +1,4 @@
-package statusbar.finder.utils;
+package statusbar.finder.provider.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

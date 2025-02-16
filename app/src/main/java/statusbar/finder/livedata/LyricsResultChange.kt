@@ -1,4 +1,4 @@
-package statusbar.finder.app.event
+package statusbar.finder.livedata
 
 /**
  * LyricGetterExt - statusbar.finder.livedata
@@ -8,8 +8,9 @@ package statusbar.finder.app.event
  * @date 2025/2/8 19:57
  */
 import androidx.lifecycle.LiveData
-import statusbar.finder.data.model.LyricResult
-import statusbar.finder.data.model.MediaInfo
+import statusbar.finder.data.LyricResult
+import statusbar.finder.data.MediaInfo
+import statusbar.finder.provider.ILrcProvider
 
 class LyricsResultChange private constructor() : LiveData<LyricsResultChange.Data>() {
 

@@ -1,19 +1,22 @@
-package statusbar.finder.app
+package statusbar.finder
 
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Space
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.zhaiyifan.lyric.model.Lyric
-import statusbar.finder.data.model.LyricItem
-import statusbar.finder.R
-import statusbar.finder.app.event.LyricSentenceUpdate
-import statusbar.finder.app.event.LyricsChange
-import statusbar.finder.data.repository.LyricRepository
-import statusbar.finder.data.repository.ResRepository
+import statusbar.finder.livedata.LyricSentenceUpdate
+import statusbar.finder.livedata.LyricsChange
+import statusbar.finder.sql.ActiveManager
+import statusbar.finder.sql.QueryTool
+import statusbar.finder.sql.ResManager
 
 /**
  * LyricGetterExt - statusbar.finder
@@ -64,7 +67,7 @@ class LyricsActivity : AppCompatActivity() {
                     Toast.makeText(applicationContext, "Offset not valid", Toast.LENGTH_SHORT).show()
 
                 }
-                ResRepository.updateResOffsetById(currentLyricResId, newOffset)
+                ResManager.updateResOffsetById(currentLyricResId, newOffset)
                 currentLyric?.offset = newOffset
                 LyricsChange.getInstance().notifyResult(LyricsChange.Data(currentLyric))
                 Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
@@ -116,7 +119,7 @@ class LyricsActivity : AppCompatActivity() {
 
         updateSongInfo(lyric)
         syncOffset(lyric)
-        currentLyricResId = LyricRepository.getActiveResIdByLyric(lyric)!!
+        currentLyricResId = QueryTool.getActiveResIdByLyric(lyric)!!
         adapter.notifyDataSetChanged()
         currentHighlightPos = -1
     }

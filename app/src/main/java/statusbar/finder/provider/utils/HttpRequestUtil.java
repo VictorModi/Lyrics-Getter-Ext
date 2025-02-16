@@ -1,4 +1,4 @@
-package statusbar.finder.utils;
+package statusbar.finder.provider.utils;
 
 import android.text.TextUtils;
 import org.json.JSONException;

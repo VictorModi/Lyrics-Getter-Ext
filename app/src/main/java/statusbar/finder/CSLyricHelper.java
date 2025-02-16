@@ -6,7 +6,6 @@ package statusbar.finder;
 import android.content.Context;
 import android.content.Intent;
 import android.util.JsonWriter;
-
 import java.io.IOException;
 import java.io.StringWriter;
 
