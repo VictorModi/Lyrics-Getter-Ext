@@ -1,4 +1,4 @@
-package statusbar.finder.livedata
+package statusbar.finder.app.event
 
 import androidx.lifecycle.LiveData
 

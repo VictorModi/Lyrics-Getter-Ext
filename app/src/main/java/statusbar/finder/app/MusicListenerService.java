@@ -1,4 +1,4 @@
-package statusbar.finder;
+package statusbar.finder.app;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -31,16 +31,21 @@ import cn.lyric.getter.api.data.ExtraData;
 import cn.lyric.getter.api.tools.Tools;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
-import statusbar.finder.data.MediaInfo;
-import statusbar.finder.livedata.AppsListChanged;
-import statusbar.finder.livedata.LyricsChange;
-import statusbar.finder.livedata.LyricsResultChange;
-import statusbar.finder.livedata.LyricSentenceUpdate;
+import statusbar.finder.CSLyricHelper;
+import statusbar.finder.LrcGetter;
+import statusbar.finder.R;
+import statusbar.finder.app.event.AppsListChanged;
+import statusbar.finder.app.event.LyricSentenceUpdate;
+import statusbar.finder.app.event.LyricsChange;
+import statusbar.finder.app.event.LyricsResultChange;
+import statusbar.finder.data.db.DatabaseHelper;
+import statusbar.finder.data.model.MediaInfo;
 import statusbar.finder.misc.Constants;
 
 import java.util.*;
 
-import static statusbar.finder.misc.Constants.*;
+import static statusbar.finder.misc.Constants.PREFERENCE_KEY_FORCE_REPEAT;
+import static statusbar.finder.misc.Constants.PREFERENCE_KEY_TRANSLATE_TYPE;
 
 public class MusicListenerService extends NotificationListenerService {
 

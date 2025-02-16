@@ -1,4 +1,4 @@
-package statusbar.finder.provider.utils;
+package statusbar.finder.utils;
 
 import android.media.MediaMetadata;
 import android.os.Build;
@@ -6,8 +6,7 @@ import android.text.TextUtils;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
-import statusbar.finder.data.MediaInfo;
-import statusbar.finder.misc.CheckLanguageUtil;
+import statusbar.finder.data.model.MediaInfo;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

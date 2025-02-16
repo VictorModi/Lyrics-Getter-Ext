@@ -1,24 +1,22 @@
-package statusbar.finder.sql
+package statusbar.finder.data.repository
 
 import android.database.sqlite.SQLiteConstraintException
-import statusbar.finder.DatabaseHelper
 import statusbar.finder.OriginQueries
-import statusbar.finder.data.MediaInfo
+import statusbar.finder.data.db.DatabaseHelper
+import statusbar.finder.data.model.MediaInfo
 
 /**
- * LyricGetterExt - statusbar.finder.sql
+ * LyricGetterExt - statusbar.finder.data.repository
  * @description TODO: coming soon.
  * @author VictorModi
  * @email victormodi@outlook.com
- * @date 2025/2/9 13:52
+ * @date 2025/2/16 23:08
  */
-object OriginManager {
+object OriginRepository {
     private val queries: OriginQueries by lazy {
-        DatabaseHelper.database?.originQueries
-            ?: throw IllegalStateException("Database not initialized")
+        DatabaseHelper.getDatabase().originQueries
     }
 
-    @JvmStatic
     fun insertOrGetMediaInfoId(mediaInfo: MediaInfo, packageName: String): Long {
         getOriginId(mediaInfo, packageName)?.let { return it }
         return try {
@@ -44,9 +42,5 @@ object OriginManager {
             packageName
         ).executeAsOneOrNull()
     }
-
-    @JvmStatic
-    fun getMediaInfoById(id: Long): MediaInfo? {
-        return queries.getInfoById(id).executeAsOneOrNull()?.let { MediaInfo(it) }
-    }
 }
+

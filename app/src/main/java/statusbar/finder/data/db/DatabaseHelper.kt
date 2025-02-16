@@ -1,7 +1,8 @@
-package statusbar.finder
+package statusbar.finder.data.db
 
 import android.content.Context
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import statusbar.finder.LyricDatabase
 
 /**
  * LyricGetterExt - statusbar
@@ -12,15 +13,19 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
  */
 object DatabaseHelper {
     private const val DATABASE_NAME = "lyric.db"
-    var database: LyricDatabase? = null
-        private set
+    private lateinit var database: LyricDatabase
 
     @Synchronized
-    fun init(context: Context?) {
-        if (database != null || context == null) {
-            return
-        }
+    fun init(context: Context) {
+        if (DatabaseHelper::database.isInitialized) return
         val driver = AndroidSqliteDriver(LyricDatabase.Schema, context, DATABASE_NAME)
         database = LyricDatabase(driver)
+    }
+
+    fun getDatabase(): LyricDatabase {
+        if (!DatabaseHelper::database.isInitialized) {
+            throw IllegalStateException("DatabaseHelper.init() must be called before using the database.")
+        }
+        return database
     }
 }

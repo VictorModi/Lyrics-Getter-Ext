@@ -1,8 +1,7 @@
-package statusbar.finder.livedata
+package statusbar.finder.app.event
 
 import androidx.lifecycle.LiveData
 import cn.zhaiyifan.lyric.model.Lyric
-import statusbar.finder.provider.ILrcProvider
 
 /**
  * LyricGetterExt - statusbar.finder.livedata
