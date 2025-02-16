@@ -1,4 +1,4 @@
-package statusbar.finder;
+package statusbar.finder.app;
 
 import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
@@ -20,6 +20,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.preference.*;
 import cn.lyric.getter.api.API;
 import org.jetbrains.annotations.NotNull;
+import statusbar.finder.R;
 import statusbar.finder.misc.Constants;
 
 import java.util.HashMap;
@@ -34,14 +35,14 @@ public class SettingsActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.collapsing_toolbar_base_layout);
+        setContentView(statusbar.finder.R.layout.collapsing_toolbar_base_layout);
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.content_frame, new SettingsFragment())
+                    .replace(statusbar.finder.R.id.content_frame, new SettingsFragment())
                     .commit();
         }
-        Toolbar collapsingToolbar = findViewById(R.id.action_bar);
+        Toolbar collapsingToolbar = findViewById(statusbar.finder.R.id.action_bar);
         setActionBar(collapsingToolbar);
 
 
@@ -135,10 +136,10 @@ public class SettingsActivity extends FragmentActivity {
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-            setPreferencesFromResource(R.xml.root_preferences, rootKey);
+            setPreferencesFromResource(statusbar.finder.R.xml.root_preferences, rootKey);
             NotificationManagerCompat manager = NotificationManagerCompat.from(requireContext());
             if (!manager.areNotificationsEnabled()) {
-                Toast.makeText(requireContext(), R.string.toast_get_notification_permission, Toast.LENGTH_LONG).show();
+                Toast.makeText(requireContext(), statusbar.finder.R.string.toast_get_notification_permission, Toast.LENGTH_LONG).show();
                 enableNotification(requireContext());
             }
             if (!isIgnoringBatteryOptimizations(requireContext())){

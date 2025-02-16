@@ -1,31 +1,25 @@
-package statusbar.finder.sql
+package statusbar.finder.data.repository
 
 import statusbar.finder.ActiveQueries
-import statusbar.finder.DatabaseHelper
+import statusbar.finder.data.db.DatabaseHelper
 
 /**
- * LyricGetterExt - statusbar.finder.sql
+ * LyricGetterExt - statusbar.finder.data.repository
  * @description TODO: coming soon.
  * @author VictorModi
  * @email victormodi@outlook.com
- * @date 2025/2/9 13:53
+ * @date 2025/2/16 23:07
  */
-object ActiveManager {
+object ActiveRepository {
     private val queries: ActiveQueries by lazy {
-        DatabaseHelper.database?.activeQueries
-            ?: throw IllegalStateException("Database not initialized")
+        DatabaseHelper.getDatabase().activeQueries
     }
 
     fun insertActiveLog(originId: Long, resultId: Long) {
         queries.insertActive(originId, resultId)
     }
 
-    fun updateActiveLog(originId: Long, resultId: Long) {
-        queries.updateActive(originId, resultId)
-    }
-
     fun getResultIdByOriginId(originId: Long): Long? {
         return queries.getResultId(originId).executeAsOneOrNull()
     }
 }
-

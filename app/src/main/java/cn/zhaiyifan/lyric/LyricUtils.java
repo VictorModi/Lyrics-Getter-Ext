@@ -1,12 +1,10 @@
 package cn.zhaiyifan.lyric;
 
-import android.media.MediaMetadata;
 import android.util.Log;
 import cn.zhaiyifan.lyric.model.Lyric;
 import cn.zhaiyifan.lyric.model.Lyric.Sentence;
-import statusbar.finder.data.LyricResult;
-import statusbar.finder.data.MediaInfo;
-import statusbar.finder.provider.ILrcProvider;
+import statusbar.finder.data.model.LyricResult;
+import statusbar.finder.data.model.MediaInfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;

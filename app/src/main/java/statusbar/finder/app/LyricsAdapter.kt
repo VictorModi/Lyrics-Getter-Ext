@@ -1,4 +1,4 @@
-package statusbar.finder
+package statusbar.finder.app
 
 import android.content.Context
 import android.content.res.Configuration
@@ -8,10 +8,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.content.ContextCompat
-import androidx.core.view.marginBottom
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.color.MaterialColors
+import statusbar.finder.data.model.LyricItem
+import statusbar.finder.R
 
 /**
  * LyricGetterExt - statusbar.finder
