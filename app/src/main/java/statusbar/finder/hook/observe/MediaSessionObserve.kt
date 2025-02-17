@@ -41,6 +41,7 @@ object MediaSessionObserve {
     private var currentLyric: Lyric? = null
     private var lastSentenceFromTime: Long = -1
     private var playInfo: PlayInfo = PlayInfo("", BuildConfig.APPLICATION_ID)
+    private val user: UserHandle = UserHandle.getUserHandleForUid(android.os.Process.myUid())
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
         controllers?.let {
@@ -69,6 +70,7 @@ object MediaSessionObserve {
                 currentLyric = null
                 EventTool.cleanLyric()
                 requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
+                Log.i("${BuildConfig.APPLICATION_ID} MediaMetadata Change, New Title: ${requiredLrcTitle}")
 
                 activeController?.let {
                     if (curLrcUpdateThread == null || !curLrcUpdateThread!!.isAlive) {
@@ -93,7 +95,7 @@ object MediaSessionObserve {
                 } else {
                     handler.removeCallbacks(lyricUpdateRunnable)
                     EventTool.cleanLyric()
-                    CSLyricHelper.pause(context, playInfo)
+                    CSLyricHelper.pauseAsUser(context, playInfo, user)
                 }
             }
         }
@@ -103,7 +105,7 @@ object MediaSessionObserve {
         override fun run() {
             if (activeController?.playbackState == null || activeController!!.playbackState!!.state != PlaybackState.STATE_PLAYING) {
                 playInfo.isPlaying = false
-                CSLyricHelper.pauseAsUser(context, playInfo, UserHandle.getUserHandleForUid(android.os.Process.myUid()))
+                CSLyricHelper.pauseAsUser(context, playInfo, user)
                 EventTool.cleanLyric()
                 return
             }
@@ -133,7 +135,7 @@ object MediaSessionObserve {
                 context,
                 playInfo,
                 CSLyricHelper.LyricData(curLyric),
-                UserHandle.getUserHandleForUid(android.os.Process.myUid())
+                user
             )
         }
     }
@@ -147,7 +149,7 @@ object MediaSessionObserve {
 
     fun initByContext(initContext: Context) {
         context = initContext
-        EventTool.setContext(context)
+        EventTool.setContext(context, user)
         DatabaseHelper.init(context)
         mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
         mediaSessionManager?.addOnActiveSessionsChangedListener(
