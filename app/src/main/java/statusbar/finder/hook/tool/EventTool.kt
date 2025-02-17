@@ -20,7 +20,7 @@ import statusbar.finder.BuildConfig
  * @date 2025/2/17 00:09
  */
 
-@SuppressLint("StaticFieldLeak")
+@SuppressLint("StaticFieldLeak", "MissingPermission")
 object EventTool {
     private lateinit var lyricsGetterContext: Context
     private var lastLyricData: LyricData? by observableChange(null) { _, _, newValue ->
@@ -28,10 +28,10 @@ object EventTool {
             if (lyric.isBlank()) {
                 cleanLyric()
             } else {
-                lyricsGetterContext.sendBroadcast(Intent().apply {
+                lyricsGetterContext.sendBroadcastAsUser(Intent().apply {
                     action = "Lyric_Data"
                     putExtra("Data", newValue)
-                })
+                }, UserHandle.getUserHandleForUid(android.os.Process.myUid()))
                 Log.d(this.toString())
             }
         }
@@ -55,9 +55,8 @@ object EventTool {
         }
     }
 
-    @SuppressLint("MissingPermission")
     fun cleanLyric() {
-        lyricsGetterContext.sendBroadcast(Intent().apply {
+        lyricsGetterContext.sendBroadcastAsUser(Intent().apply {
             action = "Lyric_Data"
             val lyricData = LyricData().apply {
                 this.type = OperateType.STOP
@@ -66,10 +65,11 @@ object EventTool {
                 })
             }
             putExtra("Data", lyricData)
-        })
+        }, UserHandle.getUserHandleForUid(android.os.Process.myUid()))
     }
 
     fun setContext(context: Context) {
         lyricsGetterContext = context
+        Log.i("${BuildConfig.APPLICATION_ID} Initializing EventTool, Context by ${lyricsGetterContext.packageName}")
     }
 }

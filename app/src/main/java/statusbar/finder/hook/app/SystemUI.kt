@@ -2,6 +2,7 @@ package statusbar.finder.hook.app
 
 import android.media.session.MediaController
 import cn.lyric.getter.api.API
+import kotlinx.coroutines.delay
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.hook.BaseHook
 import statusbar.finder.hook.observe.MediaSessionObserve
@@ -20,9 +21,7 @@ object SystemUI : BaseHook() {
     override fun init() {
         super.init()
         getApplication {
-            DatabaseHelper.init(it.baseContext)
-            EventTool.setContext(it.baseContext)
-            MediaSessionObserve(it.baseContext)
+            MediaSessionObserve.initByContext(it.baseContext)
         }
     }
 }
