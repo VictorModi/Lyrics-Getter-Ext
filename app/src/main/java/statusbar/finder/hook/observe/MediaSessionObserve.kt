@@ -10,6 +10,7 @@ import android.media.session.PlaybackState
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.os.UserHandle
 import android.service.notification.NotificationListenerService
 import cn.lyric.getter.api.data.ExtraData
 import cn.zhaiyifan.lyric.LyricUtils
@@ -43,6 +44,8 @@ object MediaSessionObserve {
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
         controllers?.let {
+            currentLyric = null
+            EventTool.cleanLyric()
             if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
             activeController?.unregisterCallback(mediaControllerCallback)
             controllers.firstOrNull()?.registerCallback(mediaControllerCallback)
@@ -62,8 +65,9 @@ object MediaSessionObserve {
     private val mediaControllerCallback = object : MediaController.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
             super.onMetadataChanged(metadata)
-            currentLyric = null
             metadata?.let {
+                currentLyric = null
+                EventTool.cleanLyric()
                 requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
 
                 activeController?.let {
@@ -75,7 +79,6 @@ object MediaSessionObserve {
                             activeController!!.packageName
                         )
                         curLrcUpdateThread!!.start()
-
                     }
                 }
             }
@@ -100,7 +103,7 @@ object MediaSessionObserve {
         override fun run() {
             if (activeController?.playbackState == null || activeController!!.playbackState!!.state != PlaybackState.STATE_PLAYING) {
                 playInfo.isPlaying = false
-                CSLyricHelper.pause(context, playInfo)
+                CSLyricHelper.pauseAsUser(context, playInfo, UserHandle.getUserHandleForUid(android.os.Process.myUid()))
                 EventTool.cleanLyric()
                 return
             }
@@ -126,10 +129,11 @@ object MediaSessionObserve {
                     delay = delay,
                 )
             )
-            CSLyricHelper.updateLyric(
+            CSLyricHelper.updateLyricAsUser(
                 context,
                 playInfo,
-                CSLyricHelper.LyricData(curLyric)
+                CSLyricHelper.LyricData(curLyric),
+                UserHandle.getUserHandleForUid(android.os.Process.myUid())
             )
         }
     }
@@ -146,10 +150,14 @@ object MediaSessionObserve {
         EventTool.setContext(context)
         DatabaseHelper.init(context)
         mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
-        mediaSessionManager!!.addOnActiveSessionsChangedListener(
+        mediaSessionManager?.addOnActiveSessionsChangedListener(
             activeSessionsListener,
             ComponentName(context, NotificationListenerService::class.java)
         )
+        val initialControllers = mediaSessionManager?.getActiveSessions(
+            ComponentName(context, NotificationListenerService::class.java)
+        )
+        activeSessionsListener.onActiveSessionsChanged(initialControllers)
     }
 }
 
