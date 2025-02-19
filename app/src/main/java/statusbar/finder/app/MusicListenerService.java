@@ -40,19 +40,14 @@ import statusbar.finder.app.event.LyricsChange;
 import statusbar.finder.app.event.LyricsResultChange;
 import statusbar.finder.data.db.DatabaseHelper;
 import statusbar.finder.data.model.MediaInfo;
+import statusbar.finder.hook.tool.Tool;
 import statusbar.finder.misc.Constants;
 
 import java.util.*;
 
-import static statusbar.finder.misc.Constants.PREFERENCE_KEY_FORCE_REPEAT;
-import static statusbar.finder.misc.Constants.PREFERENCE_KEY_TRANSLATE_TYPE;
+import static statusbar.finder.misc.Constants.*;
 
 public class MusicListenerService extends NotificationListenerService {
-
-    private static final int NOTIFICATION_ID_LRC = 1;
-
-    private static final int MSG_LYRIC_UPDATE_DONE = 2;
-
     private MediaSessionManager mMediaSessionManager;
     private MediaController mMediaController;
     private NotificationManager mNotificationManager;
@@ -73,7 +68,7 @@ public class MusicListenerService extends NotificationListenerService {
     @SuppressLint("ConstantLocale")
     public final static String systemLanguage = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
     private String drawBase64;
-    private Thread curLrcUpdateThread;
+    private LrcUpdateThread curLrcUpdateThread;
     private API lyricsGetterApi;
     public static MusicListenerService instance;
     public String musicInfo;
@@ -194,6 +189,10 @@ public class MusicListenerService extends NotificationListenerService {
     @Override
     public void onListenerConnected() {
         super.onListenerConnected();
+        if (Tool.INSTANCE.getXpActivation()) {
+            stopSelf();
+            return;
+        }
         instance = this;
 //        offsetPreferences = getSharedPreferences("offset", MODE_PRIVATE);
 //        translationStatusReferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
@@ -434,7 +433,7 @@ public class MusicListenerService extends NotificationListenerService {
         }
     }
 
-    private int calculateDelay(long position) {
+    public int calculateDelay(long position) {
         // 注意: 结果的单位为秒 (Second)
         int nextFoundIndex = LyricUtils.getSentenceIndex(mLyric.sentenceList, position, 0, mLyric.offset) + 1;
 

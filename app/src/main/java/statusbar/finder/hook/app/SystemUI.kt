@@ -1,9 +1,10 @@
 package statusbar.finder.hook.app
 
-import cn.lyric.getter.api.API
-import statusbar.finder.data.db.DatabaseHelper
+import android.app.Application
+import com.github.kyuubiran.ezxhelper.HookFactory.`-Static`.createHook
+import com.github.kyuubiran.ezxhelper.finders.MethodFinder.`-Static`.methodFinder
 import statusbar.finder.hook.BaseHook
-import statusbar.finder.hook.tool.HookTool.getApplication
+import statusbar.finder.hook.observe.MediaSessionManagerHelper
 
 /**
  * LyricGetterExt - statusbar.finder.hook.app
@@ -13,17 +14,13 @@ import statusbar.finder.hook.tool.HookTool.getApplication
  * @date 2025/1/21 下午3:17
  */
 object SystemUI : BaseHook() {
-    private val lyricsGetterApi: API = API()
 
     override fun init() {
         super.init()
-        hook()
-    }
-
-    private fun hook(classloader: ClassLoader? = null) {
-        getApplication {
-            DatabaseHelper.init(it.baseContext)
+        Application::class.java.methodFinder().filterByName("attach").first().createHook {
+            after {
+                MediaSessionManagerHelper.init(it.thisObject as Application)
+            }
         }
-        assert(lyricsGetterApi.hasEnable)
     }
 }

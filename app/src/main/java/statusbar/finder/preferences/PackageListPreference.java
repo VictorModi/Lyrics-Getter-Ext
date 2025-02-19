@@ -28,6 +28,8 @@ import androidx.preference.PreferenceCategory;
 import org.jetbrains.annotations.NotNull;
 import statusbar.finder.R;
 import statusbar.finder.app.event.AppsListChanged;
+import statusbar.finder.config.Config;
+import statusbar.finder.hook.tool.Tool;
 import statusbar.finder.preferences.PackageListAdapter.PackageItem;
 
 import java.util.ArrayList;
@@ -45,11 +47,12 @@ public class PackageListPreference extends PreferenceCategory implements
     private final Preference mAddPackagePref;
 
     private final ArrayList<String> mPackages = new ArrayList<>();
+    private final Config mConfig;
 
     public PackageListPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
-
+        mConfig = new Config();
         mPackageManager = mContext.getPackageManager();
         mPackageAdapter = new PackageListAdapter(mContext);
         mAddPackagePref = makeAddPref();
@@ -97,8 +100,9 @@ public class PackageListPreference extends PreferenceCategory implements
         packageListData = String.join(";", mPackages);
         persistString(packageListData);
         AppsListChanged.Companion.getInstance().notifyChange();
-        // this.getContext().sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
-        // LocalBroadcastManager.getInstance(this.getContext()).sendBroadcast(new Intent(Constants.BROADCAST_TARGET_APP_CHANGED));
+        if (Tool.INSTANCE.getXpActivation()) {
+            mConfig.setTargetPackages(packageListData);
+        }
     }
 
     private void addPackageToPref(String packageName) {
