@@ -1,232 +1,210 @@
-package statusbar.finder.app;
+package statusbar.finder.app
 
-import android.annotation.SuppressLint;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.PowerManager;
-import android.provider.Settings;
-import android.text.TextUtils;
-import android.widget.Toast;
-import android.widget.Toolbar;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.fragment.app.FragmentActivity;
-import androidx.preference.*;
-import cn.lyric.getter.api.API;
-import org.jetbrains.annotations.NotNull;
-import statusbar.finder.R;
-import statusbar.finder.misc.Constants;
+/**
+ * LyricGetterExt - statusbar.finder.app
+ * @description
+ * @author VictorModi
+ * @email victormodi@outlook.com
+ * @date 2025/2/18 20:06
+ */
 
-import java.util.HashMap;
-import java.util.Map;
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
+import android.util.Log
+import android.widget.Toast
+import android.widget.Toolbar
+import androidx.core.app.NotificationManagerCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.preference.*
+import cn.lyric.getter.api.API
+import statusbar.finder.BuildConfig
+import statusbar.finder.R
+import statusbar.finder.config.Config
+import statusbar.finder.hook.tool.Tool.xpActivation
+import statusbar.finder.misc.Constants
 
-public class SettingsActivity extends FragmentActivity {
+class SettingsActivity : FragmentActivity() {
 
-    private final static Map<String, String> mUrlMap = new HashMap<>();
-    public final static boolean lyricsGetterApiHasEnable = new API().getHasEnable();
+    companion object {
+        private val mUrlMap: MutableMap<String, String> = mutableMapOf(
+            "app" to "https://github.com/VictorModi/Lyrics-Getter-Ext",
+            "statusbarlyricext" to "https://github.com/KaguraRinko/StatusBarLyricExt",
+            "lyricview" to "https://github.com/markzhai/LyricView"
+        )
+        val lyricsGetterApiHasEnable: Boolean = API().hasEnable
 
+        private var config: Config = Config()
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(statusbar.finder.R.layout.collapsing_toolbar_base_layout);
+        fun enableNotification(context: Context) {
+            try {
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    putExtra(Settings.EXTRA_CHANNEL_ID, context.applicationInfo.uid)
+                    putExtra("app_package", context.packageName)
+                    putExtra("app_uid", context.applicationInfo.uid)
+                }
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            }
+        }
+
+        private fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+            return powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: false
+        }
+
+        @SuppressLint("BatteryLife")
+        fun requestIgnoreBatteryOptimizations(context: Context) {
+            try {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                }
+                context.startActivity(intent)
+            } catch (_: Exception) {}
+        }
+
+        private fun isNotificationListenerEnabled(context: Context): Boolean {
+            val pkgName = context.packageName
+            val flat = Settings.Secure.getString(context.contentResolver, Constants.SETTINGS_ENABLED_NOTIFICATION_LISTENERS)
+            return flat?.split(":")?.any { ComponentName.unflattenFromString(it)?.packageName == pkgName } ?: false
+        }
+
+        private fun getAppVersionName(context: Context): String? {
+            return try {
+                val pm = context.packageManager
+                pm.getPackageInfo(context.packageName, 0).versionName
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.collapsing_toolbar_base_layout)
         if (savedInstanceState == null) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(statusbar.finder.R.id.content_frame, new SettingsFragment())
-                    .commit();
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.content_frame, SettingsFragment())
+                .commit()
         }
-        Toolbar collapsingToolbar = findViewById(statusbar.finder.R.id.action_bar);
-        setActionBar(collapsingToolbar);
 
+        val collapsingToolbar: Toolbar = findViewById(R.id.action_bar)
+        setActionBar(collapsingToolbar)
 
-        // add urls
-        mUrlMap.put("app", "https://github.com/VictorModi/Lyrics-Getter-Ext");
-        mUrlMap.put("statusbarlyricext", "https://github.com/KaguraRinko/StatusBarLyricExt");
-        mUrlMap.put("lyricview", "https://github.com/markzhai/LyricView");
-
-        NotificationChannel channel = new NotificationChannel(Constants.NOTIFICATION_CHANNEL_LRC, "LRC", NotificationManager.IMPORTANCE_MIN);
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.createNotificationChannel(channel);
-        }
+        val channel = NotificationChannel(
+            Constants.NOTIFICATION_CHANNEL_LRC, "LRC", NotificationManager.IMPORTANCE_MIN
+        )
+        (getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.createNotificationChannel(channel)
     }
 
-    public static void enableNotification(Context context) {
-        try {
-            Intent intent = new Intent();
-            intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-            intent.putExtra(Settings.EXTRA_APP_PACKAGE,context. getPackageName());
-            intent.putExtra(Settings.EXTRA_CHANNEL_ID, context.getApplicationInfo().uid);
-            intent.putExtra("app_package", context.getPackageName());
-            intent.putExtra("app_uid", context.getApplicationInfo().uid);
-            context.startActivity(intent);
-        } catch (Exception e) {
-            e.fillInStackTrace();
-            Intent intent = new Intent();
-            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            Uri uri = Uri.fromParts("package",context. getPackageName(), null);
-            intent.setData(uri);
-            context.startActivity(intent);
-        }
-    }
+    class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
+        private lateinit var mEnabledPreference: SwitchPreference
+        private lateinit var mConnectionStatusPreference: SwitchPreference
+        private lateinit var mForceRepeatPreference: SwitchPreference
+        private lateinit var mTranslateListPreference: ListPreference
 
-    private static boolean isIgnoringBatteryOptimizations(Context context) {
-        boolean isIgnoring = false;
-        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        if (powerManager != null) {
-            isIgnoring = powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
-        }
-        return isIgnoring;
-    }
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.root_preferences, rootKey)
+            val context = requireContext()
+            val manager = NotificationManagerCompat.from(context)
 
-    public static void requestIgnoreBatteryOptimizations(Context context) {
-        try {
-            @SuppressLint("BatteryLife") Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-            intent.setData(Uri.parse("package:" + context.getPackageName()));
-            context.startActivity(intent);
-        } catch (Exception e) {
-            e.fillInStackTrace();
-        }
-    }
+            if (!manager.areNotificationsEnabled()) {
+                Toast.makeText(context, R.string.toast_get_notification_permission, Toast.LENGTH_LONG).show()
+                enableNotification(context)
+            }
 
-    private static boolean isNotificationListenerEnabled(Context context) {
-        if (context == null) return false;
-        String pkgName = context.getPackageName();
-        final String flat = Settings.Secure.getString(context.getContentResolver(), Constants.SETTINGS_ENABLED_NOTIFICATION_LISTENERS);
-        if (!TextUtils.isEmpty(flat)) {
-            final String[] names = flat.split(":");
-            for (String name : names) {
-                final ComponentName cn = ComponentName.unflattenFromString(name);
-                if (cn != null) {
-                    if (TextUtils.equals(pkgName, cn.getPackageName())) {
-                        return true;
+            if (!isIgnoringBatteryOptimizations(context)) {
+                requestIgnoreBatteryOptimizations(context)
+            }
+
+            manager.cancelAll()
+
+            mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED)!!
+            mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS)!!
+            mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_TRANSLATE_TYPE)!!
+            mForceRepeatPreference = findPreference(Constants.PREFERENCE_KEY_FORCE_REPEAT)!!
+            mConnectionStatusPreference.notifyDependencyChange(false)
+
+            mConnectionStatusPreference.apply {
+                summary = lyricsGetterApiHasEnable.toString()
+                isChecked = lyricsGetterApiHasEnable
+                onPreferenceClickListener = this@SettingsFragment
+            }
+
+            mEnabledPreference.apply {
+                isChecked = isNotificationListenerEnabled(context)
+                notifyDependencyChange(false)
+                isEnabled = true
+                onPreferenceClickListener = this@SettingsFragment
+            }
+
+            mTranslateListPreference.apply {
+                onPreferenceClickListener = this@SettingsFragment
+                setOnPreferenceChangeListener { _, newValue ->
+                    if (!xpActivation) return@setOnPreferenceChangeListener true
+                    config.translateDisplayType = newValue as String
+                    true
+                }
+            }
+
+            mForceRepeatPreference.apply {
+                onPreferenceClickListener = this@SettingsFragment
+                setOnPreferenceChangeListener { _, newValue ->
+                    if (!xpActivation) return@setOnPreferenceChangeListener true
+                    config.forceRepeat = newValue as Boolean
+                    true
+                }
+            }
+
+            findPreference<Preference>("app")?.apply {
+                summary = getAppVersionName(context)
+                isEnabled = true
+            }
+
+            findPreference<PreferenceCategory>(Constants.PREFERENCE_KEY_ABOUT)?.let { category ->
+                for (i in 0 until category.preferenceCount) {
+                    category.getPreference(i).onPreferenceClickListener = this@SettingsFragment
+                }
+            }
+        }
+
+        override fun onResume() {
+            super.onResume()
+            mConnectionStatusPreference.isChecked = lyricsGetterApiHasEnable
+            mEnabledPreference.isChecked = isNotificationListenerEnabled(requireContext())
+        }
+
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            val context = requireContext()
+            when (preference) {
+                mEnabledPreference -> startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+                mConnectionStatusPreference -> {
+                    mConnectionStatusPreference.isChecked = lyricsGetterApiHasEnable
+                    try {
+                        startActivity(Intent().setComponent(ComponentName("cn.lyric.getter", "cn.lyric.getter.ui.activity.MainActivity")))
+                    } catch (e: Exception) {
+                        Toast.makeText(context, R.string.toast_cannot_start_lyricsgetter, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                else -> {
+                    mUrlMap[preference.key]?.let {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)))
                     }
                 }
             }
-        }
-        return false;
-    }
-
-    private static String getAppVersionName(Context context) {
-        String versionName=null;
-        try {
-            PackageManager pm = context.getPackageManager();
-            PackageInfo pi = pm.getPackageInfo(context.getPackageName(), 0);
-            versionName = pi.versionName;
-        } catch (Exception e) {
-            e.fillInStackTrace();
-        }
-        return versionName;
-    }
-
-    public static class SettingsFragment
-            extends PreferenceFragmentCompat
-            implements Preference.OnPreferenceClickListener {
-
-        private SwitchPreference mEnabledPreference;
-        private SwitchPreference mConnectionStatusPreference;
-        private ListPreference mTranslateListPreference;
-
-        @Override
-        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-            setPreferencesFromResource(statusbar.finder.R.xml.root_preferences, rootKey);
-            NotificationManagerCompat manager = NotificationManagerCompat.from(requireContext());
-            if (!manager.areNotificationsEnabled()) {
-                Toast.makeText(requireContext(), statusbar.finder.R.string.toast_get_notification_permission, Toast.LENGTH_LONG).show();
-                enableNotification(requireContext());
-            }
-            if (!isIgnoringBatteryOptimizations(requireContext())){
-                requestIgnoreBatteryOptimizations(requireContext());
-            }
-            manager.cancelAll();
-            mEnabledPreference = findPreference(Constants.PREFERENCE_KEY_ENABLED);
-            mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS);
-            mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_TRANSLATE_TYPE);
-            mConnectionStatusPreference.notifyDependencyChange(true);
-//            try {
-//                mNotificationFields[0] =
-//                        Notification.class.getDeclaredField("FLAG_ALWAYS_SHOW_TICKER").getInt(null);
-//                mNotificationFields[1] =
-//                        Notification.class.getDeclaredField("FLAG_ONLY_UPDATE_TICKER").getInt(null);
-//            } catch (NoSuchFieldException | IllegalAccessException e) {
-//                mEnabledPreference.setEnabled(false);
-//                mEnabledPreference.setTitle(R.string.unsupport_rom_title);
-//                mEnabledPreference.setSummary(R.string.unsupport_rom_summary);
-//            }
-//            );
-            // boolean lyricsGetterApiHasEnable = true; For Debug
-
-            if (mConnectionStatusPreference != null){
-                mConnectionStatusPreference.setSummary(String.valueOf(lyricsGetterApiHasEnable));
-                mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
-                mConnectionStatusPreference.setOnPreferenceClickListener(this);
-            }
-            if (mEnabledPreference != null) {
-                mEnabledPreference.setChecked(isNotificationListenerEnabled(getContext()));
-                // mEnabledPreference.setEnabled(lyricsGetterApiHasEnable);
-                mEnabledPreference.setEnabled(true);
-                mEnabledPreference.setOnPreferenceClickListener(this);
-            }
-            if (mTranslateListPreference != null) {
-                mTranslateListPreference.setOnPreferenceClickListener(this);
-            }
-            Preference appInfoPreference = findPreference("app");
-            if (appInfoPreference != null) {
-                appInfoPreference.setSummary(getAppVersionName(getContext()));
-                appInfoPreference.setEnabled(true);
-            }
-            PreferenceCategory aboutCategory = findPreference(Constants.PREFERENCE_KEY_ABOUT);
-            if (aboutCategory != null) {
-                for (int i = 0; i < aboutCategory.getPreferenceCount(); i++) {
-                    aboutCategory.getPreference(i).setOnPreferenceClickListener(this);
-                }
-            }
-
-        }
-
-        @Override
-        public void onResume() {
-            super.onResume();
-            mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
-            if (mEnabledPreference != null) {
-                mEnabledPreference.setChecked(isNotificationListenerEnabled(getContext()));
-            }
-        }
-
-        @Override
-        public boolean onPreferenceClick(@NotNull Preference preference) {
-            if (preference == mEnabledPreference) {
-                startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
-            } else if (preference == mConnectionStatusPreference) {
-                mConnectionStatusPreference.setChecked(lyricsGetterApiHasEnable);
-                Intent intent = new Intent();
-                // Open LyricsGetter
-                try {
-                    intent.setComponent(new ComponentName("cn.lyric.getter", "cn.lyric.getter.ui.activity.MainActivity"));
-                    startActivity(intent);
-                } catch (android.content.ActivityNotFoundException e) {
-                    Toast.makeText(getContext(), R.string.toast_cannot_start_lyricsgetter, Toast.LENGTH_SHORT).show();
-                }
-                // 启动活动
-                return true;
-            } else if (preference == mTranslateListPreference) {
-//                Toast.makeText(requireContext(), "TranslateLyrics: " + (mTranslateSwitch.isChecked() ? "Enable" : "Disable"), Toast.LENGTH_SHORT).show();
-                Toast.makeText(requireContext(), "TranslateLyrics: " + mTranslateListPreference.getValue(), Toast.LENGTH_SHORT).show();
-            } else {
-                String url = mUrlMap.get(preference.getKey());
-                if (TextUtils.isEmpty(url)) return false;
-                Uri uri = Uri.parse(url);
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(intent);
-            }
-            return true;
+            return true
         }
     }
- }
+}

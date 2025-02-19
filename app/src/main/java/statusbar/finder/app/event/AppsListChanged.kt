@@ -9,7 +9,7 @@ import androidx.lifecycle.LiveData
  * @email victormodi@outlook.com
  * @date 2025/2/8 19:55
  */
-class AppsListChanged private constructor() : LiveData<Void?>() {
+class AppsListChanged private constructor() : LiveData<Void>() {
 
     companion object {
         @Volatile

@@ -45,10 +45,7 @@ class LyricsActivity : AppCompatActivity() {
         adapter = LyricsAdapter(lyricsList)
         recyclerView.adapter = adapter
 
-        // 注册LiveData观察者
         registerObservers()
-
-        // 更新歌词列表
         MusicListenerService.instance?.lyric?.let {
             updateLyricList(it)
         }
@@ -62,7 +59,6 @@ class LyricsActivity : AppCompatActivity() {
                     newOffset = etOffset.getText().toString().toLong()
                 } catch (e: NumberFormatException) {
                     Toast.makeText(applicationContext, "Offset not valid", Toast.LENGTH_SHORT).show()
-
                 }
                 ResRepository.updateResOffsetById(currentLyricResId, newOffset)
                 currentLyric?.offset = newOffset

@@ -1,12 +1,13 @@
 package statusbar.finder.hook
 
 
-import cn.xiaowine.dsp.DSP
 import com.github.kyuubiran.ezxhelper.EzXHelper
 import com.github.kyuubiran.ezxhelper.Log
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
+import de.robv.android.xposed.XSharedPreferences
 import de.robv.android.xposed.callbacks.XC_LoadPackage
+import statusbar.finder.BuildConfig
 import statusbar.finder.hook.app.SystemUI
 
 

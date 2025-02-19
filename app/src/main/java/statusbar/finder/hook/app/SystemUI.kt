@@ -1,13 +1,14 @@
 package statusbar.finder.hook.app
 
-import android.media.session.MediaController
-import cn.lyric.getter.api.API
-import kotlinx.coroutines.delay
-import statusbar.finder.data.db.DatabaseHelper
+import android.app.Application
+import cn.xiaowine.dsp.DSP
+import com.github.kyuubiran.ezxhelper.HookFactory.`-Static`.createHook
+import com.github.kyuubiran.ezxhelper.Log
+import com.github.kyuubiran.ezxhelper.finders.MethodFinder.`-Static`.methodFinder
+import de.robv.android.xposed.XSharedPreferences
+import statusbar.finder.BuildConfig
 import statusbar.finder.hook.BaseHook
-import statusbar.finder.hook.observe.MediaSessionObserve
-import statusbar.finder.hook.tool.EventTool
-import statusbar.finder.hook.tool.HookTool.getApplication
+import statusbar.finder.hook.observe.MediaSessionManagerHelper
 
 /**
  * LyricGetterExt - statusbar.finder.hook.app
@@ -20,8 +21,10 @@ object SystemUI : BaseHook() {
 
     override fun init() {
         super.init()
-        getApplication {
-            MediaSessionObserve.initByContext(it.baseContext)
+        Application::class.java.methodFinder().filterByName("attach").first().createHook {
+            after {
+                MediaSessionManagerHelper.initByContext(it.thisObject as Application)
+            }
         }
     }
 }

@@ -48,7 +48,7 @@ dependencies {
     implementation 'com.andree-surya:moji4j:1.0.0'
     implementation 'androidx.core:core-ktx:1.15.0'
     compileOnly 'de.robv.android.xposed:api:82'
-    implementation "com.github.kyuubiran:EzXHelper:2.0.9"
+    implementation "com.github.kyuubiran:EzXHelper:2.1.1"
     implementation 'com.github.xiaowine:XKT:1.0.12'
     implementation "com.github.xiaowine:dsp:1.1.3"
 

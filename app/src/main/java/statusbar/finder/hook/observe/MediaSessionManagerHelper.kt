@@ -1,6 +1,9 @@
 package statusbar.finder.hook.observe
 
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.media.MediaMetadata
@@ -20,9 +23,12 @@ import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
 import statusbar.finder.CSLyricHelper.PlayInfo
 import statusbar.finder.app.MusicListenerService.LrcUpdateThread
+import statusbar.finder.config.Config
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.hook.tool.EventTool
 import statusbar.finder.misc.Constants.MSG_LYRIC_UPDATE_DONE
+import statusbar.finder.misc.Constants.NOTIFICATION_ID_LRC
+
 
 /**
  * LyricGetterExt - statusbar.finder.hook.observe
@@ -31,9 +37,10 @@ import statusbar.finder.misc.Constants.MSG_LYRIC_UPDATE_DONE
  * @email victormodi@outlook.com
  * @date 2025/2/17 02:41
  */
-@SuppressLint("StaticFieldLeak")
-object MediaSessionObserve {
+@SuppressLint("StaticFieldLeak", "MissingPermission")
+object MediaSessionManagerHelper {
     private lateinit var context: Context
+    private lateinit var config: Config
     private var mediaSessionManager: MediaSessionManager? = null
     private var activeController: MediaController? = null
     private var requiredLrcTitle: String = ""
@@ -42,6 +49,8 @@ object MediaSessionObserve {
     private var lastSentenceFromTime: Long = -1
     private var playInfo: PlayInfo = PlayInfo("", BuildConfig.APPLICATION_ID)
     private val user: UserHandle = UserHandle.getUserHandleForUid(android.os.Process.myUid())
+    private var notificationManager: NotificationManager? = null;
+    private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
         controllers?.let {
@@ -149,6 +158,7 @@ object MediaSessionObserve {
 
     fun initByContext(initContext: Context) {
         context = initContext
+        config = Config()
         EventTool.setContext(context, user)
         DatabaseHelper.init(context)
         mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
@@ -160,6 +170,23 @@ object MediaSessionObserve {
             ComponentName(context, NotificationListenerService::class.java)
         )
         activeSessionsListener.onActiveSessionsChanged(initialControllers)
+        notificationManager = context.getSystemService(NotificationManager::class.java)
+        val channel = NotificationChannel(
+            noticeChannelId,
+            "Lyrics Getter Ext",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        notificationManager!!.createNotificationChannel(channel)
+        val notification = Notification.Builder(context, noticeChannelId)
+            .setSmallIcon(android.R.drawable.ic_media_pause) // 确保 systemUiContext 能识别的图标
+            .setContentTitle("Lyrics Getter Ext")
+            .setContentText("已成功加载")
+            .setOngoing(true)
+            .build()
+        notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
+        Log.i("${BuildConfig.APPLICATION_ID} Config forceRepeat: ${config.forceRepeat}")
+        Log.i("${BuildConfig.APPLICATION_ID} Config targetPackages: ${config.targetPackages}")
+        Log.i("${BuildConfig.APPLICATION_ID} Config translateDisplayType: ${config.translateDisplayType}")
     }
 }
 
