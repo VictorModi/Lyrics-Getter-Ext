@@ -40,6 +40,7 @@ import statusbar.finder.app.event.LyricsChange;
 import statusbar.finder.app.event.LyricsResultChange;
 import statusbar.finder.data.db.DatabaseHelper;
 import statusbar.finder.data.model.MediaInfo;
+import statusbar.finder.hook.tool.Tool;
 import statusbar.finder.misc.Constants;
 
 import java.util.*;
@@ -188,6 +189,10 @@ public class MusicListenerService extends NotificationListenerService {
     @Override
     public void onListenerConnected() {
         super.onListenerConnected();
+        if (Tool.INSTANCE.getXpActivation()) {
+            stopSelf();
+            return;
+        }
         instance = this;
 //        offsetPreferences = getSharedPreferences("offset", MODE_PRIVATE);
 //        translationStatusReferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
