@@ -18,6 +18,7 @@ import android.service.notification.NotificationListenerService
 import cn.lyric.getter.api.data.ExtraData
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
+import cn.zhaiyifan.lyric.model.Lyric.Sentence
 import com.github.kyuubiran.ezxhelper.Log
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
@@ -28,6 +29,7 @@ import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.hook.tool.EventTool
 import statusbar.finder.misc.Constants.MSG_LYRIC_UPDATE_DONE
 import statusbar.finder.misc.Constants.NOTIFICATION_ID_LRC
+import java.util.*
 
 
 /**
@@ -43,6 +45,7 @@ object MediaSessionManagerHelper {
     private lateinit var config: Config
     private var mediaSessionManager: MediaSessionManager? = null
     private lateinit var activeControllers: MutableMap<MediaController, MediaController.Callback>
+    private lateinit var lastSentenceMap: MutableMap<MediaController, Sentence>
     private var requiredLrcTitle: String = ""
     private var curLrcUpdateThread: LrcUpdateThread? = null
     private var currentLyric: Lyric? = null
@@ -124,18 +127,29 @@ object MediaSessionManagerHelper {
                     EventTool.cleanLyric()
                     return
                 }
-                updateLyric(controller.key.playbackState!!.position, context)
+                updateLyric(controller.key, controller.key.playbackState!!.position, context)
             }
             handler.postDelayed(this, 250)
         }
     }
 
-    fun updateLyric(position: Long, context: Context) {
+    fun updateLyric(controller: MediaController, position: Long, context: Context) {
         currentLyric?.let {
             val sentence = LyricUtils.getSentence(it.sentenceList, position, 0, it.offset) ?: return
+            val translatedSentence = LyricUtils.getSentence(it.translatedSentenceList, position, 0, it.offset) ?: return
+            if (sentence == lastSentenceMap[controller]) return
             val delay: Int = it.calcDelay(position)
             if (sentence.fromTime == lastSentenceFromTime) return
-            val curLyric = sentence.content.trim()
+            val sentenceContent = sentence.content.trim()
+            val translatedContent = translatedSentence.content.trim()
+            var curLyric = when (config.translateDisplayType) {
+                "translated" -> translatedContent.ifBlank { sentenceContent }
+                "both" -> if (translatedContent.isBlank()) sentenceContent else "$sentenceContent\n\r$translatedContent"
+                else -> sentenceContent
+            }
+            if (config.forceRepeat && lastSentenceMap[controller]?.content == sentence.content) {
+                curLyric = insertZeroWidthSpace(curLyric)
+            }
             lastSentenceFromTime = sentence.fromTime
             playInfo.isPlaying = true
             EventTool.sendLyric(curLyric,
@@ -153,6 +167,7 @@ object MediaSessionManagerHelper {
                 CSLyricHelper.LyricData(curLyric),
                 user
             )
+            lastSentenceMap[controller] = sentence
         }
     }
 
@@ -192,9 +207,21 @@ object MediaSessionManagerHelper {
             .build()
         notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
         activeControllers = mutableMapOf()
+        lastSentenceMap = mutableMapOf()
         Log.i("${BuildConfig.APPLICATION_ID} Config forceRepeat: ${config.forceRepeat}")
         Log.i("${BuildConfig.APPLICATION_ID} Config targetPackages: ${config.targetPackages}")
         Log.i("${BuildConfig.APPLICATION_ID} Config translateDisplayType: ${config.translateDisplayType}")
+    }
+
+    fun insertZeroWidthSpace(input: String): String {
+        if (input.isEmpty() || input.length < 2) {
+            return input
+        }
+        val random = Random()
+        val position = 1 + random.nextInt(input.length - 1)
+        val modifiedString = StringBuilder(input)
+        modifiedString.insert(position, '\u200B')
+        return modifiedString.toString()
     }
 }
 
