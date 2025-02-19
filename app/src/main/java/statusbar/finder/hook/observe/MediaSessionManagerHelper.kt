@@ -156,7 +156,7 @@ object MediaSessionManagerHelper {
             val delay: Int = it.calcDelay(controller, position)
             val sentenceContent = sentence.content.trim()
             val translatedContent = translatedSentence?.content?.trim() ?: ""
-            Log.i("${BuildConfig.APPLICATION_ID} current TranslateDisplayType: $translatedContent")
+            Log.i("${BuildConfig.APPLICATION_ID} current TranslateDisplayType: ${config.translateDisplayType}")
             var curLyric = when (config.translateDisplayType) {
                 "translated" -> translatedContent.ifBlank { sentenceContent }
                 "both" -> if (translatedContent.isBlank()) sentenceContent else "$sentenceContent\n\r$translatedContent"
@@ -236,6 +236,10 @@ object MediaSessionManagerHelper {
             .setOngoing(true)
             .build()
         notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
+
+        Log.i("${BuildConfig.APPLICATION_ID} config.translateDisplayType: '${config.translateDisplayType}'")
+        Log.i("${BuildConfig.APPLICATION_ID} config.forceRepeat: '${config.forceRepeat}'")
+        Log.i("${BuildConfig.APPLICATION_ID} config.targetPackages: '${config.targetPackages}'")
     }
 }
 
