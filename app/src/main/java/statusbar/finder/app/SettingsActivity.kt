@@ -28,6 +28,7 @@ import cn.lyric.getter.api.API
 import statusbar.finder.BuildConfig
 import statusbar.finder.R
 import statusbar.finder.config.Config
+import statusbar.finder.hook.tool.Tool
 import statusbar.finder.hook.tool.Tool.xpActivation
 import statusbar.finder.misc.Constants
 
@@ -119,14 +120,15 @@ class SettingsActivity : FragmentActivity() {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             val context = requireContext()
             val manager = NotificationManagerCompat.from(context)
+            if (!xpActivation) {
+                if (!manager.areNotificationsEnabled()) {
+                    Toast.makeText(context, R.string.toast_get_notification_permission, Toast.LENGTH_LONG).show()
+                    enableNotification(context)
+                }
 
-            if (!manager.areNotificationsEnabled()) {
-                Toast.makeText(context, R.string.toast_get_notification_permission, Toast.LENGTH_LONG).show()
-                enableNotification(context)
-            }
-
-            if (!isIgnoringBatteryOptimizations(context)) {
-                requestIgnoreBatteryOptimizations(context)
+                if (!isIgnoringBatteryOptimizations(context)) {
+                    requestIgnoreBatteryOptimizations(context)
+                }
             }
 
             manager.cancelAll()
@@ -148,6 +150,11 @@ class SettingsActivity : FragmentActivity() {
                 notifyDependencyChange(false)
                 isEnabled = true
                 onPreferenceClickListener = this@SettingsFragment
+                if (xpActivation) {
+                    isEnabled = true
+                    isChecked = false
+                    summary = "由于 Xposed 的启用被禁用"
+                }
             }
 
             mTranslateListPreference.apply {
@@ -182,8 +189,10 @@ class SettingsActivity : FragmentActivity() {
 
         override fun onResume() {
             super.onResume()
-            mConnectionStatusPreference.isChecked = lyricsGetterApiHasEnable
-            mEnabledPreference.isChecked = isNotificationListenerEnabled(requireContext())
+            context?.let {
+                mEnabledPreference.isChecked = xpActivation || isNotificationListenerEnabled(it)
+                mEnabledPreference.isEnabled = !xpActivation
+            }
         }
 
         override fun onPreferenceClick(preference: Preference): Boolean {

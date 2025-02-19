@@ -27,7 +27,7 @@
         <statusbar.finder.preferences.PackageListPreference
             android:title="@string/target_apps_title"
             android:key="target_packages"
-            android:dependency="enabled" />
+        />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/about_header"

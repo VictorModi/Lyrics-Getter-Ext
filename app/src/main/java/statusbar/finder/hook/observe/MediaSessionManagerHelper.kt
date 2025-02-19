@@ -42,7 +42,7 @@ object MediaSessionManagerHelper {
     private lateinit var context: Context
     private lateinit var config: Config
     private var mediaSessionManager: MediaSessionManager? = null
-    private var activeController: MediaController? = null
+    private lateinit var activeControllers: MutableMap<MediaController, MediaController.Callback>
     private var requiredLrcTitle: String = ""
     private var curLrcUpdateThread: LrcUpdateThread? = null
     private var currentLyric: Lyric? = null
@@ -52,14 +52,21 @@ object MediaSessionManagerHelper {
     private var notificationManager: NotificationManager? = null;
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
 
+
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
         controllers?.let {
             currentLyric = null
             EventTool.cleanLyric()
             if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
-            activeController?.unregisterCallback(mediaControllerCallback)
-            controllers.firstOrNull()?.registerCallback(mediaControllerCallback)
-            activeController = controllers.firstOrNull()
+            activeControllers.forEach { it.key.unregisterCallback(it.value) }
+            val targetPackages = config.targetPackages.split(";")
+            for (controller in controllers) {
+                if (targetPackages.contains(controller.packageName)) {
+                    val callback = MediaControllerCallback(controller)
+                    activeControllers[controller] = callback
+                    controller.registerCallback(callback)
+                }
+            }
         }
     }
 
@@ -72,25 +79,23 @@ object MediaSessionManagerHelper {
         }
     }
 
-    private val mediaControllerCallback = object : MediaController.Callback() {
+    private class MediaControllerCallback(private val controller: MediaController) :
+        MediaController.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
             super.onMetadataChanged(metadata)
             metadata?.let {
                 currentLyric = null
                 EventTool.cleanLyric()
                 requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
-                Log.i("${BuildConfig.APPLICATION_ID} MediaMetadata Change, New Title: ${requiredLrcTitle}")
-
-                activeController?.let {
-                    if (curLrcUpdateThread == null || !curLrcUpdateThread!!.isAlive) {
-                        curLrcUpdateThread = LrcUpdateThread(
-                            context,
-                            handler,
-                            metadata,
-                            activeController!!.packageName
-                        )
-                        curLrcUpdateThread!!.start()
-                    }
+                Log.i("${BuildConfig.APPLICATION_ID} MediaMetadata Change, New Title: $requiredLrcTitle")
+                if (curLrcUpdateThread == null || !curLrcUpdateThread!!.isAlive) {
+                    curLrcUpdateThread = LrcUpdateThread(
+                        context,
+                        handler,
+                        metadata,
+                        controller.packageName
+                    )
+                    curLrcUpdateThread!!.start()
                 }
             }
         }
@@ -98,7 +103,6 @@ object MediaSessionManagerHelper {
         override fun onPlaybackStateChanged(state: PlaybackState?) {
             super.onPlaybackStateChanged(state)
             state?.let {
-
                 if (state.state == PlaybackState.STATE_PLAYING) {
                     handler.post(lyricUpdateRunnable)
                 } else {
@@ -110,15 +114,18 @@ object MediaSessionManagerHelper {
         }
     }
 
+
     private val lyricUpdateRunnable: Runnable = object : Runnable {
         override fun run() {
-            if (activeController?.playbackState == null || activeController!!.playbackState!!.state != PlaybackState.STATE_PLAYING) {
-                playInfo.isPlaying = false
-                CSLyricHelper.pauseAsUser(context, playInfo, user)
-                EventTool.cleanLyric()
-                return
+            for (controller in activeControllers) {
+                if (controller.key.playbackState == null || controller.key.playbackState!!.state != PlaybackState.STATE_PLAYING) {
+                    playInfo.isPlaying = false
+                    CSLyricHelper.pauseAsUser(context, playInfo, user)
+                    EventTool.cleanLyric()
+                    return
+                }
+                updateLyric(controller.key.playbackState!!.position, context)
             }
-            updateLyric(activeController!!.playbackState!!.position, context)
             handler.postDelayed(this, 250)
         }
     }
@@ -184,6 +191,7 @@ object MediaSessionManagerHelper {
             .setOngoing(true)
             .build()
         notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
+        activeControllers = mutableMapOf()
         Log.i("${BuildConfig.APPLICATION_ID} Config forceRepeat: ${config.forceRepeat}")
         Log.i("${BuildConfig.APPLICATION_ID} Config targetPackages: ${config.targetPackages}")
         Log.i("${BuildConfig.APPLICATION_ID} Config translateDisplayType: ${config.translateDisplayType}")
