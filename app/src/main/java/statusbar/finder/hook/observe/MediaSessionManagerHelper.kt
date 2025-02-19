@@ -2,6 +2,7 @@ package statusbar.finder.hook.observe
 
 import android.annotation.SuppressLint
 import android.app.Notification
+import android.app.Notification.BigTextStyle
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ComponentName
@@ -83,7 +84,26 @@ object MediaSessionManagerHelper {
             super.handleMessage(msg)
             if (msg.what == MSG_LYRIC_UPDATE_DONE && requiredLrcTitle.containsValue(msg.data.getString("title", ""))) {
                 val controller = requiredLrcTitle.filterValues { it == msg.data.getString("title", "") }.keys.first()
-                currentLyric[controller] = msg.obj as Lyric?
+                val lyric = msg.obj as Lyric?
+                currentLyric[controller] = lyric
+                lyric?.let {
+                    notificationManager = context.getSystemService(NotificationManager::class.java)
+                    val notification = Notification.Builder(context, noticeChannelId)
+                        .setSmallIcon(android.R.drawable.ic_media_play)
+                        .setContentTitle(lyric.originalMediaInfo.title)
+                        .setContentText(
+                            "${lyric.originalMediaInfo.artist} - ${lyric.originalMediaInfo.album}"
+                        )
+                        .setStyle(BigTextStyle().bigText(
+                                "${lyric.title}\n\r" +
+                                "${lyric.artist} - ${lyric.album}\n\r" +
+                                "Form ${lyric.lyricResult.source}(${lyric.lyricResult.dataOrigin.getCapitalizedName()})"
+                        ))
+                        .setOngoing(true)
+                        .setOnlyAlertOnce(true)
+                        .build()
+                    notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
+                }
             }
         }
     }
@@ -94,6 +114,17 @@ object MediaSessionManagerHelper {
             super.onMetadataChanged(metadata)
             metadata?.let {
                 if (it == lastMetadata[controller]) return
+                notificationManager = context.getSystemService(NotificationManager::class.java)
+                val notification = Notification.Builder(context, noticeChannelId)
+                    .setSmallIcon(android.R.drawable.ic_media_play)
+                    .setContentTitle(metadata.getString(MediaMetadata.METADATA_KEY_TITLE))
+                    .setContentText(
+                        "${metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)} - ${metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)}"
+                    )
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true)
+                    .build()
+                notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
                 currentLyric[controller] = null
                 EventTool.cleanLyric()
                 requiredLrcTitle[controller] = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
@@ -116,6 +147,7 @@ object MediaSessionManagerHelper {
             super.onPlaybackStateChanged(state)
             state?.let {
                 if (lastState[controller] == it) return
+                lastState[controller] = it
                 Log.i("${BuildConfig.APPLICATION_ID} Playback state changed: ${state.state}");
                 if (state.state == PlaybackState.STATE_PLAYING) {
                     handler.post(lyricUpdateRunnable)
@@ -124,7 +156,6 @@ object MediaSessionManagerHelper {
                     EventTool.cleanLyric()
                     CSLyricHelper.pauseAsUser(context, playInfo, user)
                 }
-                lastState[controller] = it
             }
         }
     }
@@ -226,13 +257,14 @@ object MediaSessionManagerHelper {
         val channel = NotificationChannel(
             noticeChannelId,
             "Lyrics Getter Ext",
-            NotificationManager.IMPORTANCE_HIGH
+            NotificationManager.IMPORTANCE_MIN
         )
         notificationManager!!.createNotificationChannel(channel)
         val notification = Notification.Builder(context, noticeChannelId)
-            .setSmallIcon(android.R.drawable.ic_media_pause) // 确保 systemUiContext 能识别的图标
+            .setSmallIcon(android.R.drawable.ic_media_pause)
             .setContentTitle("Lyrics Getter Ext")
             .setContentText("已成功加载")
+            .setOnlyAlertOnce(true)
             .setOngoing(true)
             .build()
         notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)

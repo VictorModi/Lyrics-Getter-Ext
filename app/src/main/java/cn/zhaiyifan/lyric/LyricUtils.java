@@ -85,6 +85,7 @@ public class LyricUtils {
         lyric.offset = lyricResult.getOffset();
         lyric.originalMediaInfo = originalMediaInfo;
         lyric.packageName = packageName;
+        lyric.lyricResult = lyricResult;
         return lyric;
     }
 

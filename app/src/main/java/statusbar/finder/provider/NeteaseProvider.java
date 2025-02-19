@@ -16,7 +16,7 @@ import java.util.Locale;
 
 public class NeteaseProvider implements ILrcProvider {
 
-    private static final String NETEASE_BASE_URL = "http://music.163.com/api/";
+    private static final String NETEASE_BASE_URL = "https://music.163.com/api/";
 
     private static final String NETEASE_SEARCH_URL_FORMAT = NETEASE_BASE_URL + "search/get?s=%s&type=1&offset=0&limit=5";
     private static final String NETEASE_LRC_URL_FORMAT = NETEASE_BASE_URL + "song/lyric?os=pc&id=%d&lv=-1&kv=-1&tv=-1";

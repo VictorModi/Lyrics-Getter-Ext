@@ -1,6 +1,7 @@
 package cn.zhaiyifan.lyric.model;
 
 import org.jetbrains.annotations.NotNull;
+import statusbar.finder.data.model.LyricResult;
 import statusbar.finder.data.model.MediaInfo;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ public class Lyric {
     public List<Sentence> translatedSentenceList = new ArrayList<>(100);
     public MediaInfo originalMediaInfo;
     public String packageName;
+    public LyricResult lyricResult;
 
     @NotNull
     public String toString() {
