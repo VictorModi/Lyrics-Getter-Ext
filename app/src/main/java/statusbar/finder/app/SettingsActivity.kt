@@ -161,7 +161,9 @@ class SettingsActivity : FragmentActivity() {
                 onPreferenceClickListener = this@SettingsFragment
                 setOnPreferenceChangeListener { _, newValue ->
                     if (!xpActivation) return@setOnPreferenceChangeListener true
-                    config.translateDisplayType = newValue as String
+                    Log.i("TranslateList", newValue as String)
+                    Log.i("xTranslateList", config.translateDisplayType)
+                    config.translateDisplayType = newValue
                     true
                 }
             }
