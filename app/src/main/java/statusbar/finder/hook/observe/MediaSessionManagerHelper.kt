@@ -44,8 +44,8 @@ object MediaSessionManagerHelper {
     private lateinit var context: Context
     private lateinit var config: Config
     private var mediaSessionManager: MediaSessionManager? = null
-    private lateinit var activeControllers: MutableMap<MediaController, MediaController.Callback>
-    private lateinit var lastSentenceMap: MutableMap<MediaController, Sentence>
+    private var activeControllers: MutableMap<MediaController, MediaController.Callback> = mutableMapOf()
+    private var lastSentenceMap: MutableMap<MediaController, Sentence> = mutableMapOf()
     private var requiredLrcTitle: String = ""
     private var curLrcUpdateThread: LrcUpdateThread? = null
     private var currentLyric: Lyric? = null
@@ -178,7 +178,7 @@ object MediaSessionManagerHelper {
         return delay
     }
 
-    fun initByContext(initContext: Context) {
+    fun init(initContext: Context) {
         context = initContext
         config = Config()
         EventTool.setContext(context, user)
@@ -206,14 +206,12 @@ object MediaSessionManagerHelper {
             .setOngoing(true)
             .build()
         notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
-        activeControllers = mutableMapOf()
-        lastSentenceMap = mutableMapOf()
         Log.i("${BuildConfig.APPLICATION_ID} Config forceRepeat: ${config.forceRepeat}")
         Log.i("${BuildConfig.APPLICATION_ID} Config targetPackages: ${config.targetPackages}")
         Log.i("${BuildConfig.APPLICATION_ID} Config translateDisplayType: ${config.translateDisplayType}")
     }
 
-    fun insertZeroWidthSpace(input: String): String {
+    private fun insertZeroWidthSpace(input: String): String {
         if (input.isEmpty() || input.length < 2) {
             return input
         }
