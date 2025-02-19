@@ -19,6 +19,7 @@ import cn.lyric.getter.api.data.ExtraData
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
 import cn.zhaiyifan.lyric.model.Lyric.Sentence
+import com.github.kyuubiran.ezxhelper.Log
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
 import statusbar.finder.CSLyricHelper.PlayInfo
@@ -55,17 +56,21 @@ object MediaSessionManagerHelper {
 
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
+        Log.i("${BuildConfig.APPLICATION_ID} Active sessions changed: ${controllers?.size ?: 0}");
         controllers?.let {
             currentLyric.clear()
             EventTool.cleanLyric()
             if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
             activeControllers.forEach { it.key.unregisterCallback(it.value) }
+            activeControllers.clear()
             val targetPackages = config.targetPackages.split(";")
             for (controller in controllers) {
+                Log.i("${BuildConfig.APPLICATION_ID} Checking controller: ${controller.packageName}");
                 if (targetPackages.contains(controller.packageName)) {
                     val callback = MediaControllerCallback(controller)
                     activeControllers[controller] = callback
                     controller.registerCallback(callback)
+                    Log.i("${BuildConfig.APPLICATION_ID} Registered callback for: ${controller.packageName}");
                 }
             }
         }
@@ -89,6 +94,7 @@ object MediaSessionManagerHelper {
                 currentLyric[controller] = null
                 EventTool.cleanLyric()
                 requiredLrcTitle[controller] = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
+                Log.i("${BuildConfig.APPLICATION_ID} Metadata changed: ${metadata.getString(MediaMetadata.METADATA_KEY_TITLE)}");
                 if (curLrcUpdateThread[controller] == null || !curLrcUpdateThread[controller]!!.isAlive) {
                     curLrcUpdateThread[controller] = LrcUpdateThread(
                         context,
@@ -179,6 +185,17 @@ object MediaSessionManagerHelper {
         return delay.coerceAtLeast(1)
     }
 
+    private fun insertZeroWidthSpace(input: String): String {
+        if (input.isEmpty() || input.length < 2) {
+            return input
+        }
+        val random = Random()
+        val position = 1 + random.nextInt(input.length - 1)
+        val modifiedString = StringBuilder(input)
+        modifiedString.insert(position, '\u200B')
+        return modifiedString.toString()
+    }
+
     fun init(initContext: Context) {
         context = initContext
         config = Config()
@@ -207,17 +224,6 @@ object MediaSessionManagerHelper {
             .setOngoing(true)
             .build()
         notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
-    }
-
-    private fun insertZeroWidthSpace(input: String): String {
-        if (input.isEmpty() || input.length < 2) {
-            return input
-        }
-        val random = Random()
-        val position = 1 + random.nextInt(input.length - 1)
-        val modifiedString = StringBuilder(input)
-        modifiedString.insert(position, '\u200B')
-        return modifiedString.toString()
     }
 }
 
