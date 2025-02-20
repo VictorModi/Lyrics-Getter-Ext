@@ -20,7 +20,6 @@ import cn.lyric.getter.api.data.ExtraData
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
 import cn.zhaiyifan.lyric.model.Lyric.Sentence
-import com.github.kyuubiran.ezxhelper.Log
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
 import statusbar.finder.CSLyricHelper.PlayInfo
@@ -54,12 +53,12 @@ object MediaSessionManagerHelper {
     private var lastState: MutableMap<String, PlaybackState> = mutableMapOf()
     private var playInfo: PlayInfo = PlayInfo("", BuildConfig.APPLICATION_ID)
     private val user: UserHandle = UserHandle.getUserHandleForUid(android.os.Process.myUid())
-    private var notificationManager: NotificationManager? = null;
+    private var notificationManager: NotificationManager? = null
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
 
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
-        Log.i("${BuildConfig.APPLICATION_ID} Active sessions changed: ${controllers?.size ?: 0}");
+
         controllers?.let {
             if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
             activeControllers.forEach { it.key.unregisterCallback(it.value) }
@@ -69,7 +68,7 @@ object MediaSessionManagerHelper {
             lastSentenceMap.clear()
             val targetPackages = config.targetPackages.split(";")
             for (controller in controllers) {
-                Log.i("${BuildConfig.APPLICATION_ID} Checking controller: ${controller.packageName}");
+
                 if (targetPackages.contains(controller.packageName)) {
                     lastMetadata.remove(controller.packageName)
                     val callback = MediaControllerCallback(controller)
@@ -79,7 +78,6 @@ object MediaSessionManagerHelper {
                         callback.onMetadataChanged(controller.metadata)
                         callback.onPlaybackStateChanged(controller.playbackState)
                     }
-                    Log.i("${BuildConfig.APPLICATION_ID} Registered callback for: ${controller.packageName}");
                 }
             }
         }
@@ -109,7 +107,7 @@ object MediaSessionManagerHelper {
                         .setOnlyAlertOnce(true)
                         .build()
                     notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
-                } ?: Log.i("${BuildConfig.APPLICATION_ID} Failed find Lyric for controller: ${packageName}")
+                }
             }
         }
     }
@@ -120,7 +118,7 @@ object MediaSessionManagerHelper {
             super.onMetadataChanged(metadata)
             metadata?.let {
                 if (it == lastMetadata[controller.packageName]) {
-                    Log.i("${BuildConfig.APPLICATION_ID} same metadata, IGNORE")
+
                     return
                 }
                 notificationManager = context.getSystemService(NotificationManager::class.java)
@@ -135,7 +133,7 @@ object MediaSessionManagerHelper {
                     .build()
                 notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
                 requiredLrcTitle[controller.packageName] = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
-                Log.i("${BuildConfig.APPLICATION_ID} Metadata changed: ${metadata.getString(MediaMetadata.METADATA_KEY_TITLE)}");
+
                 if (curLrcUpdateThread[controller.packageName] == null || !curLrcUpdateThread[controller.packageName]!!.isAlive) {
                     currentLyric.remove(controller.packageName)
                     EventTool.cleanLyric()
@@ -146,10 +144,10 @@ object MediaSessionManagerHelper {
                         controller.packageName
                     )
                     curLrcUpdateThread[controller.packageName]!!.start()
-                    Log.i("${BuildConfig.APPLICATION_ID} Lrc Update thread started")
+
                     lastMetadata[controller.packageName] = metadata
                 }
-            } ?: Log.i("${BuildConfig.APPLICATION_ID} metadata is Null, IGNORE")
+            }
         }
 
         override fun onPlaybackStateChanged(state: PlaybackState?) {
@@ -157,7 +155,7 @@ object MediaSessionManagerHelper {
             state?.let {
                 if (lastState[controller.packageName] == it) return
                 lastState[controller.packageName] = it
-                Log.i("${BuildConfig.APPLICATION_ID} Playback state changed: ${state.state}")
+
                 lastSentenceMap.remove(controller.packageName)
                 if (state.state == PlaybackState.STATE_PLAYING) {
                     handler.post(lyricUpdateRunnable)
@@ -181,7 +179,7 @@ object MediaSessionManagerHelper {
                     EventTool.cleanLyric()
                     return
                 }
-//                Log.i("${BuildConfig.APPLICATION_ID} Updating lyrics for: ${controller.packageName}");
+//
                 updateLyric(controller, playbackState.position, context)
             }
             handler.postDelayed(this, 250)
@@ -197,7 +195,7 @@ object MediaSessionManagerHelper {
             val delay: Int = it.calcDelay(controller, position)
             val sentenceContent = sentence.content.trim()
             val translatedContent = translatedSentence?.content?.trim() ?: ""
-            Log.i("${BuildConfig.APPLICATION_ID} current TranslateDisplayType: ${config.translateDisplayType}")
+
             var curLyric = when (config.translateDisplayType) {
                 "translated" -> translatedContent.ifBlank { sentenceContent }
                 "both" -> if (translatedContent.isBlank()) sentenceContent else "$sentenceContent\n\r$translatedContent"
@@ -207,7 +205,7 @@ object MediaSessionManagerHelper {
                 curLyric = insertZeroWidthSpace(curLyric)
             }
             playInfo.isPlaying = true
-            Log.i("${BuildConfig.APPLICATION_ID} Updating Lyric: $curLyric, delay: $delay")
+
             EventTool.sendLyric(curLyric,
                 ExtraData(
                     customIcon = false,
@@ -224,7 +222,7 @@ object MediaSessionManagerHelper {
                 user
             )
             lastSentenceMap[controller.packageName] = sentence
-        } ?: Log.i("${BuildConfig.APPLICATION_ID} currentLyric[controller] is null, IGNORE")
+        }
     }
 
     private fun Lyric.calcDelay(controller: MediaController, position: Long): Int {
@@ -279,9 +277,9 @@ object MediaSessionManagerHelper {
             .build()
         notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
 
-        Log.i("${BuildConfig.APPLICATION_ID} config.translateDisplayType: '${config.translateDisplayType}'")
-        Log.i("${BuildConfig.APPLICATION_ID} config.forceRepeat: '${config.forceRepeat}'")
-        Log.i("${BuildConfig.APPLICATION_ID} config.targetPackages: '${config.targetPackages}'")
+
+
+
     }
 }
 
