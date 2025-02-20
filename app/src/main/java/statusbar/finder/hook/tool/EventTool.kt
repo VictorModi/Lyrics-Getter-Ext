@@ -38,21 +38,13 @@ object EventTool {
         }
     }
 
-    fun sendLyric(lyric: String, extra: ExtraData? = null) {
+    fun sendLyric(lyric: String, extra: ExtraData) {
         val refinedLyric = lyric.trim()
         if (refinedLyric.isBlank()) return
         lastLyricData = LyricData().apply {
             this.type = OperateType.UPDATE
             this.lyric = refinedLyric
-            if (extra.isNull()) {
-                this.extraData.mergeExtra(ExtraData().apply {
-                    this.packageName = BuildConfig.APPLICATION_ID
-                    this.customIcon = false
-                    this.base64Icon = ""
-                    this.useOwnMusicController = false
-                    this.delay = 0
-                })
-            }
+            this.extraData = extra
         }
     }
 
