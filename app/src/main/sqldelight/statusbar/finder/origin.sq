@@ -10,7 +10,7 @@ CREATE TABLE origin (
 );
 
 insertMediaInfo:
-INSERT INTO origin (title, artist, album, duration, package_name)
+INSERT OR IGNORE INTO origin (title, artist, album, duration, package_name)
 VALUES (?, ?, ?, ?, ?);
 
 getMediaInfoId:

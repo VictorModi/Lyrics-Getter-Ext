@@ -9,7 +9,7 @@ CREATE TABLE active (
 
 -- 插入新的 active 记录
 insertActive:
-INSERT INTO active (origin_id, result_id)
+INSERT OR IGNORE INTO active (origin_id, result_id)
 VALUES (?, ?);
 
 -- 更新已存在的 active 记录

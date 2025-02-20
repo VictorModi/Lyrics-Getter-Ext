@@ -15,7 +15,7 @@ CREATE TABLE res (
 );
 
 insertRes:
-INSERT INTO res (origin_id, provider, lyric, translated_lyric, distance, title, artist, album)
+INSERT OR IGNORE INTO res (origin_id, provider, lyric, translated_lyric, distance, title, artist, album)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 getResByIdAndProvider:
