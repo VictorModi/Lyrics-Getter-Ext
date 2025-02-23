@@ -34,12 +34,12 @@ public class KugouProvider implements ILrcProvider {
         String searchUrl = String.format(Locale.getDefault(), KUGOU_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo), mediaInfo.getDuration());
         JSONObject searchResult;
         try {
-            searchResult = HttpRequestUtil.getJsonResponse(searchUrl);
+            searchResult = HttpRequestUtil.INSTANCE.getJsonResponse(searchUrl);
             if (searchResult != null && searchResult.getLong("status") == 200) {
                 JSONArray array = searchResult.getJSONArray("candidates");
                 Pair<String, MediaInfo> pair = getLrcUrl(array, mediaInfo);
                 if(pair != null){
-                    JSONObject lrcJson = HttpRequestUtil.getJsonResponse(pair.first);
+                    JSONObject lrcJson = HttpRequestUtil.INSTANCE.getJsonResponse(pair.first);
                     if (lrcJson == null) {
                         return null;
                     }

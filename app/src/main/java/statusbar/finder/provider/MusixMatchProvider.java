@@ -49,7 +49,7 @@ public class MusixMatchProvider implements ILrcProvider {
         String searchUrl = String.format(Locale.getDefault(), MUSIXMATCH_SEARCH_URL_FORMAT, musixMatchUserToken , LyricSearchUtil.getSearchKey(mediaInfo));
         JSONObject searchResult;
         try{
-            searchResult = HttpRequestUtil.getJsonResponse(searchUrl);
+            searchResult = HttpRequestUtil.INSTANCE.getJsonResponse(searchUrl);
             Log.d("searchUrl", searchUrl);
             if (searchResult != null && searchResult.getJSONObject("message").getJSONObject("header").getLong("status_code") == 200) {
                 JSONArray array = searchResult.getJSONObject("message").getJSONObject("body").getJSONObject("macro_result_list").getJSONArray("track_list");
@@ -59,7 +59,7 @@ public class MusixMatchProvider implements ILrcProvider {
                 long trackId = -1;
                 JSONObject infoJson;
                 if (pair != null) {
-                    JSONObject lrcJson = HttpRequestUtil.getJsonResponse(pair.first);
+                    JSONObject lrcJson = HttpRequestUtil.INSTANCE.getJsonResponse(pair.first);
                     if (lrcJson == null) {
                         return null;
                     }
@@ -88,7 +88,7 @@ public class MusixMatchProvider implements ILrcProvider {
                             artist,
                             album);
                     Log.d("lrcUrl", lrcUrl);
-                    JSONObject lrcJson = HttpRequestUtil.getJsonResponse(lrcUrl);
+                    JSONObject lrcJson = HttpRequestUtil.INSTANCE.getJsonResponse(lrcUrl);
                     if (lrcJson == null) {
                         return null;
                     }
@@ -214,8 +214,13 @@ public class MusixMatchProvider implements ILrcProvider {
         String transLyricURL = String.format(Locale.getDefault(), MUSIXMATCH_TRANSLATED_LRC_URL_FORMAT, musixMatchUserToken, selectLang, trackId);
 
         try {
-            JSONObject transResult = HttpRequestUtil.getJsonResponse(transLyricURL);
-            JSONObject header = transResult.getJSONObject("message").getJSONObject("header");
+            JSONObject transResult = HttpRequestUtil.INSTANCE.getJsonResponse(transLyricURL);
+            JSONObject header;
+            if (transResult != null) {
+                header = transResult.getJSONObject("message").getJSONObject("header");
+            } else {
+                return null;
+            }
             int statusCode = header.getInt("status_code");
 
             if (statusCode != 200) {
@@ -224,7 +229,7 @@ public class MusixMatchProvider implements ILrcProvider {
 
             JSONArray translationsList = transResult.getJSONObject("message").getJSONObject("body").getJSONArray("translations_list");
             return translationsList.length() > 0 ? translationsList : null;
-        } catch (JSONException | IOException e) {
+        } catch (JSONException e) {
             e.fillInStackTrace();
             return null;
         }
@@ -236,9 +241,13 @@ public class MusixMatchProvider implements ILrcProvider {
             // Form Google
             JSONObject tokenJson;
             String tokenURL = String.format(Locale.getDefault(), MUSIXMATCH_TOKEN_URL_FORMAT, guid);
-            tokenJson = HttpRequestUtil.getJsonResponse(tokenURL);
-            result = tokenJson.getJSONObject("message").getJSONObject("body").getString("user_token");
-        } catch (JSONException | IOException e) {
+            tokenJson = HttpRequestUtil.INSTANCE.getJsonResponse(tokenURL);
+            if (tokenJson != null) {
+                result = tokenJson.getJSONObject("message").getJSONObject("body").getString("user_token");
+            } else {
+                result = null;
+            }
+        } catch (JSONException e) {
             e.fillInStackTrace();
             return null;
         }

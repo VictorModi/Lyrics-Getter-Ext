@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.UserHandle;
 import android.util.JsonWriter;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -86,6 +87,7 @@ public class CSLyricHelper {
             this.lyric = lyric;
         }
 
+        @NotNull
         @Override
         public String toString() {
             StringWriter sw = new StringWriter();
@@ -94,7 +96,7 @@ public class CSLyricHelper {
                 jw.name("lyric").value(lyric);
                 jw.endObject();
             } catch (IOException e) {
-                e.printStackTrace();
+                e.fillInStackTrace();
             }
             return sw.toString();
         }
@@ -116,6 +118,7 @@ public class CSLyricHelper {
             this.packageName = packageName;
         }
 
+        @NotNull
         @Override
         public String toString() {
             StringWriter sw = new StringWriter();
@@ -126,7 +129,7 @@ public class CSLyricHelper {
                 jw.name("isPlaying").value(isPlaying);
                 jw.endObject();
             } catch (IOException e) {
-                e.printStackTrace();
+                e.fillInStackTrace();
             }
             return sw.toString();
         }

@@ -32,12 +32,12 @@ public class QQMusicProvider implements ILrcProvider {
         String searchUrl = String.format(Locale.getDefault(), QM_SEARCH_URL_FORMAT, LyricSearchUtil.getSearchKey(mediaInfo));
         JSONObject searchResult;
         try {
-            searchResult = HttpRequestUtil.getJsonResponse(searchUrl, QM_REFERER);
+            searchResult = HttpRequestUtil.INSTANCE.getJsonResponse(searchUrl, QM_REFERER);
             if (searchResult != null && searchResult.getLong("code") == 0) {
                 JSONArray array = searchResult.getJSONObject("data").getJSONObject("song").getJSONArray("list");
                 Pair<String, MediaInfo> pair = getLrcUrl(array, mediaInfo);
                 if (pair != null) {
-                    JSONObject lrcJson = HttpRequestUtil.getJsonResponse(pair.first, QM_REFERER);
+                    JSONObject lrcJson = HttpRequestUtil.INSTANCE.getJsonResponse(pair.first, QM_REFERER);
                     if (lrcJson == null) {
                         return null;
                     }

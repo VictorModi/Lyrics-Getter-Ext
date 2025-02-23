@@ -39,8 +39,6 @@ public class LrcGetter {
 
     public static Lyric getLyric(Context context, MediaInfo mediaInfo, String sysLang, String packageName) {
         DatabaseHelper.INSTANCE.init(context);
-        MojiDetector detector = new MojiDetector();
-        MojiConverter converter = new MojiConverter();
 
         if (messageDigest == null) {
             try {
@@ -60,7 +58,8 @@ public class LrcGetter {
             LyricsResultChange.Companion.getInstance().notifyResult(new LyricsResultChange.Data(mediaInfo, currentResult));
             return LyricUtils.parseLyric(currentResult, mediaInfo, packageName);
         }
-
+        MojiDetector detector = new MojiDetector();
+        MojiConverter converter = new MojiConverter();
         if (currentResult == null && (!detector.hasKana(mediaInfo.getTitle()) && detector.hasLatin(mediaInfo.getTitle()))) {
             MediaInfo hiraganaMediaInfo = mediaInfo.clone();
             hiraganaMediaInfo.setTitle(converter.convertRomajiToHiragana(mediaInfo.getTitle()));

@@ -5,8 +5,10 @@ import android.app.Notification
 import android.app.Notification.BigTextStyle
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
@@ -23,7 +25,10 @@ import cn.zhaiyifan.lyric.model.Lyric.Sentence
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
 import statusbar.finder.CSLyricHelper.PlayInfo
+import statusbar.finder.app.LyricsActivity
 import statusbar.finder.app.MusicListenerService.LrcUpdateThread
+import statusbar.finder.app.event.LyricSentenceUpdate
+import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.config.Config
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.hook.tool.EventTool
@@ -51,14 +56,15 @@ object MediaSessionManagerHelper {
     private var currentLyric: MutableMap<String, Lyric?> = mutableMapOf()
     private var lastMetadata: MutableMap<String, MediaMetadata?> = mutableMapOf()
     private var lastState: MutableMap<String, PlaybackState> = mutableMapOf()
+    private var lastLyricLine: MutableMap<String, String> = mutableMapOf()
     private var playInfo: PlayInfo = PlayInfo("", BuildConfig.APPLICATION_ID)
     private val user: UserHandle = UserHandle.getUserHandleForUid(android.os.Process.myUid())
-    private var notificationManager: NotificationManager? = null
+    private lateinit var notificationManager: NotificationManager
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
+    private lateinit var pendingIntent: PendingIntent
 
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
-
         controllers?.let {
             if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
             activeControllers.forEach { it.key.unregisterCallback(it.value) }
@@ -68,7 +74,6 @@ object MediaSessionManagerHelper {
             lastSentenceMap.clear()
             val targetPackages = config.targetPackages.split(";")
             for (controller in controllers) {
-
                 if (targetPackages.contains(controller.packageName)) {
                     lastMetadata.remove(controller.packageName)
                     val callback = MediaControllerCallback(controller)
@@ -90,24 +95,8 @@ object MediaSessionManagerHelper {
                 val packageName = requiredLrcTitle.filterValues { it == msg.data.getString("title", "") }.keys.first()
                 val lyric = msg.obj as Lyric?
                 currentLyric[packageName] = lyric
-                lyric?.let {
-                    notificationManager = context.getSystemService(NotificationManager::class.java)
-                    val notification = Notification.Builder(context, noticeChannelId)
-                        .setSmallIcon(android.R.drawable.ic_media_play)
-                        .setContentTitle(lyric.originalMediaInfo.title)
-                        .setContentText(
-                            "${lyric.originalMediaInfo.artist} - ${lyric.originalMediaInfo.album}"
-                        )
-                        .setStyle(BigTextStyle().bigText(
-                                "${lyric.title}\n\r" +
-                                "${lyric.artist} - ${lyric.album}\n\r" +
-                                "From ${lyric.lyricResult.source} (${lyric.lyricResult.dataOrigin.getCapitalizedName()})"
-                        ))
-                        .setOngoing(true)
-                        .setOnlyAlertOnce(true)
-                        .build()
-                    notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
-                }
+                lastLyricLine.remove(packageName)
+                LyricsChange.getInstance().notifyResult(LyricsChange.Data(lyric))
             }
         }
     }
@@ -117,10 +106,7 @@ object MediaSessionManagerHelper {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
             super.onMetadataChanged(metadata)
             metadata?.let {
-                if (it == lastMetadata[controller.packageName]) {
-
-                    return
-                }
+                if (it == lastMetadata[controller.packageName]) return
                 notificationManager = context.getSystemService(NotificationManager::class.java)
                 val notification = Notification.Builder(context, noticeChannelId)
                     .setSmallIcon(android.R.drawable.ic_media_play)
@@ -131,7 +117,7 @@ object MediaSessionManagerHelper {
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .build()
-                notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
+                notificationManager.notify(NOTIFICATION_ID_LRC, notification)
                 requiredLrcTitle[controller.packageName] = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
 
                 if (curLrcUpdateThread[controller.packageName] == null || !curLrcUpdateThread[controller.packageName]!!.isAlive) {
@@ -144,7 +130,6 @@ object MediaSessionManagerHelper {
                         controller.packageName
                     )
                     curLrcUpdateThread[controller.packageName]!!.start()
-
                     lastMetadata[controller.packageName] = metadata
                 }
             }
@@ -158,11 +143,26 @@ object MediaSessionManagerHelper {
 
                 lastSentenceMap.remove(controller.packageName)
                 if (state.state == PlaybackState.STATE_PLAYING) {
+                    lastMetadata[controller.packageName]?.let { metadata ->
+                        val notification = Notification.Builder(context, noticeChannelId)
+                            .setSmallIcon(android.R.drawable.ic_media_play)
+                            .setContentTitle(lastMetadata[controller.packageName]?.getString(MediaMetadata.METADATA_KEY_TITLE))
+                            .setContentText(
+                                metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) +
+                                        (if (metadata.getString(MediaMetadata.METADATA_KEY_ALBUM).isBlank()) "" else
+                                            " - ${metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)}")
+                            )
+                            .setOngoing(true)
+                            .setOnlyAlertOnce(true)
+                            .build()
+                        notificationManager.notify(NOTIFICATION_ID_LRC, notification)
+                    }
                     handler.post(lyricUpdateRunnable)
                 } else {
                     handler.removeCallbacks(lyricUpdateRunnable)
                     EventTool.cleanLyric()
                     CSLyricHelper.pauseAsUser(context, playInfo, user)
+                    notificationManager.cancel(NOTIFICATION_ID_LRC)
                 }
             }
         }
@@ -179,16 +179,17 @@ object MediaSessionManagerHelper {
                     EventTool.cleanLyric()
                     return
                 }
-//
                 updateLyric(controller, playbackState.position, context)
             }
-            handler.postDelayed(this, 250)
+            handler.postDelayed(this, 100)
         }
     }
 
     fun updateLyric(controller: MediaController, position: Long, context: Context) {
         currentLyric[controller.packageName]?.let {
-            val sentence = LyricUtils.getSentence(it.sentenceList, position, 0, it.offset) ?: return
+            val sentenceIndex = LyricUtils.getSentenceIndex(it.sentenceList, position, 0, it.offset)
+            if (sentenceIndex < 0) return
+            val sentence =  it.sentenceList[sentenceIndex]
             val translatedSentence = LyricUtils.getSentence(it.translatedSentenceList, position, 0, it.offset)
             if (sentence.content.isBlank()) return
             if (sentence == lastSentenceMap[controller.packageName]) return
@@ -201,11 +202,37 @@ object MediaSessionManagerHelper {
                 "both" -> if (translatedContent.isBlank()) sentenceContent else "$sentenceContent\n\r$translatedContent"
                 else -> sentenceContent
             }
-            if (config.forceRepeat && lastSentenceMap[controller.packageName]?.content == sentence.content) {
+            if (config.forceRepeat &&
+                lastLyricLine[controller.packageName] == curLyric) {
                 curLyric = insertZeroWidthSpace(curLyric)
             }
             playInfo.isPlaying = true
-
+            LyricSentenceUpdate.getInstance().notifyLyrics(LyricSentenceUpdate.Data(
+                sentence.content,
+                translatedSentence?.content,
+                sentenceIndex,
+                delay
+            ))
+            val notification = Notification.Builder(MediaSessionManagerHelper.context, noticeChannelId)
+                .setSmallIcon(android.R.drawable.ic_media_play)
+                .setContentTitle(
+                    "${it.originalMediaInfo.title} - ${it.originalMediaInfo.artist}" +
+                            (if (it.originalMediaInfo.album.isBlank()) "" else " - ${it.originalMediaInfo.album}")
+                )
+                .setContentText(
+                    "${it.title} - ${it.artist}" +
+                            (if (it.album.isBlank()) "" else " - ${it.album}")
+                )
+                .setStyle(BigTextStyle().bigText(
+                    "${it.lyricResult.source} (${it.lyricResult.dataOrigin.getCapitalizedName()})" +
+                    "\n\rcurrentLyric:\n\r$curLyric\n\r\n\rdelay: $delay sec"
+                ))
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setTicker(curLyric)
+                .build()
+            notificationManager.notify(NOTIFICATION_ID_LRC, notification)
             EventTool.sendLyric(curLyric,
                 ExtraData(
                     customIcon = false,
@@ -221,6 +248,7 @@ object MediaSessionManagerHelper {
                 CSLyricHelper.LyricData(curLyric),
                 user
             )
+            lastLyricLine[controller.packageName] = curLyric
             lastSentenceMap[controller.packageName] = sentence
         }
     }
@@ -240,8 +268,7 @@ object MediaSessionManagerHelper {
         if (input.isEmpty() || input.length < 2) {
             return input
         }
-        val random = Random()
-        val position = 1 + random.nextInt(input.length - 1)
+        val position = 1 + Random().nextInt(input.length - 1)
         val modifiedString = StringBuilder(input)
         modifiedString.insert(position, '\u200B')
         return modifiedString.toString()
@@ -250,6 +277,7 @@ object MediaSessionManagerHelper {
     fun init(initContext: Context) {
         context = initContext
         config = Config()
+        if (config.targetPackages.isBlank()) return
         EventTool.setContext(context, user)
         DatabaseHelper.init(context)
         mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
@@ -267,19 +295,16 @@ object MediaSessionManagerHelper {
             "Lyrics Getter Ext",
             NotificationManager.IMPORTANCE_MIN
         )
-        notificationManager!!.createNotificationChannel(channel)
-        val notification = Notification.Builder(context, noticeChannelId)
-            .setSmallIcon(android.R.drawable.ic_media_pause)
-            .setContentTitle("Lyrics Getter Ext")
-            .setContentText("已成功加载")
-            .setOnlyAlertOnce(true)
-            .setOngoing(true)
-            .build()
-        notificationManager!!.notify(NOTIFICATION_ID_LRC, notification)
-
-
-
-
+        notificationManager.createNotificationChannel(channel)
+        val intent = Intent()
+        intent.setClassName(BuildConfig.APPLICATION_ID, LyricsActivity::class.java.name)
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 }
 
