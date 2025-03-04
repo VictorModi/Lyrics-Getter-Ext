@@ -22,6 +22,7 @@ import cn.lyric.getter.api.data.ExtraData
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
 import cn.zhaiyifan.lyric.model.Lyric.Sentence
+import com.google.gson.Gson
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
 import statusbar.finder.CSLyricHelper.PlayInfo
@@ -32,8 +33,7 @@ import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.config.Config
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.hook.tool.EventTool
-import statusbar.finder.misc.Constants.MSG_LYRIC_UPDATE_DONE
-import statusbar.finder.misc.Constants.NOTIFICATION_ID_LRC
+import statusbar.finder.misc.Constants.*
 import java.util.*
 
 
@@ -62,6 +62,7 @@ object MediaSessionManagerHelper {
     private lateinit var notificationManager: NotificationManager
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
     private lateinit var pendingIntent: PendingIntent
+    private val gson = Gson()
 
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
@@ -96,7 +97,14 @@ object MediaSessionManagerHelper {
                 val lyric = msg.obj as Lyric?
                 currentLyric[packageName] = lyric
                 lastLyricLine.remove(packageName)
-                LyricsChange.getInstance().notifyResult(LyricsChange.Data(lyric))
+                val data = LyricsChange.Data(lyric)
+                val intent = Intent(
+                    BROADCAST_LYRICS_CHANGED
+                )
+                intent.setPackage(BuildConfig.APPLICATION_ID)
+                LyricsChange.getInstance().notifyResult(data)
+                intent.putExtra("data", gson.toJson(data))
+                context.sendBroadcastAsUser(intent, user)
             }
         }
     }
@@ -207,12 +215,19 @@ object MediaSessionManagerHelper {
                 curLyric = insertZeroWidthSpace(curLyric)
             }
             playInfo.isPlaying = true
-            LyricSentenceUpdate.getInstance().notifyLyrics(LyricSentenceUpdate.Data(
+            val data = LyricSentenceUpdate.Data(
                 sentence.content,
                 translatedSentence?.content,
                 sentenceIndex,
                 delay
-            ))
+            )
+            val intent = Intent(
+                BROADCAST_LYRIC_SENTENCE_UPDATE
+            )
+            intent.setPackage(BuildConfig.APPLICATION_ID)
+            LyricSentenceUpdate.getInstance().notifyLyrics(data)
+            intent.putExtra("data", gson.toJson(data))
+            context.sendBroadcastAsUser(intent, user)
             val notification = Notification.Builder(MediaSessionManagerHelper.context, noticeChannelId)
                 .setSmallIcon(android.R.drawable.ic_media_play)
                 .setContentTitle(
@@ -290,12 +305,6 @@ object MediaSessionManagerHelper {
         )
         activeSessionsListener.onActiveSessionsChanged(initialControllers)
         notificationManager = context.getSystemService(NotificationManager::class.java)
-        val channel = NotificationChannel(
-            noticeChannelId,
-            "Lyrics Getter Ext",
-            NotificationManager.IMPORTANCE_MIN
-        )
-        notificationManager.createNotificationChannel(channel)
         val intent = Intent()
         intent.setClassName(BuildConfig.APPLICATION_ID, LyricsActivity::class.java.name)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

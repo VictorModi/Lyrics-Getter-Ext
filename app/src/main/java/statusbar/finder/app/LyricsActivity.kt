@@ -14,6 +14,7 @@ import statusbar.finder.app.event.LyricSentenceUpdate
 import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.data.repository.LyricRepository
 import statusbar.finder.data.repository.ResRepository
+import statusbar.finder.hook.tool.Tool
 
 /**
  * LyricGetterExt - statusbar.finder
@@ -31,6 +32,7 @@ class LyricsActivity : AppCompatActivity() {
     private var currentHighlightPos = -1
     private var currentLyricResId: Long = -1L
     private var currentLyric: Lyric? = null
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,7 +114,11 @@ class LyricsActivity : AppCompatActivity() {
 
         updateSongInfo(lyric)
         syncOffset(lyric)
-        currentLyricResId = LyricRepository.getActiveResIdByLyric(lyric)!!
+        currentLyricResId = if (Tool.xpActivation) {
+            -1
+        } else {
+            LyricRepository.getActiveResIdByLyric(lyric)!!
+        }
         adapter.notifyDataSetChanged()
         currentHighlightPos = -1
     }

@@ -40,7 +40,7 @@ public class Lyric {
                 stringBuilder.append(sentence.toString()).append("\n");
             }
         }
-        if (translatedSentenceList != null) {
+        if (!translatedSentenceList.isEmpty()) {
             stringBuilder.append ("--- Translate Lyrics ---\n");
             for (Sentence sentence : translatedSentenceList) {
                 stringBuilder.append(sentence.toString()).append("\n");

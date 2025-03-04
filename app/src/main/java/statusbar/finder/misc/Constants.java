@@ -1,5 +1,7 @@
 package statusbar.finder.misc;
 
+import statusbar.finder.BuildConfig;
+
 public class Constants {
     public static final int NOTIFICATION_ID_LRC = 1;
     public static final int MSG_LYRIC_UPDATE_DONE = 2;
@@ -17,4 +19,8 @@ public class Constants {
     public static final int FLAG_ONLY_UPDATE_TICKER = 0x2000000;
 
     public static final String SETTINGS_ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
+
+
+    public static final String BROADCAST_LYRICS_CHANGED = String.format("%s.LYRICS_CHANGED", BuildConfig.APPLICATION_ID);
+    public static final String BROADCAST_LYRIC_SENTENCE_UPDATE = String.format("%s.LYRICS_SENTENCE_UPDATED", BuildConfig.APPLICATION_ID);
 }

@@ -33,6 +33,15 @@
             </intent-filter>
         </service>
 
+        <receiver android:name=".app.broadcast.LyricsBroadcastReceiver" android:exported="true"
+                  android:permission="status.finder.Broadcast">
+            <intent-filter>
+                <action android:name="statusbar.finder.LYRICS_CHANGED" />
+                <action android:name="statusbar.finder.LYRICS_SENTENCE_UPDATED"/>
+            </intent-filter>
+        </receiver>
+
+
         <activity
             android:name="statusbar.finder.app.SettingsActivity"
             android:exported="true">
