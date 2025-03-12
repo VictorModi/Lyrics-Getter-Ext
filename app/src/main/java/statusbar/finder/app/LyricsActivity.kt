@@ -80,8 +80,8 @@ class LyricsActivity : AppCompatActivity() {
                     ResRepository.updateResOffsetById(currentLyricResId, newOffset)
                     currentLyric?.offset = newOffset
                     LyricsChange.getInstance().notifyResult(LyricsChange.Data(currentLyric))
-                    Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
                 }
+                Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
             }
