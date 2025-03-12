@@ -130,19 +130,7 @@ object MediaSessionManagerHelper {
                     .build()
                 notificationManager.notify(NOTIFICATION_ID_LRC, notification)
                 requiredLrcTitle[controller.packageName] = info.title
-
-                if (curLrcUpdateThread[controller.packageName] == null || !curLrcUpdateThread[controller.packageName]!!.isAlive) {
-                    currentLyric.remove(controller.packageName)
-                    EventTool.cleanLyric()
-                    curLrcUpdateThread[controller.packageName] = LrcUpdateThread(
-                        context,
-                        handler,
-                        metadata,
-                        controller.packageName
-                    )
-                    curLrcUpdateThread[controller.packageName]!!.start()
-                    lastMetadata[controller.packageName] = metadata
-                }
+                updateLyrics(controller.packageName)
             }
         }
 
