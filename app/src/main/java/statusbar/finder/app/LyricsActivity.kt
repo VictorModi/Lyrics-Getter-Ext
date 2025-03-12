@@ -112,6 +112,7 @@ class LyricsActivity : AppCompatActivity() {
     @SuppressLint("NotifyDataSetChanged")
     private fun updateLyricList(data: LyricsChange.Data) {
         lyricsList.clear()
+        adapter.notifyDataSetChanged()
         if (data.lyric == null || data.providers == null) return
         val originLines = data.lyric.sentenceList
         val translatedLines = data.lyric.translatedSentenceList
@@ -119,6 +120,7 @@ class LyricsActivity : AppCompatActivity() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, spinnerItems)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         provideSpinner.adapter = adapter
+        provideSpinner.setSelection(spinnerItems.indexOf(data.lyric.lyricResult.source))
         provideSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parentView: AdapterView<*>, selectedItemView: View?, position: Int, id: Long) {
                 val selectedKey = spinnerItems[position]
@@ -135,7 +137,6 @@ class LyricsActivity : AppCompatActivity() {
                         ActiveRepository.updateResultIdByOriginId(data.lyric.lyricResult.originId, it)
                         MusicListenerService.instance.startSearch()
                     }
-                    lyricsList.clear()
                 }
             }
 
