@@ -3,7 +3,6 @@ package statusbar.finder.hook.observe
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.Notification.BigTextStyle
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ComponentName
@@ -32,6 +31,7 @@ import statusbar.finder.app.event.LyricSentenceUpdate
 import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.config.Config
 import statusbar.finder.data.db.DatabaseHelper
+import statusbar.finder.data.model.MediaInfo
 import statusbar.finder.hook.tool.EventTool
 import statusbar.finder.misc.Constants.*
 import java.util.*
@@ -63,6 +63,7 @@ object MediaSessionManagerHelper {
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
     private lateinit var pendingIntent: PendingIntent
     private val gson = Gson()
+    private var lastBroadcastLyric: LyricsChange.Data? = null
 
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
@@ -105,6 +106,7 @@ object MediaSessionManagerHelper {
                 LyricsChange.getInstance().notifyResult(data)
                 intent.putExtra("data", gson.toJson(data))
                 context.sendBroadcastAsUser(intent, user)
+                lastBroadcastLyric = data
             }
         }
     }
@@ -114,19 +116,20 @@ object MediaSessionManagerHelper {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
             super.onMetadataChanged(metadata)
             metadata?.let {
+                val info = it.toMediaInfo()
                 if (it == lastMetadata[controller.packageName]) return
                 notificationManager = context.getSystemService(NotificationManager::class.java)
                 val notification = Notification.Builder(context, noticeChannelId)
                     .setSmallIcon(android.R.drawable.ic_media_play)
-                    .setContentTitle(metadata.getString(MediaMetadata.METADATA_KEY_TITLE))
+                    .setContentTitle(info.title)
                     .setContentText(
-                        "${metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)} - ${metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)}"
+                        "${info.artist} - ${info.album}"
                     )
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .build()
                 notificationManager.notify(NOTIFICATION_ID_LRC, notification)
-                requiredLrcTitle[controller.packageName] = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
+                requiredLrcTitle[controller.packageName] = info.title
 
                 if (curLrcUpdateThread[controller.packageName] == null || !curLrcUpdateThread[controller.packageName]!!.isAlive) {
                     currentLyric.remove(controller.packageName)
@@ -152,13 +155,14 @@ object MediaSessionManagerHelper {
                 lastSentenceMap.remove(controller.packageName)
                 if (state.state == PlaybackState.STATE_PLAYING) {
                     lastMetadata[controller.packageName]?.let { metadata ->
+                        val info = metadata.toMediaInfo()
                         val notification = Notification.Builder(context, noticeChannelId)
                             .setSmallIcon(android.R.drawable.ic_media_play)
-                            .setContentTitle(lastMetadata[controller.packageName]?.getString(MediaMetadata.METADATA_KEY_TITLE))
+                            .setContentTitle(info.title)
                             .setContentText(
-                                metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) +
-                                        (if (metadata.getString(MediaMetadata.METADATA_KEY_ALBUM).isBlank()) "" else
-                                            " - ${metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)}")
+                                info.artist +
+                                        (if (info.album.isBlank()) "" else
+                                            " - ${info.album}")
                             )
                             .setOngoing(true)
                             .setOnlyAlertOnce(true)
@@ -279,6 +283,10 @@ object MediaSessionManagerHelper {
         return delay.coerceAtLeast(1)
     }
 
+    private fun MediaMetadata.toMediaInfo(): MediaInfo {
+        return MediaInfo(this)
+    }
+
     private fun insertZeroWidthSpace(input: String): String {
         if (input.isEmpty() || input.length < 2) {
             return input
@@ -314,6 +322,24 @@ object MediaSessionManagerHelper {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+
+    fun getLastBroadcastLyric(): LyricsChange.Data? {
+        return lastBroadcastLyric
+    }
+
+    fun updateLyrics(packageName: String) {
+        if (curLrcUpdateThread[packageName] == null || !curLrcUpdateThread[packageName]!!.isAlive) {
+            currentLyric.remove(packageName)
+            EventTool.cleanLyric()
+            curLrcUpdateThread[packageName] = LrcUpdateThread(
+                context,
+                handler,
+                lastMetadata[packageName],
+                packageName
+            )
+            curLrcUpdateThread[packageName]!!.start()
+        }
     }
 }
 

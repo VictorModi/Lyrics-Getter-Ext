@@ -1,6 +1,7 @@
 package statusbar.finder.app
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -15,6 +16,8 @@ import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.data.repository.LyricRepository
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.Tool
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_CHANGED_REQUEST
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST
 
 /**
  * LyricGetterExt - statusbar.finder
@@ -48,24 +51,37 @@ class LyricsActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         registerObservers()
-        MusicListenerService.instance?.lyric?.let {
-            updateLyricList(it)
+        if (Tool.xpActivation) {
+            val intent = Intent(BROADCAST_LYRICS_CHANGED_REQUEST)
+            applicationContext.sendBroadcast(intent)
+        } else {
+            MusicListenerService.instance?.lyric?.let {
+                currentLyric = it
+            }
         }
 
         val btnSubmit = findViewById<Button>(R.id.btnSubmit)
 
         btnSubmit.setOnClickListener {
-            if (currentLyricResId != -1L) {
+            if (currentLyricResId != -1L && currentLyric != null) {
                 var newOffset = 0L
                 try {
                     newOffset = etOffset.getText().toString().toLong()
                 } catch (e: NumberFormatException) {
                     Toast.makeText(applicationContext, "Offset not valid", Toast.LENGTH_SHORT).show()
                 }
-                ResRepository.updateResOffsetById(currentLyricResId, newOffset)
-                currentLyric?.offset = newOffset
-                LyricsChange.getInstance().notifyResult(LyricsChange.Data(currentLyric))
-                Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
+                if (Tool.xpActivation) {
+                    val intent = Intent(BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST)
+                    intent.putExtra("offset", newOffset)
+                    intent.putExtra("resId", currentLyricResId)
+                    intent.putExtra("packageName", currentLyric!!.packageName)
+                    applicationContext.sendBroadcast(intent)
+                } else {
+                    ResRepository.updateResOffsetById(currentLyricResId, newOffset)
+                    currentLyric?.offset = newOffset
+                    LyricsChange.getInstance().notifyResult(LyricsChange.Data(currentLyric))
+                    Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
+                }
             } else {
                 Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
             }
@@ -114,11 +130,7 @@ class LyricsActivity : AppCompatActivity() {
 
         updateSongInfo(lyric)
         syncOffset(lyric)
-        currentLyricResId = if (Tool.xpActivation) {
-            -1
-        } else {
-            LyricRepository.getActiveResIdByLyric(lyric)!!
-        }
+        currentLyricResId = lyric.lyricResult.resId
         adapter.notifyDataSetChanged()
         currentHighlightPos = -1
     }

@@ -23,4 +23,7 @@ public class Constants {
 
     public static final String BROADCAST_LYRICS_CHANGED = String.format("%s.LYRICS_CHANGED", BuildConfig.APPLICATION_ID);
     public static final String BROADCAST_LYRIC_SENTENCE_UPDATE = String.format("%s.LYRICS_SENTENCE_UPDATED", BuildConfig.APPLICATION_ID);
+
+    public static final String BROADCAST_LYRICS_CHANGED_REQUEST = String.format("%s.LYRICS_CHANGED_REQUEST", BuildConfig.APPLICATION_ID);
+    public static final String BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST = String.format("%s.LYRICS_OFFSET_UPDATE_REQUEST", BuildConfig.APPLICATION_ID);
 }

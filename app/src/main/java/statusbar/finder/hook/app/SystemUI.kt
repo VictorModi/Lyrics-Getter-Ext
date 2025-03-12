@@ -1,10 +1,14 @@
 package statusbar.finder.hook.app
 
 import android.app.Application
+import android.content.IntentFilter
 import com.github.kyuubiran.ezxhelper.HookFactory.`-Static`.createHook
 import com.github.kyuubiran.ezxhelper.finders.MethodFinder.`-Static`.methodFinder
 import statusbar.finder.hook.BaseHook
+import statusbar.finder.hook.broadcast.LyricRequestBroadcastReceiver
 import statusbar.finder.hook.observe.MediaSessionManagerHelper
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_CHANGED_REQUEST
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST
 
 /**
  * LyricGetterExt - statusbar.finder.hook.app
@@ -19,7 +23,15 @@ object SystemUI : BaseHook() {
         super.init()
         Application::class.java.methodFinder().filterByName("attach").first().createHook {
             after {
-                MediaSessionManagerHelper.init(it.thisObject as Application)
+                val application = it.thisObject as Application
+                MediaSessionManagerHelper.init(application)
+                application.registerReceiver(
+                    LyricRequestBroadcastReceiver(),
+                    IntentFilter().apply {
+                        addAction(BROADCAST_LYRICS_CHANGED_REQUEST)
+                        addAction(BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST)
+                    }
+                )
             }
         }
     }

@@ -16,6 +16,7 @@ data class LyricResult(
     var source: String = "Local",
     var offset: Int = 0,
     var resultInfo: MediaInfo? = null,
+    var resId: Long = -1,
     var dataOrigin: DataOrigin = DataOrigin.UNDEFINED
 ) {
     override fun toString(): String {
@@ -36,6 +37,7 @@ data class LyricResult(
         offset = result.lyric_offset.toInt(),
         source = result.provider,
         dataOrigin = DataOrigin.DATABASE,
+        resId = result.id,
         resultInfo = MediaInfo(
             title = result.title ?: "",
             artist = result.artist ?: "",

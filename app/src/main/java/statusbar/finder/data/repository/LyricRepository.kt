@@ -12,7 +12,6 @@ import statusbar.finder.data.model.MediaInfo
  * @date 2025/2/16 23:01
  */
 object LyricRepository {
-
     /**
      * 根据 MediaInfo 获取激活的歌词 & OriginId
      */
