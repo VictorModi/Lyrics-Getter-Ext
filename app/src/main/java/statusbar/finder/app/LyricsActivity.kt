@@ -9,15 +9,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.zhaiyifan.lyric.model.Lyric
-import statusbar.finder.data.model.LyricItem
 import statusbar.finder.R
 import statusbar.finder.app.event.LyricSentenceUpdate
 import statusbar.finder.app.event.LyricsChange
-import statusbar.finder.data.repository.LyricRepository
+import statusbar.finder.data.model.LyricItem
+import statusbar.finder.data.repository.ActiveRepository
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.Tool
-import statusbar.finder.misc.Constants.BROADCAST_LYRICS_CHANGED_REQUEST
-import statusbar.finder.misc.Constants.BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST
+import statusbar.finder.misc.Constants.*
 
 /**
  * LyricGetterExt - statusbar.finder
@@ -31,6 +30,7 @@ class LyricsActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: LyricsAdapter
     private lateinit var etOffset: EditText
+    private lateinit var provideSpinner: Spinner
     private val lyricsList = mutableListOf<LyricItem>()
     private var currentHighlightPos = -1
     private var currentLyricResId: Long = -1L
@@ -40,11 +40,10 @@ class LyricsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.lrcview)  // 确保这个布局文件正确且包含 RecyclerView
-
-        // 在 setContentView 后初始化 recyclerView
+        setContentView(R.layout.lrcview)
         recyclerView = findViewById(R.id.rvLyrics)
         etOffset = findViewById(R.id.etOffset)
+        provideSpinner = findViewById(R.id.provideSpinner)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         adapter = LyricsAdapter(lyricsList)
@@ -77,9 +76,14 @@ class LyricsActivity : AppCompatActivity() {
                     intent.putExtra("packageName", currentLyric!!.packageName)
                     applicationContext.sendBroadcast(intent)
                 } else {
-                    ResRepository.updateResOffsetById(currentLyricResId, newOffset)
-                    currentLyric?.offset = newOffset
-                    LyricsChange.getInstance().notifyResult(LyricsChange.Data(currentLyric))
+                    currentLyric?.let {
+                        ResRepository.updateResOffsetById(currentLyricResId, newOffset)
+                        it.offset = newOffset
+                        LyricsChange.getInstance().notifyResult(LyricsChange.Data(
+                            it,
+                            ResRepository.getProvidersMapByOriginId(it.lyricResult.originId)
+                        ))
+                    }
                 }
                 Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
             } else {
@@ -91,9 +95,9 @@ class LyricsActivity : AppCompatActivity() {
     private fun registerObservers() {
         // 歌词结果变化观察
         LyricsChange.getInstance().observe(this) { resultData ->
-            resultData?.lyric?.let { lyric ->
-                currentLyric = lyric
-                updateLyricList(lyric)
+            resultData?.let {
+                currentLyric = it.lyric
+                updateLyricList(it)
             }
         }
 
@@ -106,11 +110,36 @@ class LyricsActivity : AppCompatActivity() {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun updateLyricList(lyric: Lyric) {
+    private fun updateLyricList(data: LyricsChange.Data) {
         lyricsList.clear()
-        val originLines = lyric.sentenceList
-        val translatedLines = lyric.translatedSentenceList
+        if (data.lyric == null || data.providers == null) return
+        val originLines = data.lyric.sentenceList
+        val translatedLines = data.lyric.translatedSentenceList
+        val spinnerItems: List<String> = data.providers.keys.toList()
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, spinnerItems)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        provideSpinner.adapter = adapter
+        provideSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parentView: AdapterView<*>, selectedItemView: View?, position: Int, id: Long) {
+                val selectedKey = spinnerItems[position]
+                if (selectedKey == data.lyric.lyricResult.source) return
+                val selectedValue = data.providers[selectedKey]
+                selectedValue?.let {
+                    if (Tool.xpActivation) {
+                        val intent = Intent(BROADCAST_LYRICS_ACTIVE_UPDATE_REQUEST)
+                        intent.putExtra("originId", data.lyric.lyricResult.originId)
+                        intent.putExtra("resId", it)
+                        intent.putExtra("packageName", data.lyric.packageName)
+                        applicationContext.sendBroadcast(intent)
+                    } else {
+                        ActiveRepository.updateResultIdByOriginId(data.lyric.lyricResult.originId, it)
+                        MusicListenerService.instance.startSearch()
+                    }
+                }
+            }
 
+            override fun onNothingSelected(parentView: AdapterView<*>) { }
+        }
         // 用来处理配对后的数据
         var translatedIndex = 0
 
@@ -128,9 +157,9 @@ class LyricsActivity : AppCompatActivity() {
             )
         }
 
-        updateSongInfo(lyric)
-        syncOffset(lyric)
-        currentLyricResId = lyric.lyricResult.resId
+        updateSongInfo(data.lyric)
+        syncOffset(data.lyric)
+        currentLyricResId = data.lyric.lyricResult.resId
         adapter.notifyDataSetChanged()
         currentHighlightPos = -1
     }

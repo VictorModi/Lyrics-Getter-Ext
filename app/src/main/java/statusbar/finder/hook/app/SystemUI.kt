@@ -7,8 +7,7 @@ import com.github.kyuubiran.ezxhelper.finders.MethodFinder.`-Static`.methodFinde
 import statusbar.finder.hook.BaseHook
 import statusbar.finder.hook.broadcast.LyricRequestBroadcastReceiver
 import statusbar.finder.hook.observe.MediaSessionManagerHelper
-import statusbar.finder.misc.Constants.BROADCAST_LYRICS_CHANGED_REQUEST
-import statusbar.finder.misc.Constants.BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST
+import statusbar.finder.misc.Constants.*
 
 /**
  * LyricGetterExt - statusbar.finder.hook.app
@@ -30,6 +29,7 @@ object SystemUI : BaseHook() {
                     IntentFilter().apply {
                         addAction(BROADCAST_LYRICS_CHANGED_REQUEST)
                         addAction(BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST)
+                        addAction(BROADCAST_LYRICS_ACTIVE_UPDATE_REQUEST)
                     }
                 )
             }

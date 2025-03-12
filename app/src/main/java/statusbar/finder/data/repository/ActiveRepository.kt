@@ -22,4 +22,8 @@ object ActiveRepository {
     fun getResultIdByOriginId(originId: Long): Long? {
         return queries.getResultId(originId).executeAsOneOrNull()
     }
+
+    fun updateResultIdByOriginId(originId: Long, resultId: Long) {
+        queries.updateActive(originId, resultId)
+    }
 }

@@ -70,7 +70,7 @@ class LyricsAdapter(private val lyrics: List<LyricItem>) :
 
     override fun getItemCount() = lyrics.size
 
-    fun isDarkMode(context: Context): Boolean {
+    private fun isDarkMode(context: Context): Boolean {
         return (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     }
 }

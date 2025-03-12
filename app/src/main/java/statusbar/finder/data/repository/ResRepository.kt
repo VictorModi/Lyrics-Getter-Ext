@@ -52,4 +52,8 @@ object ResRepository {
     fun getResByOriginIdAndProvider(originId: Long, provider: String): Res? {
         return queries.getResByIdAndProvider(originId, provider).executeAsOneOrNull()
     }
+
+    fun getProvidersMapByOriginId(originId: Long): Map<String, Long> {
+        return queries.getProvidersAndIdByOriginId(originId).executeAsList().associate { it.provider to it.id }
+    }
 }

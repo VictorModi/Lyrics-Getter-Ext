@@ -40,5 +40,10 @@ UPDATE res
 SET lyric_offset = ?
 WHERE id = ?;
 
+getProvidersAndIdByOriginId:
+SELECT provider, id
+FROM res
+WHERE origin_id = ?;
+
 getLastInsertId:
 SELECT last_insert_rowid() AS id;

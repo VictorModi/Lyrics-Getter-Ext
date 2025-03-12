@@ -8,6 +8,7 @@ import android.os.UserHandle
 import com.github.kyuubiran.ezxhelper.Log
 import com.google.gson.Gson
 import statusbar.finder.BuildConfig
+import statusbar.finder.data.repository.ActiveRepository
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.observe.MediaSessionManagerHelper.getLastBroadcastIntent
 import statusbar.finder.hook.observe.MediaSessionManagerHelper.updateLyrics
@@ -39,6 +40,17 @@ class LyricRequestBroadcastReceiver : BroadcastReceiver() {
                 packageName?.let {
                     if (offset != -1L && resId != -1L) {
                         ResRepository.updateResOffsetById(resId, offset)
+                        updateLyrics(packageName)
+                    }
+                }
+            }
+            BROADCAST_LYRICS_ACTIVE_UPDATE_REQUEST -> {
+                val originId = intent.getLongExtra("originId", -1L)
+                val resId = intent.getLongExtra("resId", -1L)
+                val packageName = intent.getStringExtra("packageName")
+                packageName?.let {
+                    if (originId != -1L && resId != -1L) {
+                        ActiveRepository.updateResultIdByOriginId(originId, resId)
                         updateLyrics(packageName)
                     }
                 }

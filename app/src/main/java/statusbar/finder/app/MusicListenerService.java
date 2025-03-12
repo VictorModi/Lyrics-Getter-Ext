@@ -40,6 +40,7 @@ import statusbar.finder.app.event.LyricsChange;
 import statusbar.finder.app.event.LyricsResultChange;
 import statusbar.finder.data.db.DatabaseHelper;
 import statusbar.finder.data.model.MediaInfo;
+import statusbar.finder.data.repository.ResRepository;
 import statusbar.finder.hook.tool.Tool;
 import statusbar.finder.misc.Constants;
 
@@ -80,7 +81,11 @@ public class MusicListenerService extends NotificationListenerService {
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             if (msg.what == MSG_LYRIC_UPDATE_DONE && msg.getData().getString("title", "").equals(requiredLrcTitle)) {
-                LyricsChange.Companion.getInstance().notifyResult(new LyricsChange.Data((Lyric) msg.obj));
+                if (msg.obj != null) {
+                    Lyric lyric = (Lyric) msg.obj;
+                    LyricsChange.Companion.getInstance().notifyResult(
+                            new LyricsChange.Data(lyric, ResRepository.INSTANCE.getProvidersMapByOriginId(lyric.lyricResult.getOriginId())));
+                }
             }
         }
     };
@@ -128,10 +133,6 @@ public class MusicListenerService extends NotificationListenerService {
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
             mCurrentMediaInfo = new MediaInfo(metadata);
-            if (curLrcUpdateThread == null || !curLrcUpdateThread.isAlive()) {
-                curLrcUpdateThread = new LrcUpdateThread(getApplicationContext(), mHandler, metadata, mMediaController.getPackageName());
-                curLrcUpdateThread.start();
-            }
         }
     };
 
@@ -151,9 +152,22 @@ public class MusicListenerService extends NotificationListenerService {
                 mMediaController.registerCallback(mMediaCallback);
                 mMediaCallback.onMetadataChanged(mMediaController.getMetadata());
                 mMediaCallback.onPlaybackStateChanged(mMediaController.getPlaybackState());
+                startSearch();
             }
         }
     };
+
+    public void startSearch() {
+        if (curLrcUpdateThread == null || !curLrcUpdateThread.isAlive()) {
+            curLrcUpdateThread = new LrcUpdateThread(
+                    getApplicationContext(),
+                    mHandler,
+                    mMediaController.getMetadata(),
+                    mMediaController.getPackageName()
+            );
+            curLrcUpdateThread.start();
+        }
+    }
 
     private int getMediaControllerPlaybackState(MediaController controller) {
         if (controller != null) {

@@ -32,6 +32,7 @@ import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.config.Config
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.data.model.MediaInfo
+import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.EventTool
 import statusbar.finder.misc.Constants.*
 import java.util.*
@@ -98,12 +99,14 @@ object MediaSessionManagerHelper {
                 val lyric = msg.obj as Lyric?
                 currentLyric[packageName] = lyric
                 lastLyricLine.remove(packageName)
-                val data = LyricsChange.Data(lyric)
+                val data = lyric?.let {
+                    LyricsChange.Data(lyric, ResRepository.getProvidersMapByOriginId(lyric.lyricResult.originId))
+                } ?: LyricsChange.Data(null, null)
                 val intent = Intent(
                     BROADCAST_LYRICS_CHANGED
                 )
                 intent.setPackage(BuildConfig.APPLICATION_ID)
-                LyricsChange.getInstance().notifyResult(data)
+                LyricsChange.getInstance().notifyResult(data) // 类型不匹配。
                 intent.putExtra("data", gson.toJson(data))
                 context.sendBroadcastAsUser(intent, user)
                 lastBroadcastIntent = intent
@@ -118,6 +121,7 @@ object MediaSessionManagerHelper {
             metadata?.let {
                 val info = it.toMediaInfo()
                 if (it == lastMetadata[controller.packageName]) return
+                lastMetadata[controller.packageName] = it
                 notificationManager = context.getSystemService(NotificationManager::class.java)
                 val notification = Notification.Builder(context, noticeChannelId)
                     .setSmallIcon(android.R.drawable.ic_media_play)
@@ -320,12 +324,14 @@ object MediaSessionManagerHelper {
         if (curLrcUpdateThread[packageName] == null || !curLrcUpdateThread[packageName]!!.isAlive) {
             currentLyric.remove(packageName)
             EventTool.cleanLyric()
-            curLrcUpdateThread[packageName] = LrcUpdateThread(
-                context,
-                handler,
-                lastMetadata[packageName],
-                packageName
-            )
+            lastMetadata[packageName]?.let {
+                curLrcUpdateThread[packageName] = LrcUpdateThread(
+                    context,
+                    handler,
+                    it,
+                    packageName
+                )
+            }
             curLrcUpdateThread[packageName]!!.start()
         }
     }
