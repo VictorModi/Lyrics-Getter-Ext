@@ -63,7 +63,7 @@ object MediaSessionManagerHelper {
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
     private lateinit var pendingIntent: PendingIntent
     private val gson = Gson()
-    private var lastBroadcastLyric: LyricsChange.Data? = null
+    private var lastBroadcastIntent: Intent? = null
 
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
@@ -106,7 +106,7 @@ object MediaSessionManagerHelper {
                 LyricsChange.getInstance().notifyResult(data)
                 intent.putExtra("data", gson.toJson(data))
                 context.sendBroadcastAsUser(intent, user)
-                lastBroadcastLyric = data
+                lastBroadcastIntent = intent
             }
         }
     }
@@ -324,8 +324,8 @@ object MediaSessionManagerHelper {
         )
     }
 
-    fun getLastBroadcastLyric(): LyricsChange.Data? {
-        return lastBroadcastLyric
+    fun getLastBroadcastIntent(): Intent? {
+        return lastBroadcastIntent
     }
 
     fun updateLyrics(packageName: String) {

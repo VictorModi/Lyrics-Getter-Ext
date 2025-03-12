@@ -9,7 +9,7 @@ import com.github.kyuubiran.ezxhelper.Log
 import com.google.gson.Gson
 import statusbar.finder.BuildConfig
 import statusbar.finder.data.repository.ResRepository
-import statusbar.finder.hook.observe.MediaSessionManagerHelper.getLastBroadcastLyric
+import statusbar.finder.hook.observe.MediaSessionManagerHelper.getLastBroadcastIntent
 import statusbar.finder.hook.observe.MediaSessionManagerHelper.updateLyrics
 import statusbar.finder.misc.Constants.*
 
@@ -28,10 +28,8 @@ class LyricRequestBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             BROADCAST_LYRICS_CHANGED_REQUEST -> {
-                getLastBroadcastLyric()?.let {
-                    val revIntent = Intent(BROADCAST_LYRICS_CHANGED)
-                    revIntent.putExtra("data", gson.toJson(it))
-                    context.sendBroadcastAsUser(revIntent, user)
+                getLastBroadcastIntent()?.let {
+                    context.sendBroadcastAsUser(it, user)
                 }
             }
             BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST -> {
