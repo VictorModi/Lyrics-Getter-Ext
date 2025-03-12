@@ -5,9 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.UserHandle
-import com.github.kyuubiran.ezxhelper.Log
-import com.google.gson.Gson
-import statusbar.finder.BuildConfig
 import statusbar.finder.data.repository.ActiveRepository
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.observe.MediaSessionManagerHelper.getLastBroadcastIntent
@@ -23,7 +20,6 @@ import statusbar.finder.misc.Constants.*
  */
 @SuppressLint("MissingPermission")
 class LyricRequestBroadcastReceiver : BroadcastReceiver() {
-    private val gson = Gson()
     private val user: UserHandle = UserHandle.getUserHandleForUid(android.os.Process.myUid())
 
     override fun onReceive(context: Context, intent: Intent) {

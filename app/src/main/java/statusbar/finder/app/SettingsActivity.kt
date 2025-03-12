@@ -25,10 +25,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.preference.*
 import cn.lyric.getter.api.API
-import statusbar.finder.BuildConfig
 import statusbar.finder.R
 import statusbar.finder.config.Config
-import statusbar.finder.hook.tool.Tool
 import statusbar.finder.hook.tool.Tool.xpActivation
 import statusbar.finder.misc.Constants
 

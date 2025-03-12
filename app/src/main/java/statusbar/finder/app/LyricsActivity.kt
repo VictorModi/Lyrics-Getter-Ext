@@ -135,6 +135,7 @@ class LyricsActivity : AppCompatActivity() {
                         ActiveRepository.updateResultIdByOriginId(data.lyric.lyricResult.originId, it)
                         MusicListenerService.instance.startSearch()
                     }
+                    lyricsList.clear()
                 }
             }
 

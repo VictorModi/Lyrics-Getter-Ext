@@ -9,8 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import statusbar.finder.data.model.LyricItem
 import statusbar.finder.R
+import statusbar.finder.data.model.LyricItem
 
 /**
  * LyricGetterExt - statusbar.finder
