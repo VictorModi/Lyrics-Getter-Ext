@@ -79,7 +79,7 @@ public class NeteaseProvider implements ILrcProvider {
             JSONArray artists = jsonObject.getJSONArray("artists");
             String albumName = jsonObject.getJSONObject("album").getString("name");
             long dis = LyricSearchUtil.calculateSongInfoDistance(songTitle, songArtist, songAlbum, soundName, LyricSearchUtil.parseArtists(artists, "name"), albumName);
-            if (dis < minDistance) {
+            if (dis <= minDistance) {
                 minDistance = dis;
                 currentID = jsonObject.getLong("id");
                 resultSoundName = soundName;

@@ -26,6 +26,10 @@ public class CheckLanguageUtil {
     }
 
     public static boolean isJapanese(String str) {
-        return getDetector().hasKana(str);
+        return getDetector().hasKana(str) || getDetector().hasKanji(str);
+    }
+
+    public static boolean isLatin(String str) {
+        return getDetector().hasLatin(str);
     }
 }

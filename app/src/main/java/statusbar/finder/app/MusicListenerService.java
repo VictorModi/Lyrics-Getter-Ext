@@ -506,7 +506,7 @@ public class MusicListenerService extends NotificationListenerService {
         @Override
         public void run() {
             if (handler == null) return;
-            Lyric lrc = LrcGetter.getLyric(context, data, systemLanguage, packageName);
+            Lyric lrc = LrcGetter.INSTANCE.getLyric(context, data, systemLanguage, packageName);
             Message message = new Message();
             message.what = MSG_LYRIC_UPDATE_DONE;
             message.obj = lrc;
