@@ -12,7 +12,7 @@ import statusbar.finder.utils.LyricSearchUtil.getSearchKey
  * @email victormodi@outlook.com
  * @date 2025/3/13 17:38
  */
-abstract class QueryProcessor {
+abstract class Modifier {
     abstract fun modify(mediaInfo: MediaInfo): MediaInfo?
 
     fun isNoJapaneseButLatin(mediaInfo: MediaInfo): Boolean {

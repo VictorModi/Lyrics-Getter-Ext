@@ -16,10 +16,10 @@ import statusbar.finder.data.repository.LyricRepository.getActiveLyricFromDataba
 import statusbar.finder.data.repository.LyricRepository.getActiveLyricFromDatabaseByOriginId
 import statusbar.finder.data.repository.ResRepository.getResByOriginIdAndProvider
 import statusbar.finder.data.repository.ResRepository.insertResData
-import statusbar.finder.modifiers.HiraganaQueryProcessor
-import statusbar.finder.modifiers.KatakanaQueryProcessor
-import statusbar.finder.modifiers.OriginalQueryProcessor
-import statusbar.finder.modifiers.SimplifiedQueryProcessor
+import statusbar.finder.modifier.HiraganaModifier
+import statusbar.finder.modifier.KatakanaModifier
+import statusbar.finder.modifier.OriginalModifier
+import statusbar.finder.modifier.SimplifiedModifier
 import statusbar.finder.provider.KugouProvider
 import statusbar.finder.provider.MusixMatchProvider
 import statusbar.finder.provider.NeteaseProvider
@@ -27,7 +27,6 @@ import statusbar.finder.provider.QQMusicProvider
 import statusbar.finder.utils.CheckLanguageUtil
 import statusbar.finder.utils.LyricSearchUtil
 import java.io.IOException
-import kotlin.properties.Delegates
 
 /**
  * LyricGetterExt - statusbar.finder
@@ -45,10 +44,10 @@ object LrcGetter {
     )
 
     private val modifiers = arrayOf(
-        SimplifiedQueryProcessor(),
-        OriginalQueryProcessor(),
-        KatakanaQueryProcessor(),
-        HiraganaQueryProcessor(),
+        SimplifiedModifier(),
+        OriginalModifier(),
+        KatakanaModifier(),
+        HiraganaModifier(),
     )
     fun getLyric(context: Context, mediaMetadata: MediaMetadata, sysLang: String, packageName: String): Lyric? {
         return getLyric(context, MediaInfo(mediaMetadata), sysLang, packageName)
