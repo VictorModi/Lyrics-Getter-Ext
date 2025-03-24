@@ -26,4 +26,8 @@ object ActiveRepository {
     fun updateResultIdByOriginId(originId: Long, resultId: Long) {
         queries.updateActive(resultId, originId)
     }
+
+    fun deleteResultByOriginId(originId: Long) {
+        queries.deleteActiveByOriginId(originId)
+    }
 }

@@ -1,4 +1,4 @@
-package statusbar.finder
+package statusbar.finder.modifier
 
 import statusbar.finder.data.model.MediaInfo
 import statusbar.finder.utils.CheckLanguageUtil.isJapanese
@@ -12,8 +12,8 @@ import statusbar.finder.utils.LyricSearchUtil.getSearchKey
  * @email victormodi@outlook.com
  * @date 2025/3/13 17:38
  */
-abstract class Modifier {
-    abstract fun modify(mediaInfo: MediaInfo): MediaInfo?
+interface Modifier {
+    fun modify(mediaInfo: MediaInfo): MediaInfo?
 
     fun isNoJapaneseButLatin(mediaInfo: MediaInfo): Boolean {
         val searchKey = getSearchKey(mediaInfo)

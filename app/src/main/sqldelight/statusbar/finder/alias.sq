@@ -1,0 +1,13 @@
+CREATE TABLE alias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    origin_id INTEGER NOT NULL UNIQUE,
+    title TEXT,
+    artist TEXT,
+    album TEXT,
+    added_date INTEGER DEFAULT (strftime('%s', 'now')) NOT NULL,
+    FOREIGN KEY (origin_id) REFERENCES origin (id) ON DELETE CASCADE
+);
+
+insertAlias:
+INSERT OR IGNORE INTO alias (origin_id, title, artist, album)
+VALUES (?, ?, ? ,?);

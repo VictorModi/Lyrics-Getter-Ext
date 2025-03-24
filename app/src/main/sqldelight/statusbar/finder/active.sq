@@ -23,5 +23,9 @@ SELECT result_id
 FROM active
 WHERE origin_id = ?;
 
+deleteActiveByOriginId:
+DELETE FROM active
+WHERE origin_id = ?;
+
 getLastInsertId:
 SELECT last_insert_rowid() AS id;

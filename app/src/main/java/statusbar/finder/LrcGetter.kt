@@ -16,10 +16,7 @@ import statusbar.finder.data.repository.LyricRepository.getActiveLyricFromDataba
 import statusbar.finder.data.repository.LyricRepository.getActiveLyricFromDatabaseByOriginId
 import statusbar.finder.data.repository.ResRepository.getResByOriginIdAndProvider
 import statusbar.finder.data.repository.ResRepository.insertResData
-import statusbar.finder.modifier.HiraganaModifier
-import statusbar.finder.modifier.KatakanaModifier
-import statusbar.finder.modifier.OriginalModifier
-import statusbar.finder.modifier.SimplifiedModifier
+import statusbar.finder.modifier.*
 import statusbar.finder.provider.KugouProvider
 import statusbar.finder.provider.MusixMatchProvider
 import statusbar.finder.provider.NeteaseProvider
@@ -45,6 +42,7 @@ object LrcGetter {
 
     private val modifiers = arrayOf(
         SimplifiedModifier(),
+        RemoveParenthesesModifier(),
         OriginalModifier(),
         KatakanaModifier(),
         HiraganaModifier(),

@@ -45,5 +45,9 @@ SELECT provider, id
 FROM res
 WHERE origin_id = ?;
 
+deleteResByOriginId:
+DELETE FROM res
+WHERE origin_id = ?;
+
 getLastInsertId:
 SELECT last_insert_rowid() AS id;

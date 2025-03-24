@@ -30,11 +30,9 @@ object LyricRepository {
         return LyricResult(res)
     }
 
-    /**
-     * 根据 Lyric 获取 ResId
-     */
-    fun getActiveResIdByLyric(lyric: Lyric): Long? {
-        val originId = OriginRepository.getOriginId(lyric.originalMediaInfo, lyric.packageName) ?: return null
-        return ActiveRepository.getResultIdByOriginId(originId)
+
+    fun deleteResByOriginIdAndDeleteActive(originId: Long) {
+        ActiveRepository.deleteResultByOriginId(originId)
+        ResRepository.deleteResByOriginId(originId)
     }
 }

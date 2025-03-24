@@ -49,12 +49,26 @@
                 android:maxLines="1"
         />
     </LinearLayout>
-
-    <Spinner
-            android:id="@+id/provideSpinner"
-            android:layout_width="wrap_content"
+    <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-    />
+            android:orientation="horizontal"
+            android:gravity="center"
+    >
+        <Spinner
+                android:id="@+id/provideSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+        />
+        <ImageButton
+                android:id="@+id/retry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="TODO"
+                android:src="@android:drawable/ic_menu_revert"
+                android:background="?attr/selectableItemBackgroundBorderless"
+        />
+    </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvLyrics"
             android:layout_width="match_parent"

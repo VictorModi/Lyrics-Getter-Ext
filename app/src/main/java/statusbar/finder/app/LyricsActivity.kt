@@ -14,6 +14,7 @@ import statusbar.finder.app.event.LyricSentenceUpdate
 import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.data.model.LyricItem
 import statusbar.finder.data.repository.ActiveRepository
+import statusbar.finder.data.repository.LyricRepository.deleteResByOriginIdAndDeleteActive
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.Tool
 import statusbar.finder.misc.Constants.*
@@ -62,31 +63,43 @@ class LyricsActivity : AppCompatActivity() {
         val btnSubmit = findViewById<Button>(R.id.btnSubmit)
 
         btnSubmit.setOnClickListener {
-            if (currentLyricResId != -1L && currentLyric != null) {
-                var newOffset = 0L
+            currentLyric?.let {
+                val newOffset: Long
                 try {
                     newOffset = etOffset.getText().toString().toLong()
                 } catch (e: NumberFormatException) {
                     Toast.makeText(applicationContext, "Offset not valid", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
                 }
                 if (Tool.xpActivation) {
                     val intent = Intent(BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST)
                     intent.putExtra("offset", newOffset)
                     intent.putExtra("resId", currentLyricResId)
-                    intent.putExtra("packageName", currentLyric!!.packageName)
+                    intent.putExtra("packageName", it.packageName)
                     applicationContext.sendBroadcast(intent)
                 } else {
-                    currentLyric?.let {
-                        ResRepository.updateResOffsetById(currentLyricResId, newOffset)
-                        it.offset = newOffset
-                        LyricsChange.getInstance().notifyResult(LyricsChange.Data(
-                            it,
-                            ResRepository.getProvidersMapByOriginId(it.lyricResult.originId)
-                        ))
-                    }
+                    ResRepository.updateResOffsetById(currentLyricResId, newOffset)
+                    MusicListenerService.instance.startSearch()
                 }
-                Toast.makeText(applicationContext, "Updated Offset Successfully", Toast.LENGTH_SHORT).show()
-            } else {
+            } ?: run {
+                Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        val retryBtn = findViewById<ImageButton>(R.id.retry)
+        retryBtn.setOnClickListener {
+            currentLyric?.let {
+                val originId = it.lyricResult.originId
+                if (Tool.xpActivation) {
+                    val intent = Intent(BROADCAST_LYRICS_DELETE_RESULT_REQUEST)
+                    intent.putExtra("originId", originId)
+                    intent.putExtra("packageName", it.packageName)
+                    applicationContext.sendBroadcast(intent)
+                } else {
+                    deleteResByOriginIdAndDeleteActive(originId)
+                    MusicListenerService.instance.startSearch()
+                }
+            } ?: run {
                 Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
             }
         }
@@ -96,7 +109,6 @@ class LyricsActivity : AppCompatActivity() {
         // 歌词结果变化观察
         LyricsChange.getInstance().observe(this) { resultData ->
             resultData?.let {
-                currentLyric = it.lyric
                 updateLyricList(it)
             }
         }
@@ -109,10 +121,9 @@ class LyricsActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private fun updateLyricList(data: LyricsChange.Data) {
-        lyricsList.clear()
-        adapter.notifyDataSetChanged()
+        clear()
+        currentLyric = data.lyric
         if (data.lyric == null || data.providers == null) return
         val originLines = data.lyric.sentenceList
         val translatedLines = data.lyric.translatedSentenceList
@@ -159,26 +170,33 @@ class LyricsActivity : AppCompatActivity() {
             )
         }
 
-        updateSongInfo(data.lyric)
+        updateSongInfo()
         syncOffset(data.lyric)
         currentLyricResId = data.lyric.lyricResult.resId
         adapter.notifyDataSetChanged()
         currentHighlightPos = -1
     }
 
-    private fun updateSongInfo(lyric: Lyric) {
+    private fun updateSongInfo() {
         val tvSongName = findViewById<TextView>(R.id.tvSongName)
         val tvSongArtist = findViewById<TextView>(R.id.tvSongArtist)
         val tvSongAlbum = findViewById<TextView>(R.id.tvSongAlbum)
         val artistSpaceAlbumView = findViewById<Space>(R.id.artistSpaceAlbumView)
-
-        tvSongName.text = lyric.title
-        tvSongArtist.text = lyric.artist
-        lyric.album?.let {
-            tvSongAlbum.text = it
-            artistSpaceAlbumView.visibility = View.VISIBLE
-            tvSongAlbum.visibility = View.VISIBLE
+        currentLyric?.let { lyric ->
+            tvSongName.text = lyric.title
+            tvSongArtist.text = lyric.artist
+            lyric.album?.let {
+                tvSongAlbum.text = it
+                artistSpaceAlbumView.visibility = View.VISIBLE
+                tvSongAlbum.visibility = View.VISIBLE
+            } ?: run {
+                artistSpaceAlbumView.visibility = View.GONE
+                tvSongAlbum.visibility = View.GONE
+            }
         } ?: run {
+            tvSongName.text = ""
+            tvSongArtist.text = ""
+            tvSongAlbum.text = ""
             artistSpaceAlbumView.visibility = View.GONE
             tvSongAlbum.visibility = View.GONE
         }
@@ -230,5 +248,14 @@ class LyricsActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         recyclerView.clearOnScrollListeners()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun clear() {
+        currentLyric = null
+        updateSongInfo()
+        lyricsList.clear()
+        adapter.notifyDataSetChanged()
+        etOffset.text.clear()
     }
 }

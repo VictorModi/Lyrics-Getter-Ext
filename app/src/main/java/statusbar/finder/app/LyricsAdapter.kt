@@ -23,6 +23,7 @@ class LyricsAdapter(private val lyrics: List<LyricItem>) :
     RecyclerView.Adapter<LyricsAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        var sb = R.id.tvOrigin
         val tvOrigin: TextView = view.findViewById(R.id.tvOrigin)
         val tvTranslation: TextView = view.findViewById(R.id.tvTranslation)
     }

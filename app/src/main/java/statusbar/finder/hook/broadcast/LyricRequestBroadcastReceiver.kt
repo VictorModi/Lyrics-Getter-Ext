@@ -6,9 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.UserHandle
 import statusbar.finder.data.repository.ActiveRepository
+import statusbar.finder.data.repository.LyricRepository.deleteResByOriginIdAndDeleteActive
 import statusbar.finder.data.repository.ResRepository
-import statusbar.finder.hook.observe.MediaSessionManagerHelper.getLastBroadcastIntent
-import statusbar.finder.hook.observe.MediaSessionManagerHelper.updateLyrics
+import statusbar.finder.hook.helper.MediaSessionManagerHelper.getLastBroadcastIntent
+import statusbar.finder.hook.helper.MediaSessionManagerHelper.updateLyrics
 import statusbar.finder.misc.Constants.*
 
 /**
@@ -47,6 +48,16 @@ class LyricRequestBroadcastReceiver : BroadcastReceiver() {
                 packageName?.let {
                     if (originId != -1L && resId != -1L) {
                         ActiveRepository.updateResultIdByOriginId(originId, resId)
+                        updateLyrics(packageName)
+                    }
+                }
+            }
+            BROADCAST_LYRICS_DELETE_RESULT_REQUEST -> {
+                val originId = intent.getLongExtra("originId", -1L)
+                val packageName = intent.getStringExtra("packageName")
+                packageName?.let {
+                    if (originId != -1L) {
+                        deleteResByOriginIdAndDeleteActive(originId)
                         updateLyrics(packageName)
                     }
                 }

@@ -6,7 +6,7 @@ import com.github.kyuubiran.ezxhelper.HookFactory.`-Static`.createHook
 import com.github.kyuubiran.ezxhelper.finders.MethodFinder.`-Static`.methodFinder
 import statusbar.finder.hook.BaseHook
 import statusbar.finder.hook.broadcast.LyricRequestBroadcastReceiver
-import statusbar.finder.hook.observe.MediaSessionManagerHelper
+import statusbar.finder.hook.helper.MediaSessionManagerHelper
 import statusbar.finder.misc.Constants.*
 
 /**
@@ -30,6 +30,7 @@ object SystemUI : BaseHook() {
                         addAction(BROADCAST_LYRICS_CHANGED_REQUEST)
                         addAction(BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST)
                         addAction(BROADCAST_LYRICS_ACTIVE_UPDATE_REQUEST)
+                        addAction(BROADCAST_LYRICS_DELETE_RESULT_REQUEST)
                     }
                 )
             }
