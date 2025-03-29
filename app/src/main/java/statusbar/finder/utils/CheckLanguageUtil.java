@@ -1,6 +1,9 @@
 package statusbar.finder.utils;
 
 import com.moji4j.MojiDetector;
+import statusbar.finder.data.model.MediaInfo;
+
+import static statusbar.finder.utils.LyricSearchUtil.getSearchKey;
 
 public class CheckLanguageUtil {
 
@@ -31,5 +34,10 @@ public class CheckLanguageUtil {
 
     public static boolean isLatin(String str) {
         return getDetector().hasLatin(str);
+    }
+
+    public static boolean isNoJapaneseButLatin(MediaInfo mediaInfo) {
+        String searchKey = getSearchKey(mediaInfo);
+        return !isJapanese(searchKey) && isLatin(searchKey);
     }
 }

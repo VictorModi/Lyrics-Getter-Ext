@@ -1,6 +1,7 @@
 package statusbar.finder.data.repository
 
 import android.database.sqlite.SQLiteConstraintException
+import statusbar.finder.Origin
 import statusbar.finder.OriginQueries
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.data.model.MediaInfo
@@ -34,13 +35,24 @@ object OriginRepository {
         }
     }
 
-    fun getOriginId(mediaInfo: MediaInfo, packageName: String): Long? {
+    private fun getOriginId(mediaInfo: MediaInfo, packageName: String): Long? {
         return queries.getMediaInfoId(
             mediaInfo.title,
             mediaInfo.artist,
             mediaInfo.album,
             packageName
         ).executeAsOneOrNull()
+    }
+
+    fun getMediaInfoById(id: Long): MediaInfo? {
+        return queries.getInfoById(id).executeAsOneOrNull()?.let { info ->
+            MediaInfo().apply {
+                title = info.title
+                artist = info.artist
+                album = info.album ?: ""
+                duration = info.duration ?: -1L
+            }
+        }
     }
 }
 

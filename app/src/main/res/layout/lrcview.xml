@@ -68,6 +68,14 @@
                 android:src="@android:drawable/ic_menu_revert"
                 android:background="?attr/selectableItemBackgroundBorderless"
         />
+        <ImageButton
+                android:id="@+id/alias"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="TODO"
+                android:src="@android:drawable/ic_menu_edit"
+                android:background="?attr/selectableItemBackgroundBorderless"
+        />
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvLyrics"

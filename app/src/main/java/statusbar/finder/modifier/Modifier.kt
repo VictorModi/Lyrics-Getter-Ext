@@ -13,10 +13,7 @@ import statusbar.finder.utils.LyricSearchUtil.getSearchKey
  * @date 2025/3/13 17:38
  */
 interface Modifier {
-    fun modify(mediaInfo: MediaInfo): MediaInfo?
+    fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo?
 
-    fun isNoJapaneseButLatin(mediaInfo: MediaInfo): Boolean {
-        val searchKey = getSearchKey(mediaInfo)
-        return !isJapanese(searchKey) && isLatin(searchKey)
-    }
+
 }

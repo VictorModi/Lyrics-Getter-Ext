@@ -1,8 +1,11 @@
 package statusbar.finder.app
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +16,9 @@ import statusbar.finder.R
 import statusbar.finder.app.event.LyricSentenceUpdate
 import statusbar.finder.app.event.LyricsChange
 import statusbar.finder.data.model.LyricItem
+import statusbar.finder.data.model.MediaInfo
 import statusbar.finder.data.repository.ActiveRepository
+import statusbar.finder.data.repository.AliasRepository
 import statusbar.finder.data.repository.LyricRepository.deleteResByOriginIdAndDeleteActive
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.Tool
@@ -101,6 +106,16 @@ class LyricsActivity : AppCompatActivity() {
                 }
             } ?: run {
                 Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        val aliasBtn = findViewById<ImageButton>(R.id.alias)
+        aliasBtn.setOnClickListener {
+            currentLyric?.let {
+                val originId = it.lyricResult.originId
+                showInputDialog { info ->
+                    AliasRepository.updateAlias(originId, info.title, info.artist, info.album)
+                }
             }
         }
     }
@@ -258,4 +273,34 @@ class LyricsActivity : AppCompatActivity() {
         adapter.notifyDataSetChanged()
         etOffset.text.clear()
     }
+
+    fun showInputDialog(onConfirm: (MediaInfo) -> Unit) {
+        val builder = AlertDialog.Builder(this)
+            .setTitle("Alias | 别名")
+        val hints = arrayOf("输入标题", "输入艺术家", "输入专辑")
+        val inputs = Array(hints.size) { i ->
+            EditText(this).apply {
+                hint = hints[i]
+                inputType = InputType.TYPE_CLASS_TEXT
+            }
+        }
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 20, 50, 20)
+            inputs.forEach { addView(it) }
+        }
+        builder.setView(layout)
+        builder.setPositiveButton("确定") { _, _ ->
+            val values = inputs.map { it.text.toString().trim() }
+//            onConfirm(values[0], values[1], values[2])
+            onConfirm(MediaInfo().apply {
+                this.title = values[0]
+                this.artist = values[1]
+                this.album = values[2]
+            })
+        }
+        builder.setNegativeButton("取消", null)
+        builder.show()
+    }
+
 }

@@ -41,12 +41,14 @@ object LrcGetter {
     )
 
     private val modifiers = arrayOf(
+        AliasModifier(),
         SimplifiedModifier(),
         RemoveParenthesesModifier(),
         OriginalModifier(),
         KatakanaModifier(),
         HiraganaModifier(),
     )
+
     fun getLyric(context: Context, mediaMetadata: MediaMetadata, sysLang: String, packageName: String): Lyric? {
         return getLyric(context, MediaInfo(mediaMetadata), sysLang, packageName)
     }
@@ -60,7 +62,7 @@ object LrcGetter {
             return LyricUtils.parseLyric(it, mediaInfo, packageName)
         }
         for (modifier in modifiers) {
-            modifier.modify(mediaInfo)?.let {
+            modifier.modify(mediaInfo, databaseResult.second)?.let {
                 searchLyricsResultByInfo(
                     it,
                     databaseResult.second,

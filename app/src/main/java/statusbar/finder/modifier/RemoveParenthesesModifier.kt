@@ -20,7 +20,7 @@ class RemoveParenthesesModifier : Modifier {
         return result.replace("\\s+".toRegex(), " ").trim()
     }
 
-    override fun modify(mediaInfo: MediaInfo): MediaInfo {
+    override fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo? {
         Log.d("${BuildConfig.APPLICATION_ID}::removeParenthesesModifier $mediaInfo")
         Log.d("${BuildConfig.APPLICATION_ID}::removeParenthesesModifier ${mediaInfo.title} -> ${removeBracketsAndContent(mediaInfo.title)}")
         return mediaInfo.copy().apply {
