@@ -1,6 +1,7 @@
 package statusbar.finder.data.model
 
 import statusbar.finder.Res
+import statusbar.finder.modifier.Modifier
 
 /**
  * LyricGetterExt - statusbar.finder.data
@@ -18,7 +19,8 @@ data class LyricResult(
     var resultInfo: MediaInfo? = null,
     var resId: Long = -1,
     var originId: Long = -1,
-    var dataOrigin: DataOrigin = DataOrigin.UNDEFINED
+    var dataOrigin: DataOrigin = DataOrigin.UNDEFINED,
+    var matchBy: String? = null
 ) {
     override fun toString(): String {
         return """

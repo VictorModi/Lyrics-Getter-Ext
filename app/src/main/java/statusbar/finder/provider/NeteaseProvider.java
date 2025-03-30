@@ -49,7 +49,6 @@ public class NeteaseProvider implements ILrcProvider {
                         result.setTranslatedLyric(null);
                     }
                     result.setDistance(pair.second.getDistance());
-                    result.setSource("Netease");
                     result.setResultInfo(pair.second);
                     return result;
                 } else {

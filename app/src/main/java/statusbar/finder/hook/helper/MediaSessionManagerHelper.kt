@@ -22,6 +22,7 @@ import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
 import cn.zhaiyifan.lyric.model.Lyric.Sentence
 import com.google.gson.Gson
+import org.apache.commons.lang3.tuple.MutablePair
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
 import statusbar.finder.CSLyricHelper.PlayInfo
@@ -64,7 +65,7 @@ object MediaSessionManagerHelper {
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
     private lateinit var pendingIntent: PendingIntent
     private val gson = Gson()
-    private var lastBroadcastIntent: Intent? = null
+    private var lastBroadcastIntent: MutablePair<Intent, Intent?>? = null
 
 
     private var activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
@@ -109,7 +110,7 @@ object MediaSessionManagerHelper {
                 LyricsChange.getInstance().notifyResult(data) // 类型不匹配。
                 intent.putExtra("data", gson.toJson(data))
                 context.sendBroadcastAsUser(intent, user)
-                lastBroadcastIntent = intent
+                lastBroadcastIntent = MutablePair(intent, null)
             }
         }
     }
@@ -221,9 +222,10 @@ object MediaSessionManagerHelper {
                 BROADCAST_LYRIC_SENTENCE_UPDATE
             )
             intent.setPackage(BuildConfig.APPLICATION_ID)
-            LyricSentenceUpdate.getInstance().notifyLyrics(data)
             intent.putExtra("data", gson.toJson(data))
             context.sendBroadcastAsUser(intent, user)
+            lastBroadcastIntent?.right = intent
+            LyricSentenceUpdate.getInstance().notifyLyrics(data)
             val notification = Notification.Builder(MediaSessionManagerHelper.context, noticeChannelId)
                 .setSmallIcon(android.R.drawable.ic_media_play)
                 .setContentTitle(
@@ -316,7 +318,7 @@ object MediaSessionManagerHelper {
         )
     }
 
-    fun getLastBroadcastIntent(): Intent? {
+    fun getLastBroadcastIntent(): MutablePair<Intent, Intent?>? {
         return lastBroadcastIntent
     }
 

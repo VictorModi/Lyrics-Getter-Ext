@@ -22,6 +22,7 @@ import statusbar.finder.data.repository.AliasRepository
 import statusbar.finder.data.repository.LyricRepository.deleteResByOriginIdAndDeleteActive
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.Tool
+import statusbar.finder.hook.tool.Tool.xpActivation
 import statusbar.finder.misc.Constants.*
 
 /**
@@ -56,7 +57,7 @@ class LyricsActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         registerObservers()
-        if (Tool.xpActivation) {
+        if (xpActivation) {
             val intent = Intent(BROADCAST_LYRICS_CHANGED_REQUEST)
             applicationContext.sendBroadcast(intent)
         } else {
@@ -76,7 +77,7 @@ class LyricsActivity : AppCompatActivity() {
                     Toast.makeText(applicationContext, "Offset not valid", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                if (Tool.xpActivation) {
+                if (xpActivation) {
                     val intent = Intent(BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST)
                     intent.putExtra("offset", newOffset)
                     intent.putExtra("resId", currentLyricResId)
@@ -91,11 +92,11 @@ class LyricsActivity : AppCompatActivity() {
             }
         }
 
-        val retryBtn = findViewById<ImageButton>(R.id.retry)
+        val retryBtn = findViewById<ImageButton>(R.id.retryBtn)
         retryBtn.setOnClickListener {
             currentLyric?.let {
                 val originId = it.lyricResult.originId
-                if (Tool.xpActivation) {
+                if (xpActivation) {
                     val intent = Intent(BROADCAST_LYRICS_DELETE_RESULT_REQUEST)
                     intent.putExtra("originId", originId)
                     intent.putExtra("packageName", it.packageName)
@@ -109,12 +110,22 @@ class LyricsActivity : AppCompatActivity() {
             }
         }
 
-        val aliasBtn = findViewById<ImageButton>(R.id.alias)
+        val aliasBtn = findViewById<ImageButton>(R.id.aliasBtn)
         aliasBtn.setOnClickListener {
             currentLyric?.let {
                 val originId = it.lyricResult.originId
                 showInputDialog { info ->
-                    AliasRepository.updateAlias(originId, info.title, info.artist, info.album)
+                    if (xpActivation) {
+                        val intent = Intent(BROADCAST_LYRICS_UPDATE_ALIAS_REQUEST)
+                        intent.putExtra("originId", originId)
+                        intent.putExtra("newTitle", info.title)
+                        intent.putExtra("newArtist", info.artist)
+                        intent.putExtra("newAlbum", info.album)
+                        intent.putExtra("packageName", it.packageName)
+                        applicationContext.sendBroadcast(intent)
+                    } else {
+                        AliasRepository.updateAlias(originId, info.title, info.artist, info.album)
+                    }
                 }
             }
         }
@@ -153,7 +164,7 @@ class LyricsActivity : AppCompatActivity() {
                 if (selectedKey == data.lyric.lyricResult.source) return
                 val selectedValue = data.providers[selectedKey]
                 selectedValue?.let {
-                    if (Tool.xpActivation) {
+                    if (xpActivation) {
                         val intent = Intent(BROADCAST_LYRICS_ACTIVE_UPDATE_REQUEST)
                         intent.putExtra("originId", data.lyric.lyricResult.originId)
                         intent.putExtra("resId", it)
@@ -266,7 +277,7 @@ class LyricsActivity : AppCompatActivity() {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun clear() {
+    private fun clear() {
         currentLyric = null
         updateSongInfo()
         lyricsList.clear()
@@ -274,14 +285,18 @@ class LyricsActivity : AppCompatActivity() {
         etOffset.text.clear()
     }
 
-    fun showInputDialog(onConfirm: (MediaInfo) -> Unit) {
+    private fun showInputDialog(onConfirm: (MediaInfo) -> Unit) {
         val builder = AlertDialog.Builder(this)
             .setTitle("Alias | 别名")
         val hints = arrayOf("输入标题", "输入艺术家", "输入专辑")
+        val texts = currentLyric?.let {
+            arrayOf(it.title, it.artist, it.album)
+        } ?: arrayOf("", "", "")
         val inputs = Array(hints.size) { i ->
             EditText(this).apply {
                 hint = hints[i]
                 inputType = InputType.TYPE_CLASS_TEXT
+                setText(texts[i])
             }
         }
         val layout = LinearLayout(this).apply {

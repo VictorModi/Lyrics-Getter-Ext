@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
         />
         <ImageButton
-                android:id="@+id/retry"
+                android:id="@+id/retryBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="TODO"
@@ -69,7 +69,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
         />
         <ImageButton
-                android:id="@+id/alias"
+                android:id="@+id/aliasBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="TODO"

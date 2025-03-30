@@ -31,6 +31,7 @@ object SystemUI : BaseHook() {
                         addAction(BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST)
                         addAction(BROADCAST_LYRICS_ACTIVE_UPDATE_REQUEST)
                         addAction(BROADCAST_LYRICS_DELETE_RESULT_REQUEST)
+                        addAction(BROADCAST_LYRICS_UPDATE_ALIAS_REQUEST)
                     }
                 )
             }

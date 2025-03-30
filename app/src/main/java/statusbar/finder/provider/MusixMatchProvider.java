@@ -102,7 +102,6 @@ public class MusixMatchProvider implements ILrcProvider {
                 if (result.getDistance() == 0) {
                     result.setDistance(LyricSearchUtil.calculateSongInfoDistance(mediaInfo, soundName, artistName, albumName));
                 }
-                result.setSource("MusixMatch");
                 result.setResultInfo(new MediaInfo(soundName, artistName, albumName, -1, result.getDistance()));
                 result.setTranslatedLyric(getTranslatedLyric(result.getLyric(), trackId));
                 return result;

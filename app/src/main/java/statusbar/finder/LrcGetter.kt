@@ -71,6 +71,7 @@ object LrcGetter {
             }
             currentResult = getActiveLyricFromDatabaseByOriginId(databaseResult.second)
             currentResult?.let {
+                it.matchBy = modifier.javaClass.simpleName.removeSuffix("Modifier")
                 it.dataOrigin = DataOrigin.INTERNET
                 getInstance().notifyResult(LyricsResultChange.Data(mediaInfo, it))
                 return LyricUtils.parseLyric(it, mediaInfo, packageName)
@@ -85,6 +86,7 @@ object LrcGetter {
         for (provider in providers) {
             try {
                 val lyricResult = provider.getLyric(mediaInfo)
+                lyricResult?.source = provider.javaClass.simpleName.removeSuffix("Provider")
                 if (lyricResult?.lyric != null) {
                     val allLyrics = if (lyricResult.translatedLyric != null) {
                         LyricUtils.getAllLyrics(false, lyricResult.translatedLyric)

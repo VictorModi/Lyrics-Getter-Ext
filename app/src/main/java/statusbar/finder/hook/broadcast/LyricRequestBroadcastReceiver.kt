@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.UserHandle
+import org.apache.commons.lang3.tuple.MutablePair
 import statusbar.finder.data.repository.ActiveRepository
+import statusbar.finder.data.repository.AliasRepository
 import statusbar.finder.data.repository.LyricRepository.deleteResByOriginIdAndDeleteActive
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.helper.MediaSessionManagerHelper.getLastBroadcastIntent
@@ -27,7 +29,10 @@ class LyricRequestBroadcastReceiver : BroadcastReceiver() {
         when (intent.action) {
             BROADCAST_LYRICS_CHANGED_REQUEST -> {
                 getLastBroadcastIntent()?.let {
-                    context.sendBroadcastAsUser(it, user)
+                    context.sendBroadcastAsUser(it.left, user)
+                    it.right?.let { lineIntent ->
+                        context.sendBroadcastAsUser(lineIntent, user)
+                    }
                 }
             }
             BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST -> {
@@ -60,6 +65,17 @@ class LyricRequestBroadcastReceiver : BroadcastReceiver() {
                         deleteResByOriginIdAndDeleteActive(originId)
                         updateLyrics(packageName)
                     }
+                }
+            }
+            BROADCAST_LYRICS_UPDATE_ALIAS_REQUEST -> {
+                val originId = intent.getLongExtra("originId", -1L)
+                val packageName = intent.getStringExtra("packageName")
+                val newTitle = intent.getStringExtra("newTitle")
+                val newArtist = intent.getStringExtra("newArtist")
+                val newAlbum = intent.getStringExtra("newAlbum")
+
+                packageName?.let {
+                    AliasRepository.updateAlias(originId, newTitle, newArtist, newAlbum)
                 }
             }
         }
