@@ -1,9 +1,6 @@
 package statusbar.finder.modifier
 
 import statusbar.finder.data.model.MediaInfo
-import statusbar.finder.utils.CheckLanguageUtil.isJapanese
-import statusbar.finder.utils.CheckLanguageUtil.isLatin
-import statusbar.finder.utils.LyricSearchUtil.getSearchKey
 
 /**
  * LyricGetterExt - statusbar.finder

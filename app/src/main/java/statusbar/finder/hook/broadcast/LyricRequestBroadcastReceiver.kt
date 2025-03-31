@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.UserHandle
-import org.apache.commons.lang3.tuple.MutablePair
 import statusbar.finder.data.repository.ActiveRepository
 import statusbar.finder.data.repository.AliasRepository
 import statusbar.finder.data.repository.LyricRepository.deleteResByOriginIdAndDeleteActive

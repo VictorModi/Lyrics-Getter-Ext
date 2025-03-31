@@ -1,7 +1,6 @@
 package statusbar.finder.data.model
 
 import statusbar.finder.Res
-import statusbar.finder.modifier.Modifier
 
 /**
  * LyricGetterExt - statusbar.finder.data

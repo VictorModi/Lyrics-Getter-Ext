@@ -1,6 +1,5 @@
 package statusbar.finder.data.repository
 
-import cn.zhaiyifan.lyric.model.Lyric
 import statusbar.finder.data.model.LyricResult
 import statusbar.finder.data.model.MediaInfo
 

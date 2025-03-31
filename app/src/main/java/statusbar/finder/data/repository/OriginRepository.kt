@@ -1,7 +1,6 @@
 package statusbar.finder.data.repository
 
 import android.database.sqlite.SQLiteConstraintException
-import statusbar.finder.Origin
 import statusbar.finder.OriginQueries
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.data.model.MediaInfo

@@ -1,6 +1,5 @@
 package statusbar.finder.data.repository
 
-import statusbar.finder.ActiveQueries
 import statusbar.finder.Alias
 import statusbar.finder.AliasQueries
 import statusbar.finder.data.db.DatabaseHelper
