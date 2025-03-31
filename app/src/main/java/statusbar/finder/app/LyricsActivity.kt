@@ -3,11 +3,13 @@ package statusbar.finder.app
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.size
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.zhaiyifan.lyric.model.Lyric
@@ -93,16 +95,22 @@ class LyricsActivity : AppCompatActivity() {
         val retryBtn = findViewById<ImageButton>(R.id.retryBtn)
         retryBtn.setOnClickListener {
             currentLyric?.let {
-                val originId = it.lyricResult.originId
-                if (xpActivation) {
-                    val intent = Intent(BROADCAST_LYRICS_DELETE_RESULT_REQUEST)
-                    intent.putExtra("originId", originId)
-                    intent.putExtra("packageName", it.packageName)
-                    applicationContext.sendBroadcast(intent)
-                } else {
-                    deleteResByOriginIdAndDeleteActive(originId)
-                    MusicListenerService.instance.startSearch()
-                }
+                AlertDialog.Builder(this)
+                    .setMessage(R.string.dialog_lyric_rescan)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        val originId = it.lyricResult.originId
+                        if (xpActivation) {
+                            val intent = Intent(BROADCAST_LYRICS_DELETE_RESULT_REQUEST)
+                            intent.putExtra("originId", originId)
+                            intent.putExtra("packageName", it.packageName)
+                            applicationContext.sendBroadcast(intent)
+                        } else {
+                            deleteResByOriginIdAndDeleteActive(originId)
+                            MusicListenerService.instance.startSearch()
+                        }
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
             } ?: run {
                 Toast.makeText(applicationContext, R.string.lyric_not_found, Toast.LENGTH_SHORT).show()
             }
@@ -306,12 +314,25 @@ class LyricsActivity : AppCompatActivity() {
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(50, 20, 50, 20)
-            inputs.forEach { addView(it) }
+            inputs.forEach {
+                addView(LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    addView(TextView(context).apply {
+                        text = it.hint
+                        textSize = 12f
+                    })
+                    addView(it)
+                })
+            }
+            addView(TextView(context).apply {
+                text = getString(R.string.search_instruction)
+                textSize = 18f
+                setTextColor(Color.RED)
+            })
         }
         builder.setView(layout)
         builder.setPositiveButton(android.R.string.ok) { _, _ ->
             val values = inputs.map { it.text.toString().trim() }
-//            onConfirm(values[0], values[1], values[2])
             onConfirm(MediaInfo().apply {
                 this.title = values[0]
                 this.artist = values[1]
