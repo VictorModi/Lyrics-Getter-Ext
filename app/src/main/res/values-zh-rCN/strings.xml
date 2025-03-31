@@ -18,4 +18,10 @@
     <string name="offset_label">偏移值 (ms):</string>
     <string name="hint_enter_offset">输入偏移值</string>
     <string name="submit_button">提交</string>
+    <string name="offset_not_valid">偏移量无效</string>
+    <string name="lyric_not_found">未找到歌词</string>
+    <string name="alias_title">别名</string>
+    <string name="info_title">标题</string>
+    <string name="info_artist">艺术家</string>
+    <string name="info_album">专辑</string>
 </resources>

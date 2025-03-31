@@ -2,7 +2,6 @@ package statusbar.finder.app
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
@@ -21,7 +20,6 @@ import statusbar.finder.data.repository.ActiveRepository
 import statusbar.finder.data.repository.AliasRepository
 import statusbar.finder.data.repository.LyricRepository.deleteResByOriginIdAndDeleteActive
 import statusbar.finder.data.repository.ResRepository
-import statusbar.finder.hook.tool.Tool
 import statusbar.finder.hook.tool.Tool.xpActivation
 import statusbar.finder.misc.Constants.*
 
@@ -74,7 +72,7 @@ class LyricsActivity : AppCompatActivity() {
                 try {
                     newOffset = etOffset.getText().toString().toLong()
                 } catch (e: NumberFormatException) {
-                    Toast.makeText(applicationContext, "Offset not valid", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, R.string.offset_not_valid, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 if (xpActivation) {
@@ -88,7 +86,7 @@ class LyricsActivity : AppCompatActivity() {
                     MusicListenerService.instance.startSearch()
                 }
             } ?: run {
-                Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(applicationContext, R.string.lyric_not_found, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -106,7 +104,7 @@ class LyricsActivity : AppCompatActivity() {
                     MusicListenerService.instance.startSearch()
                 }
             } ?: run {
-                Toast.makeText(applicationContext, "No Lyrics Found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(applicationContext, R.string.lyric_not_found, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -127,6 +125,8 @@ class LyricsActivity : AppCompatActivity() {
                         AliasRepository.updateAlias(originId, info.title, info.artist, info.album)
                     }
                 }
+            } ?: run {
+                Toast.makeText(applicationContext, R.string.lyric_not_found, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -287,14 +287,18 @@ class LyricsActivity : AppCompatActivity() {
 
     private fun showInputDialog(onConfirm: (MediaInfo) -> Unit) {
         val builder = AlertDialog.Builder(this)
-            .setTitle("Alias | 别名")
-        val hints = arrayOf("输入标题", "输入艺术家", "输入专辑")
+            .setTitle(R.string.alias_title)
+        val hints = arrayOf(
+            R.string.info_title,
+            R.string.info_artist,
+            R.string.info_album,
+        )
         val texts = currentLyric?.let {
             arrayOf(it.title, it.artist, it.album)
         } ?: arrayOf("", "", "")
         val inputs = Array(hints.size) { i ->
             EditText(this).apply {
-                hint = hints[i]
+                hint = getString(hints[i])
                 inputType = InputType.TYPE_CLASS_TEXT
                 setText(texts[i])
             }
@@ -305,7 +309,7 @@ class LyricsActivity : AppCompatActivity() {
             inputs.forEach { addView(it) }
         }
         builder.setView(layout)
-        builder.setPositiveButton("确定") { _, _ ->
+        builder.setPositiveButton(android.R.string.ok) { _, _ ->
             val values = inputs.map { it.text.toString().trim() }
 //            onConfirm(values[0], values[1], values[2])
             onConfirm(MediaInfo().apply {
@@ -314,7 +318,7 @@ class LyricsActivity : AppCompatActivity() {
                 this.album = values[2]
             })
         }
-        builder.setNegativeButton("取消", null)
+        builder.setNegativeButton(android.R.string.cancel, null)
         builder.show()
     }
 

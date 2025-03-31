@@ -37,4 +37,10 @@
     <string name="offset_label">Offset (ms):</string>
     <string name="hint_enter_offset">Enter offset</string>
     <string name="submit_button">Submit</string>
+    <string name="offset_not_valid">Offset not valid</string>
+    <string name="lyric_not_found">No Lyric Found</string>
+    <string name="alias_title">Alias</string>
+    <string name="info_title">Title</string>
+    <string name="info_artist">Artist</string>
+    <string name="info_album">Album</string>
 </resources>

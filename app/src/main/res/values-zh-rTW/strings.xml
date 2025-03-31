@@ -15,7 +15,13 @@
     <string name="toast_get_notification_permission">尚未取得通知權限，請在下一個畫面中允許本應用程式的通知權限。</string>
     <string name="force_repeat_title">強制重複歌詞</string>
     <string name="force_repeat_summary">在重複的歌詞中間隨機插入零寬空格</string>
-    <string name="offset_label">Offset (ms):</string>
-    <string name="hint_enter_offset">Enter offset</string>
-    <string name="submit_button">Submit</string>
+    <string name="offset_label">偏移量 (毫秒):</string>
+    <string name="hint_enter_offset">输入偏移量</string>
+    <string name="submit_button">提交</string>
+    <string name="offset_not_valid">偏移量無效</string>
+    <string name="lyric_not_found">找不到歌詞</string>
+    <string name="alias_title">別名</string>
+    <string name="info_title">標題</string>
+    <string name="info_artist">歌手</string>
+    <string name="info_album">專輯</string>
 </resources>
