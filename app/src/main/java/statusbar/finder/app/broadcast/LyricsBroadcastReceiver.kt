@@ -18,24 +18,24 @@ import statusbar.finder.misc.Constants.BROADCAST_LYRIC_SENTENCE_UPDATE
  * @date 2025/3/1 11:53
  */
 class LyricsBroadcastReceiver : BroadcastReceiver() {
-    private val gson = Gson()
+
+    private val gson by lazy { Gson() }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        intent?.let {
-            val json = it.getStringExtra("data")
-            json?.let {
-                Log.d("LyricsBroadcastReceiver", json)
-                when (intent.action) {
-                    BROADCAST_LYRICS_CHANGED -> {
-                        val data = gson.fromJson(json, LyricsChange.Data::class.java)
-                        LyricsChange.getInstance().notifyResult(data)
-                    }
-                    BROADCAST_LYRIC_SENTENCE_UPDATE -> {
-                        val data = gson.fromJson(json, LyricSentenceUpdate.Data::class.java)
-                        LyricSentenceUpdate.getInstance().notifyLyrics(data)
-                    }
+        intent?.getStringExtra("data")?.let { json ->
+            Log.d(LyricsBroadcastReceiver::class.java.simpleName, json)
+
+            when (intent.action) {
+                BROADCAST_LYRICS_CHANGED -> {
+                    val data = gson.fromJson(json, LyricsChange.Data::class.java)
+                    LyricsChange.getInstance().notifyResult(data)
+                }
+                BROADCAST_LYRIC_SENTENCE_UPDATE -> {
+                    val data = gson.fromJson(json, LyricSentenceUpdate.Data::class.java)
+                    LyricSentenceUpdate.getInstance().notifyLyrics(data)
                 }
             }
         }
     }
 }
+

@@ -35,10 +35,10 @@ data class MediaInfo(
     )
 
     fun toSimple(): MediaInfo {
-        return this.copy().apply {
-            title = ZhConverterUtil.toSimple(title)
-            artist = ZhConverterUtil.toSimple(artist)
-            album = ZhConverterUtil.toSimple(album)
-        }
+        return this.copy(
+            title = ZhConverterUtil.toSimple(this.title),
+            artist = ZhConverterUtil.toSimple(this.artist),
+            album = ZhConverterUtil.toSimple(this.album)
+        )
     }
 }

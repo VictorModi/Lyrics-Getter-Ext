@@ -17,11 +17,11 @@ class HiraganaModifier : Modifier {
     override fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo? {
         if (isNoJapaneseButLatin(mediaInfo)) return null
         val converter = MojiConverter()
-        val convertedMediaInfo = mediaInfo.copy().apply {
-            title = converter.convertRomajiToHiragana(title)
-            artist = converter.convertRomajiToHiragana(artist)
-            album = converter.convertRomajiToHiragana(album)
-        }
+        val convertedMediaInfo = mediaInfo.copy(
+            title = converter.convertRomajiToHiragana(mediaInfo.title),
+            artist = converter.convertRomajiToHiragana(mediaInfo.artist),
+            album = converter.convertRomajiToHiragana(mediaInfo.album)
+        )
         if (isLatin(getSearchKey(mediaInfo))) return null
         return convertedMediaInfo
     }

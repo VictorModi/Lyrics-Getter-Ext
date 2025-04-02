@@ -290,6 +290,7 @@ class LyricsActivity : AppCompatActivity() {
         lyricsList.clear()
         adapter.notifyDataSetChanged()
         etOffset.text.clear()
+        provideSpinner.adapter = null
     }
 
     private fun showInputDialog(onConfirm: (MediaInfo) -> Unit) {

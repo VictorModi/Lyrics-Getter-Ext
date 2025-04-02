@@ -14,12 +14,11 @@ import statusbar.finder.data.repository.AliasRepository
 // 这样写代码脑袋会变得平平的
 class AliasModifier : Modifier {
     override fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo? {
-        return AliasRepository.getAlias(originId)?.let { alias ->
-            mediaInfo.copy().apply {
-                this.title = alias.title ?: title
-                this.artist = alias.artist ?: artist
-                this.album = alias.album ?: album
-            }
-        }
+        val alias = AliasRepository.getAlias(originId) ?: return null
+        return mediaInfo.copy(
+            title = alias.title ?: mediaInfo.title,
+            artist = alias.artist ?: mediaInfo.artist,
+            album = alias.album ?: mediaInfo.album
+        )
     }
 }

@@ -11,6 +11,4 @@ import statusbar.finder.data.model.MediaInfo
  */
 interface Modifier {
     fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo?
-
-
 }

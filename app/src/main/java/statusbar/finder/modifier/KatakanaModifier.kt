@@ -17,11 +17,11 @@ class KatakanaModifier : Modifier {
     override fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo? {
         if (isNoJapaneseButLatin(mediaInfo)) return null
         val converter = MojiConverter()
-        val convertedMediaInfo = mediaInfo.copy().apply {
-            title = converter.convertRomajiToKatakana(title)
-            artist = converter.convertRomajiToKatakana(artist)
-            album = converter.convertRomajiToKatakana(album)
-        }
+        val convertedMediaInfo = mediaInfo.copy(
+            title = converter.convertRomajiToKatakana(mediaInfo.title),
+            artist = converter.convertRomajiToKatakana(mediaInfo.artist),
+            album = converter.convertRomajiToKatakana(mediaInfo.album)
+        )
         if (isLatin(getSearchKey(mediaInfo))) return null
         return convertedMediaInfo
     }

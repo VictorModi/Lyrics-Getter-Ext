@@ -10,7 +10,7 @@ import statusbar.finder.data.model.MediaInfo
  * @date 2025/3/13 17:42
  */
 class SimplifiedModifier : Modifier {
-    override fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo? {
+    override fun modify(mediaInfo: MediaInfo, originId: Long): MediaInfo {
         return mediaInfo.toSimple()
     }
 }

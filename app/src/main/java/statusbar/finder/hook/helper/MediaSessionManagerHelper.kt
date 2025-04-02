@@ -103,13 +103,12 @@ object MediaSessionManagerHelper {
                 val data = lyric?.let {
                     LyricsChange.Data(lyric, ResRepository.getProvidersMapByOriginId(lyric.lyricResult.originId))
                 } ?: LyricsChange.Data(null, null)
-                val intent = Intent(
-                    BROADCAST_LYRICS_CHANGED
-                )
-                intent.setPackage(BuildConfig.APPLICATION_ID)
-                LyricsChange.getInstance().notifyResult(data) // 类型不匹配。
-                intent.putExtra("data", gson.toJson(data))
+                val intent = Intent(BROADCAST_LYRICS_CHANGED).apply {
+                    setPackage(BuildConfig.APPLICATION_ID)
+                    putExtra("data", gson.toJson(data))
+                }
                 context.sendBroadcastAsUser(intent, user)
+                LyricsChange.getInstance().notifyResult(data)
                 lastBroadcastIntent = MutablePair(intent, null)
             }
         }
@@ -218,11 +217,10 @@ object MediaSessionManagerHelper {
                 sentenceIndex,
                 delay
             )
-            val intent = Intent(
-                BROADCAST_LYRIC_SENTENCE_UPDATE
-            )
-            intent.setPackage(BuildConfig.APPLICATION_ID)
-            intent.putExtra("data", gson.toJson(data))
+            val intent = Intent(BROADCAST_LYRIC_SENTENCE_UPDATE).apply {
+                setPackage(BuildConfig.APPLICATION_ID)
+                putExtra("data", gson.toJson(data))
+            }
             context.sendBroadcastAsUser(intent, user)
             lastBroadcastIntent?.right = intent
             LyricSentenceUpdate.getInstance().notifyLyrics(data)
@@ -326,6 +324,13 @@ object MediaSessionManagerHelper {
         if (curLrcUpdateThread[packageName] == null || !curLrcUpdateThread[packageName]!!.isAlive) {
             currentLyric.remove(packageName)
             EventTool.cleanLyric()
+            context.sendBroadcastAsUser(
+                Intent(BROADCAST_LYRICS_CHANGED).apply {
+                    putExtra("data", gson.toJson(LyricsChange.Data(null, null)))
+                    setPackage(BuildConfig.APPLICATION_ID)
+                },
+                user
+            )
             lastMetadata[packageName]?.let {
                 curLrcUpdateThread[packageName] = LrcUpdateThread(
                     context,
