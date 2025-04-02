@@ -110,7 +110,6 @@ public class LyricUtils {
      */
     public static int getSentenceIndex(List<Sentence> lyricList, long ts, int index, long offset) {
         if (lyricList.isEmpty() || ts < 0 || index < -1) {
-            Log.d(TAG, "-1");
             return -1;
         }
 
