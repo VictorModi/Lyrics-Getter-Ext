@@ -82,7 +82,7 @@ object LrcGetter {
 
     private fun searchLyricsResultByInfo(mediaInfo: MediaInfo, originId: Long, sysLang: String) {
         var bestMatchSource: String? = null
-        val bestMatchDistance: Long = 0
+        var bestMatchDistance: Long = Long.MAX_VALUE
         for (provider in providers) {
             try {
                 val lyricResult = provider.getLyric(mediaInfo)
@@ -113,9 +113,10 @@ object LrcGetter {
                     }
                     insertResData(originId, lyricResult)
                     if (LyricSearchUtil.isLyricContent(lyricResult.lyric)
-                        && (bestMatchSource == null || bestMatchDistance > lyricResult.distance)
+                        && lyricResult.distance < bestMatchDistance
                     ) {
                         bestMatchSource = lyricResult.source
+                        bestMatchDistance = lyricResult.distance
                     }
                 }
             } catch (e: IOException) {
