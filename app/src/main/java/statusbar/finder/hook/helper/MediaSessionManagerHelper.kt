@@ -295,7 +295,6 @@ object MediaSessionManagerHelper {
         return modifiedString.toString()
     }
 
-    @SuppressLint("DiscouragedApi")
     fun init(initContext: Context) {
         context = initContext
         config = Config()
