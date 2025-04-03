@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.XModuleResources
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
@@ -17,10 +18,14 @@ import android.os.Looper
 import android.os.Message
 import android.os.UserHandle
 import android.service.notification.NotificationListenerService
+import androidx.core.content.res.ResourcesCompat
 import cn.lyric.getter.api.data.ExtraData
+import cn.lyric.getter.api.tools.Tools.drawableToBase64
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
 import cn.zhaiyifan.lyric.model.Lyric.Sentence
+import com.github.kyuubiran.ezxhelper.EzXHelper
+import com.github.kyuubiran.ezxhelper.Log
 import com.google.gson.Gson
 import org.apache.commons.lang3.tuple.MutablePair
 import statusbar.finder.BuildConfig
@@ -65,6 +70,7 @@ object MediaSessionManagerHelper {
     private val noticeChannelId = "${BuildConfig.APPLICATION_ID.replace(".", "_")}_info"
     private lateinit var pendingIntent: PendingIntent
     private val gson = Gson()
+    private var icon: String? = null
     private var lastBroadcastIntent: MutablePair<Intent, Intent?>? = null
 
 
@@ -246,8 +252,8 @@ object MediaSessionManagerHelper {
             notificationManager.notify(NOTIFICATION_ID_LRC, notification)
             EventTool.sendLyric(curLyric,
                 ExtraData(
-                    customIcon = false,
-                    "",
+                    customIcon = icon != null,
+                    icon ?: "",
                     false,
                     BuildConfig.APPLICATION_ID,
                     delay = delay,
@@ -289,6 +295,7 @@ object MediaSessionManagerHelper {
         return modifiedString.toString()
     }
 
+    @SuppressLint("DiscouragedApi")
     fun init(initContext: Context) {
         context = initContext
         config = Config()
@@ -314,6 +321,15 @@ object MediaSessionManagerHelper {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        XModuleResources.createInstance(EzXHelper.modulePath, null)?.let { xmr ->
+            val resId = xmr.getIdentifier("ic_statusbar_icon", "drawable", BuildConfig.APPLICATION_ID)
+            val drawable =  ResourcesCompat.getDrawable(xmr, resId, null)
+            if (drawable != null) {
+                icon = drawableToBase64(drawable)
+            } else {
+                Log.i("${BuildConfig.APPLICATION_ID} Drawable not found: ic_statusbar_icon")
+            }
+        }
     }
 
     fun getLastBroadcastIntent(): MutablePair<Intent, Intent?>? {
