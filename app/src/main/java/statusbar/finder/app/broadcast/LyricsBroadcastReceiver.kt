@@ -3,7 +3,6 @@ package statusbar.finder.app.broadcast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.google.gson.Gson
 import statusbar.finder.app.event.LyricSentenceUpdate
 import statusbar.finder.app.event.LyricsChange
@@ -23,8 +22,6 @@ class LyricsBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         intent?.getStringExtra("data")?.let { json ->
-            Log.d(LyricsBroadcastReceiver::class.java.simpleName, json)
-
             when (intent.action) {
                 BROADCAST_LYRICS_CHANGED -> {
                     val data = gson.fromJson(json, LyricsChange.Data::class.java)

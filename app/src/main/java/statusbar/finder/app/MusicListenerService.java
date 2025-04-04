@@ -18,7 +18,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.service.notification.NotificationListenerService;
-import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.Log;
 import androidx.annotation.NonNull;
@@ -72,7 +71,6 @@ public class MusicListenerService extends NotificationListenerService {
     private LrcUpdateThread curLrcUpdateThread;
     private API lyricsGetterApi;
     public static MusicListenerService instance;
-    public String musicInfo;
     public CSLyricHelper.PlayInfo playInfo;
     private static Lyric.Sentence lastSentence;
 
@@ -182,23 +180,6 @@ public class MusicListenerService extends NotificationListenerService {
     public MusicListenerService() {
     }
 
-    @Override
-    public void onNotificationPosted(StatusBarNotification sbn) {
-    //        Notification notification = sbn.getNotification();
-    //            if (sbn.isClearable()){
-    //                if (notification != null) {
-    //                    String lyricText = String.format("%s : %s", notification.extras.getString(Notification.EXTRA_TITLE), notification.extras.getString(Notification.EXTRA_TEXT));
-    //                    lyricsGetterApi.sendLyric(lyricText,new ExtraData(
-    //                            true,
-    //                            drawBase64,
-    //                            false,
-    //                            getPackageName(),
-    //                            0
-    //                    ));
-    //                }
-    //        }
-    }
-
     @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     public void onListenerConnected() {
@@ -208,11 +189,8 @@ public class MusicListenerService extends NotificationListenerService {
             return;
         }
         instance = this;
-//        offsetPreferences = getSharedPreferences("offset", MODE_PRIVATE);
-//        translationStatusReferences = getSharedPreferences("translationstatus", MODE_PRIVATE);
         lyricsGetterApi = new API();
         drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
-        // Log.d("systemLanguage", systemLanguage);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mLyricNotification = buildLrcNotification();
@@ -230,9 +208,7 @@ public class MusicListenerService extends NotificationListenerService {
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
         };
 
-        Observer<LyricsChange.Data> mLyricsChangeObserver = data -> {
-            mLyric = data.getLyric();
-        };
+        Observer<LyricsChange.Data> mLyricsChangeObserver = data -> mLyric = data.getLyric();
         AppsListChanged.Companion.getInstance().observeForever(mAppsListChangedObserver);
         LyricsResultChange.Companion.getInstance().observeForever(mGetResultObserver);
         LyricsChange.Companion.getInstance().observeForever(mLyricsChangeObserver);
@@ -377,13 +353,6 @@ public class MusicListenerService extends NotificationListenerService {
         if (mNotificationManager == null || mLyric == null) {
             return;
         }
-
-        musicInfo = "Title:" + mLyric.title
-                + " ,Artist:" + mLyric.artist
-                + " ,Album:" + mLyric.album
-                + " ,By:" + mLyric.by
-                + " ,Author:" + mLyric.author
-                + " ,Length:" + mLyric.length;
         Lyric.Sentence sentence = LyricUtils.getSentence(mLyric.sentenceList, position, 0 ,mLyric.offset);
         if (sentence == null) return;
         if (sentence.equals(lastSentence)) return;

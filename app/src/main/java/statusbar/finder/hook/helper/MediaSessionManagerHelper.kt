@@ -23,9 +23,7 @@ import cn.lyric.getter.api.data.ExtraData
 import cn.lyric.getter.api.tools.Tools.drawableToBase64
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
-import cn.zhaiyifan.lyric.model.Lyric.Sentence
 import com.github.kyuubiran.ezxhelper.EzXHelper
-import com.github.kyuubiran.ezxhelper.Log
 import com.google.gson.Gson
 import org.apache.commons.lang3.tuple.MutablePair
 import statusbar.finder.BuildConfig
@@ -42,6 +40,8 @@ import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.EventTool
 import statusbar.finder.misc.Constants.*
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.roundToInt
 
 
 /**
@@ -56,14 +56,8 @@ object MediaSessionManagerHelper {
     private lateinit var context: Context
     private lateinit var config: Config
     private var mediaSessionManager: MediaSessionManager? = null
-    private var activeControllers: MutableMap<MediaController, MediaController.Callback> = mutableMapOf()
-    private var lastSentenceMap: MutableMap<String, Sentence> = mutableMapOf()
-    private var requiredLrcTitle: MutableMap<String, String> = mutableMapOf()
-    private var curLrcUpdateThread: MutableMap<String, LrcUpdateThread> = mutableMapOf()
-    private var currentLyric: MutableMap<String, Lyric?> = mutableMapOf()
-    private var lastMetadata: MutableMap<String, MediaMetadata?> = mutableMapOf()
-    private var lastState: MutableMap<String, PlaybackState> = mutableMapOf()
-    private var lastLyricLine: MutableMap<String, String> = mutableMapOf()
+    private val controllerInfo: MutableMap<String, ControllerInfo> = mutableMapOf()
+    private var activeControllers: ConcurrentHashMap<MediaController, MediaController.Callback> = ConcurrentHashMap()
     private var playInfo: PlayInfo = PlayInfo("", BuildConfig.APPLICATION_ID)
     private val user: UserHandle = UserHandle.getUserHandleForUid(android.os.Process.myUid())
     private lateinit var notificationManager: NotificationManager
@@ -79,13 +73,11 @@ object MediaSessionManagerHelper {
             if (controllers.isEmpty()) return@OnActiveSessionsChangedListener
             activeControllers.forEach { it.key.unregisterCallback(it.value) }
             activeControllers.clear()
-            currentLyric.clear()
-            lastMetadata.clear()
-            lastSentenceMap.clear()
+            controllerInfo.clear()
             val targetPackages = config.targetPackages.split(";")
             for (controller in controllers) {
                 if (targetPackages.contains(controller.packageName)) {
-                    lastMetadata.remove(controller.packageName)
+                    controllerInfo[controller.packageName] = ControllerInfo()
                     val callback = MediaControllerCallback(controller)
                     activeControllers[controller] = callback
                     controller.registerCallback(callback)
@@ -101,20 +93,22 @@ object MediaSessionManagerHelper {
     private val handler = object : Handler(Looper.myLooper()!!) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
-            if (msg.what == MSG_LYRIC_UPDATE_DONE && requiredLrcTitle.containsValue(msg.data.getString("title", ""))) {
-                val packageName = requiredLrcTitle.filterValues { it == msg.data.getString("title", "") }.keys.first()
-                val lyric = msg.obj as Lyric?
-                currentLyric[packageName] = lyric
-                lastLyricLine.remove(packageName)
-                val data = lyric?.let {
-                    LyricsChange.Data(lyric, ResRepository.getProvidersMapByOriginId(lyric.lyricResult.originId))
+            if (msg.what == MSG_LYRIC_UPDATE_DONE) {
+                val lyric = msg.obj as? Lyric
+                val lyricsChangeData: LyricsChange.Data = lyric?.let {
+                    val packageName = it.packageName
+                    controllerInfo[packageName]?.let { controllerInfo ->
+                        controllerInfo.currentLyric = it
+                        controllerInfo.lastSentenceIndex = null
+                    }
+                    LyricsChange.Data(it, ResRepository.getProvidersMapByOriginId(it.lyricResult.originId))
                 } ?: LyricsChange.Data(null, null)
                 val intent = Intent(BROADCAST_LYRICS_CHANGED).apply {
                     setPackage(BuildConfig.APPLICATION_ID)
-                    putExtra("data", gson.toJson(data))
+                    putExtra("data", gson.toJson(lyricsChangeData))
                 }
                 context.sendBroadcastAsUser(intent, user)
-                LyricsChange.getInstance().notifyResult(data)
+                LyricsChange.getInstance().notifyResult(lyricsChangeData)
                 lastBroadcastIntent = MutablePair(intent, null)
             }
         }
@@ -126,53 +120,54 @@ object MediaSessionManagerHelper {
             super.onMetadataChanged(metadata)
             metadata?.let {
                 val info = it.toMediaInfo()
-                if (it == lastMetadata[controller.packageName]) return
-                lastMetadata[controller.packageName] = it
+                if (it == controllerInfo[controller.packageName]?.lastMetadata) return
+                controllerInfo[controller.packageName]?.lastMetadata = it
                 notificationManager = context.getSystemService(NotificationManager::class.java)
                 val notification = Notification.Builder(context, noticeChannelId)
                     .setSmallIcon(android.R.drawable.ic_media_play)
                     .setContentTitle(info.title)
                     .setContentText(
-                        "${info.artist} - ${info.album}"
+                        info.artist + (if (info.album.isBlank()) "" else " - ${info.album}")
                     )
                     .setOngoing(true)
                     .setOnlyAlertOnce(true)
                     .build()
                 notificationManager.notify(NOTIFICATION_ID_LRC, notification)
-                requiredLrcTitle[controller.packageName] = info.title
+                controllerInfo[controller.packageName]?.requiredLrcTitle = info.title
                 updateLyrics(controller.packageName)
             }
         }
 
         override fun onPlaybackStateChanged(state: PlaybackState?) {
             super.onPlaybackStateChanged(state)
-            state?.let {
-                if (lastState[controller.packageName] == it) return
-                lastState[controller.packageName] = it
-
-                lastSentenceMap.remove(controller.packageName)
-                if (state.state == PlaybackState.STATE_PLAYING) {
-                    lastMetadata[controller.packageName]?.let { metadata ->
-                        val info = metadata.toMediaInfo()
-                        val notification = Notification.Builder(context, noticeChannelId)
-                            .setSmallIcon(android.R.drawable.ic_media_play)
-                            .setContentTitle(info.title)
-                            .setContentText(
-                                info.artist +
-                                        (if (info.album.isBlank()) "" else
-                                            " - ${info.album}")
-                            )
-                            .setOngoing(true)
-                            .setOnlyAlertOnce(true)
-                            .build()
-                        notificationManager.notify(NOTIFICATION_ID_LRC, notification)
+            state?.let { playState ->
+                controllerInfo[controller.packageName]?.let {
+                    if (it.state == playState) return
+                    it.state = playState
+                    it.lastSentenceIndex = null
+                    if (state.state == PlaybackState.STATE_PLAYING) {
+                        it.lastMetadata?.let { metadata ->
+                            val info = metadata.toMediaInfo()
+                            val notification = Notification.Builder(context, noticeChannelId)
+                                .setSmallIcon(android.R.drawable.ic_media_play)
+                                .setContentTitle(info.title)
+                                .setContentText(
+                                    info.artist +
+                                            (if (info.album.isBlank()) "" else
+                                                " - ${info.album}")
+                                )
+                                .setOngoing(true)
+                                .setOnlyAlertOnce(true)
+                                .build()
+                            notificationManager.notify(NOTIFICATION_ID_LRC, notification)
+                        }
+                        handler.post(lyricUpdateRunnable)
+                    } else {
+                        handler.removeCallbacks(lyricUpdateRunnable)
+                        EventTool.cleanLyric()
+                        CSLyricHelper.pauseAsUser(context, playInfo, user)
+                        notificationManager.cancel(NOTIFICATION_ID_LRC)
                     }
-                    handler.post(lyricUpdateRunnable)
-                } else {
-                    handler.removeCallbacks(lyricUpdateRunnable)
-                    EventTool.cleanLyric()
-                    CSLyricHelper.pauseAsUser(context, playInfo, user)
-                    notificationManager.cancel(NOTIFICATION_ID_LRC)
                 }
             }
         }
@@ -196,85 +191,87 @@ object MediaSessionManagerHelper {
     }
 
     fun updateLyric(controller: MediaController, position: Long, context: Context) {
-        currentLyric[controller.packageName]?.let {
-            val sentenceIndex = LyricUtils.getSentenceIndex(it.sentenceList, position, 0, it.offset)
-            if (sentenceIndex < 0) return
-            val sentence =  it.sentenceList[sentenceIndex]
-            val translatedSentence = LyricUtils.getSentence(it.translatedSentenceList, position, 0, it.offset)
-            if (sentence.content.isBlank()) return
-            if (sentence == lastSentenceMap[controller.packageName]) return
-            val delay: Int = it.calcDelay(controller, position)
-            val sentenceContent = sentence.content.trim()
-            val translatedContent = translatedSentence?.content?.trim() ?: ""
+        controllerInfo[controller.packageName]?.let {
+            it.currentLyric?.let { lyric ->
+                val sentenceIndex = LyricUtils.getSentenceIndex(lyric.sentenceList, position, 0, lyric.offset)
+                if (sentenceIndex < 0) return
+                val sentence = lyric.sentenceList[sentenceIndex]
+                val translatedSentence = LyricUtils.getSentence(lyric.translatedSentenceList, position, 0, lyric.offset)
+                if (sentence.content.isBlank()) return
+                if (sentenceIndex == it.lastSentenceIndex) return
+                val delay: Int = lyric.calcDelay(position)
+                val sentenceContent = sentence.content.trim()
+                val translatedContent = translatedSentence?.content?.trim() ?: ""
 
-            var curLyric = when (config.translateDisplayType) {
-                "translated" -> translatedContent.ifBlank { sentenceContent }
-                "both" -> if (translatedContent.isBlank()) sentenceContent else "$sentenceContent\n\r$translatedContent"
-                else -> sentenceContent
-            }
-            if (config.forceRepeat &&
-                lastLyricLine[controller.packageName] == curLyric) {
-                curLyric = insertZeroWidthSpace(curLyric)
-            }
-            playInfo.isPlaying = true
-            val data = LyricSentenceUpdate.Data(
-                sentence.content,
-                translatedSentence?.content,
-                sentenceIndex,
-                delay
-            )
-            val intent = Intent(BROADCAST_LYRIC_SENTENCE_UPDATE).apply {
-                setPackage(BuildConfig.APPLICATION_ID)
-                putExtra("data", gson.toJson(data))
-            }
-            context.sendBroadcastAsUser(intent, user)
-            lastBroadcastIntent?.right = intent
-            LyricSentenceUpdate.getInstance().notifyLyrics(data)
-            val notification = Notification.Builder(MediaSessionManagerHelper.context, noticeChannelId)
-                .setSmallIcon(android.R.drawable.ic_media_play)
-                .setContentTitle(
-                    "${it.originalMediaInfo.title} - ${it.originalMediaInfo.artist}" +
-                            (if (it.originalMediaInfo.album.isBlank()) "" else " - ${it.originalMediaInfo.album}")
+                var curLyric = when (config.translateDisplayType) {
+                    "translated" -> translatedContent.ifBlank { sentenceContent }
+                    "both" -> if (translatedContent.isBlank()) sentenceContent else "$sentenceContent\n\r$translatedContent"
+                    else -> sentenceContent
+                }
+                if (config.forceRepeat &&
+                    it.lastLyricLineContent == curLyric) {
+                    curLyric = insertZeroWidthSpace(curLyric)
+                }
+                playInfo.isPlaying = true
+                val data = LyricSentenceUpdate.Data(
+                    sentence.content,
+                    translatedSentence?.content,
+                    sentenceIndex,
+                    delay
                 )
-                .setContentText(
-                    "${it.title} - ${it.artist}" +
-                            (if (it.album.isBlank()) "" else " - ${it.album}")
+                val intent = Intent(BROADCAST_LYRIC_SENTENCE_UPDATE).apply {
+                    setPackage(BuildConfig.APPLICATION_ID)
+                    putExtra("data", gson.toJson(data))
+                }
+                context.sendBroadcastAsUser(intent, user)
+                lastBroadcastIntent?.right = intent
+                LyricSentenceUpdate.getInstance().notifyLyrics(data)
+                val notification = Notification.Builder(MediaSessionManagerHelper.context, noticeChannelId)
+                    .setSmallIcon(android.R.drawable.ic_media_play)
+                    .setContentTitle(
+                        "${lyric.originalMediaInfo.title} - ${lyric.originalMediaInfo.artist}" +
+                                (if (lyric.originalMediaInfo.album.isBlank()) "" else " - ${lyric.originalMediaInfo.album}")
+                    )
+                    .setContentText(
+                        "${lyric.title} - ${lyric.artist}" +
+                                (if (lyric.album.isBlank()) "" else " - ${lyric.album}")
+                    )
+                    .setStyle(BigTextStyle().bigText(
+                        "${lyric.lyricResult.source} (${lyric.lyricResult.dataOrigin.getCapitalizedName()})" +
+                                "\n\rcurrentLyric:\n\r$curLyric\n\r\n\rdelay: $delay sec"
+                    ))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true)
+                    .setTicker(curLyric)
+                    .build()
+                notificationManager.notify(NOTIFICATION_ID_LRC, notification)
+                EventTool.sendLyric(curLyric,
+                    ExtraData(
+                        customIcon = icon != null,
+                        icon ?: "",
+                        false,
+                        BuildConfig.APPLICATION_ID,
+                        delay = delay,
+                    )
                 )
-                .setStyle(BigTextStyle().bigText(
-                    "${it.lyricResult.source} (${it.lyricResult.dataOrigin.getCapitalizedName()})" +
-                    "\n\rcurrentLyric:\n\r$curLyric\n\r\n\rdelay: $delay sec"
-                ))
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setTicker(curLyric)
-                .build()
-            notificationManager.notify(NOTIFICATION_ID_LRC, notification)
-            EventTool.sendLyric(curLyric,
-                ExtraData(
-                    customIcon = icon != null,
-                    icon ?: "",
-                    false,
-                    BuildConfig.APPLICATION_ID,
-                    delay = delay,
+                CSLyricHelper.updateLyricAsUser(
+                    context,
+                    playInfo,
+                    CSLyricHelper.LyricData(curLyric),
+                    user
                 )
-            )
-            CSLyricHelper.updateLyricAsUser(
-                context,
-                playInfo,
-                CSLyricHelper.LyricData(curLyric),
-                user
-            )
-            lastLyricLine[controller.packageName] = curLyric
-            lastSentenceMap[controller.packageName] = sentence
+                it.lastLyricLineContent = curLyric
+                it.lastSentenceIndex = sentenceIndex
+            }
         }
     }
 
-    private fun Lyric.calcDelay(controller: MediaController, position: Long): Int {
-        val nextFoundIndex = LyricUtils.getSentenceIndex(this.sentenceList, position, 0, this.offset) + 1
-        if (nextFoundIndex >= this.sentenceList.size) return 1
-        var delay: Int = ((this.sentenceList[nextFoundIndex].fromTime - position) / 1000).toInt()
-        currentLyric[controller.packageName]!!.translatedSentenceList?.let {
+    private fun Lyric.calcDelay(position: Long): Int {
+        val nextSentenceIndex = LyricUtils.getSentenceIndex(this.sentenceList, position, 0, this.offset) + 1
+        if (nextSentenceIndex >= this.sentenceList.size) return 1
+        var delay: Int = ((this.sentenceList[nextSentenceIndex].fromTime - position) / 1000.0).roundToInt()
+        this.translatedSentenceList?.let {
             delay /= 2
         }
         delay -= 3
@@ -295,6 +292,7 @@ object MediaSessionManagerHelper {
         return modifiedString.toString()
     }
 
+    @SuppressLint("DiscouragedApi")
     fun init(initContext: Context) {
         context = initContext
         config = Config()
@@ -325,8 +323,6 @@ object MediaSessionManagerHelper {
             val drawable =  ResourcesCompat.getDrawable(xmr, resId, null)
             if (drawable != null) {
                 icon = drawableToBase64(drawable)
-            } else {
-                Log.i("${BuildConfig.APPLICATION_ID} Drawable not found: ic_statusbar_icon")
             }
         }
     }
@@ -336,26 +332,39 @@ object MediaSessionManagerHelper {
     }
 
     fun updateLyrics(packageName: String) {
-        if (curLrcUpdateThread[packageName] == null || !curLrcUpdateThread[packageName]!!.isAlive) {
-            currentLyric.remove(packageName)
-            EventTool.cleanLyric()
-            context.sendBroadcastAsUser(
-                Intent(BROADCAST_LYRICS_CHANGED).apply {
-                    putExtra("data", gson.toJson(LyricsChange.Data(null, null)))
-                    setPackage(BuildConfig.APPLICATION_ID)
-                },
-                user
-            )
-            lastMetadata[packageName]?.let {
-                curLrcUpdateThread[packageName] = LrcUpdateThread(
-                    context,
-                    handler,
-                    it,
-                    packageName
+        controllerInfo[packageName]?.let {
+            synchronized(it) {
+                if (it.curLrcUpdateThread?.isAlive == true) return
+                it.currentLyric = null
+                EventTool.cleanLyric()
+                context.sendBroadcastAsUser(
+                    Intent(BROADCAST_LYRICS_CHANGED).apply {
+                        putExtra("data", gson.toJson(LyricsChange.Data(null, null)))
+                        setPackage(BuildConfig.APPLICATION_ID)
+                    },
+                    user
                 )
+                it.lastMetadata?.let { metadata ->
+                    it.curLrcUpdateThread = LrcUpdateThread(
+                        context,
+                        handler,
+                        metadata,
+                        packageName
+                    ).apply { start() }
+                }
             }
-            curLrcUpdateThread[packageName]!!.start()
         }
     }
+
+
+    data class ControllerInfo(
+        var lastSentenceIndex: Int? = null,
+        var requiredLrcTitle: String? = null,
+        var curLrcUpdateThread: LrcUpdateThread? = null,
+        var currentLyric: Lyric? = null,
+        var lastMetadata: MediaMetadata? = null,
+        var lastLyricLineContent: String? = null,
+        var state: PlaybackState? = null,
+    )
 }
 
