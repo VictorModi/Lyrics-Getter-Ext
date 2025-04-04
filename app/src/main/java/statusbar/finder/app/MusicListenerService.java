@@ -30,6 +30,7 @@ import cn.lyric.getter.api.data.ExtraData;
 import cn.lyric.getter.api.tools.Tools;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
+import statusbar.finder.BuildConfig;
 import statusbar.finder.CSLyricHelper;
 import statusbar.finder.LrcGetter;
 import statusbar.finder.R;
@@ -67,12 +68,12 @@ public class MusicListenerService extends NotificationListenerService {
 
     @SuppressLint("ConstantLocale")
     public final static String systemLanguage = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
-    private String drawBase64;
     private LrcUpdateThread curLrcUpdateThread;
     private API lyricsGetterApi;
     public static MusicListenerService instance;
     public CSLyricHelper.PlayInfo playInfo;
     private static Lyric.Sentence lastSentence;
+    private static final ExtraData extraData = new ExtraData();
 
     private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.myLooper())) {
         @Override
@@ -127,6 +128,7 @@ public class MusicListenerService extends NotificationListenerService {
             stopLyric();
             mLyric = null;
             if (metadata == null) return;
+            lyricsGetterApi.sendMediaData(metadata);
             mLyricNotification = buildLrcNotification();
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             requiredLrcTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
@@ -190,7 +192,9 @@ public class MusicListenerService extends NotificationListenerService {
         }
         instance = this;
         lyricsGetterApi = new API();
-        drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
+        String drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
+        extraData.setBase64Icon(drawBase64);
+        extraData.setPackageName(BuildConfig.APPLICATION_ID);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mLyricNotification = buildLrcNotification();
@@ -394,14 +398,8 @@ public class MusicListenerService extends NotificationListenerService {
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             // EventTools.INSTANCE.sendLyric(getApplicationContext(), curLyric, true, drawBase64, false, "", getPackageName(), delay);
             Log.d("updateLyric: ", String.format("Lyric: %s , delay: %d", curLyric, delay));
-            lyricsGetterApi.sendLyric(curLyric, new ExtraData(
-                    true,
-                    drawBase64,
-                    false,
-                    getPackageName(),
-                    delay // 单位: 秒 (Second)
-                    // 文档里写毫秒骗人呢，别信，信我，我怎么可能骗你呢
-            ));
+            extraData.setDelay(delay);
+            lyricsGetterApi.sendLyric(curLyric, extraData);
             playInfo.isPlaying = true;
             CSLyricHelper.updateLyric(
                     getApplicationContext(),

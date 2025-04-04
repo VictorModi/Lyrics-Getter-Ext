@@ -3,6 +3,7 @@ package statusbar.finder.hook.tool
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.media.MediaMetadata
 import android.os.UserHandle
 import cn.lyric.getter.api.data.ExtraData
 import cn.lyric.getter.api.data.LyricData
@@ -45,6 +46,23 @@ object EventTool {
             this.lyric = refinedLyric
             this.extraData = extra
         }
+    }
+
+    fun sendMetadata(metadata: MediaMetadata) {
+        context.sendBroadcastAsUser(Intent().apply {
+            action = "Lyric_Data"
+            val lyricData = LyricData().apply {
+                this.type = OperateType.MEDIA_DATA
+                this.extraData.mergeExtra(ExtraData().apply {
+                    this.packageName = BuildConfig.APPLICATION_ID
+                    this.mediaMetadata = metadata
+                    this.artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
+                    this.album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM) ?: "Unknown Album"
+                    this.title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Title"
+                })
+            }
+            putExtra("Data", lyricData)
+        }, UserHandle.getUserHandleForUid(android.os.Process.myUid()))
     }
 
     fun cleanLyric() {

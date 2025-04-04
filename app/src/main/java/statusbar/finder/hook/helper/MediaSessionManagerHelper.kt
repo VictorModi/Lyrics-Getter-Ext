@@ -38,6 +38,7 @@ import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.data.model.MediaInfo
 import statusbar.finder.data.repository.ResRepository
 import statusbar.finder.hook.tool.EventTool
+import statusbar.finder.hook.tool.EventTool.sendMetadata
 import statusbar.finder.misc.Constants.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -122,6 +123,7 @@ object MediaSessionManagerHelper {
                 val info = it.toMediaInfo()
                 if (it == controllerInfo[controller.packageName]?.lastMetadata) return
                 controllerInfo[controller.packageName]?.lastMetadata = it
+                sendMetadata(it)
                 notificationManager = context.getSystemService(NotificationManager::class.java)
                 val notification = Notification.Builder(context, noticeChannelId)
                     .setSmallIcon(android.R.drawable.ic_media_play)
@@ -199,7 +201,7 @@ object MediaSessionManagerHelper {
                 val translatedSentence = LyricUtils.getSentence(lyric.translatedSentenceList, position, 0, lyric.offset)
                 if (sentence.content.isBlank()) return
                 if (sentenceIndex == it.lastSentenceIndex) return
-                val delay: Int = lyric.calcDelay(position)
+                val lyricDelay: Int = lyric.calcDelay(position)
                 val sentenceContent = sentence.content.trim()
                 val translatedContent = translatedSentence?.content?.trim() ?: ""
 
@@ -217,7 +219,7 @@ object MediaSessionManagerHelper {
                     sentence.content,
                     translatedSentence?.content,
                     sentenceIndex,
-                    delay
+                    lyricDelay
                 )
                 val intent = Intent(BROADCAST_LYRIC_SENTENCE_UPDATE).apply {
                     setPackage(BuildConfig.APPLICATION_ID)
@@ -238,7 +240,7 @@ object MediaSessionManagerHelper {
                     )
                     .setStyle(BigTextStyle().bigText(
                         "${lyric.lyricResult.source} (${lyric.lyricResult.dataOrigin.getCapitalizedName()})" +
-                                "\n\rcurrentLyric:\n\r$curLyric\n\r\n\rdelay: $delay sec"
+                                "\n\rcurrentLyric:\n\r$curLyric\n\r\n\rdelay: $lyricDelay sec"
                     ))
                     .setContentIntent(pendingIntent)
                     .setOngoing(true)
@@ -247,13 +249,11 @@ object MediaSessionManagerHelper {
                     .build()
                 notificationManager.notify(NOTIFICATION_ID_LRC, notification)
                 EventTool.sendLyric(curLyric,
-                    ExtraData(
-                        customIcon = icon != null,
-                        icon ?: "",
-                        false,
-                        BuildConfig.APPLICATION_ID,
-                        delay = delay,
-                    )
+                    ExtraData().apply {
+                        base64Icon = icon ?: ""
+                        packageName = BuildConfig.APPLICATION_ID
+                        delay = lyricDelay
+                    }
                 )
                 CSLyricHelper.updateLyricAsUser(
                     context,
