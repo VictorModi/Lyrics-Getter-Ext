@@ -8,7 +8,7 @@
     <string name="dialog_delete_message">移除所選項目？</string>
     <string name="add_package_to_title">增加應用程式</string>
     <string name="enabled_title">開啟</string>
-    <string name="lyricsGetterStatus_title">Lyrics Getter 連接狀態</string>
+    <string name="connect_status_title">Super Lyric 連接狀態</string>
     <string name="target_apps_title">目標應用程式</string>
     <string name="toast_cannot_start_lyricsgetter">很抱歉，LyricsGetter啟動失敗。請檢查是否正確安裝LyricsGetter。</string>
     <string name="toast_cannot_get_rules">很抱歉，忽略應用程式規則更新失敗，請檢查您的網路設定。</string>

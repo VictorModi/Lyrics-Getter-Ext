@@ -9,7 +9,7 @@
             android:title="@string/enabled_title" />
         <SwitchPreference
             android:key="connection_status"
-            android:title="@string/lyricsGetterStatus_title"
+            android:title="@string/connect_status_title"
         />
         <ListPreference
             android:key="translate_type"

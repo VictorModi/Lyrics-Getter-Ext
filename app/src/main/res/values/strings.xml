@@ -10,7 +10,7 @@
     <string name="preferences_header">Prefreences</string>
     <string name="about_header">About</string>
     <string name="enabled_title">Enabled</string>
-    <string name="lyricsGetterStatus_title">Lyrics Getter Connection Status</string>
+    <string name="connect_status_title">Super Lyric Connection Status</string>
 
     <!--    &lt;!&ndash; Unsupport ROM &ndash;&gt;-->
 <!--    <string name="unsupport_rom_title">Unsupport</string>-->

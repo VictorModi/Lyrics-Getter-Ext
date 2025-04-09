@@ -24,7 +24,7 @@ import android.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.preference.*
-import cn.lyric.getter.api.API
+import com.hchen.superlyricapi.SuperLyricTool
 import statusbar.finder.R
 import statusbar.finder.config.Config
 import statusbar.finder.hook.tool.Tool.xpActivation
@@ -38,7 +38,7 @@ class SettingsActivity : FragmentActivity() {
             "statusbarlyricext" to "https://github.com/KaguraRinko/StatusBarLyricExt",
             "lyricview" to "https://github.com/markzhai/LyricView"
         )
-        val lyricsGetterApiHasEnable: Boolean = API().hasEnable
+        val apiHasEnable: Boolean = SuperLyricTool.isEnabled
 
         private var config: Config = Config()
 
@@ -138,8 +138,8 @@ class SettingsActivity : FragmentActivity() {
             mConnectionStatusPreference.notifyDependencyChange(false)
 
             mConnectionStatusPreference.apply {
-                summary = lyricsGetterApiHasEnable.toString()
-                isChecked = lyricsGetterApiHasEnable
+                summary = apiHasEnable.toString()
+                isChecked = apiHasEnable
                 onPreferenceClickListener = this@SettingsFragment
             }
 
@@ -200,12 +200,7 @@ class SettingsActivity : FragmentActivity() {
             when (preference) {
                 mEnabledPreference -> startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
                 mConnectionStatusPreference -> {
-                    mConnectionStatusPreference.isChecked = lyricsGetterApiHasEnable
-                    try {
-                        startActivity(Intent().setComponent(ComponentName("cn.lyric.getter", "cn.lyric.getter.ui.activity.MainActivity")))
-                    } catch (e: Exception) {
-                        Toast.makeText(context, R.string.toast_cannot_start_lyricsgetter, Toast.LENGTH_SHORT).show()
-                    }
+                    mConnectionStatusPreference.isChecked = apiHasEnable
                 }
                 else -> {
                     mUrlMap[preference.key]?.let {
