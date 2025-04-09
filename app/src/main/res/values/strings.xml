@@ -45,4 +45,5 @@
     <string name="info_album">Album</string>
     <string name="dialog_lyric_rescan">Do you want to search for lyrics again?</string>
     <string name="search_instruction">Please manually search again after modifying the alias</string>
+    <string name="title_lyrics_configuration">Lyrics Configuration</string>
 </resources>

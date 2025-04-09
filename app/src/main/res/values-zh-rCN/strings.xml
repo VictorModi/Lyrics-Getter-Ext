@@ -26,4 +26,5 @@
     <string name="info_album">专辑</string>
     <string name="dialog_lyric_rescan">是否重新搜索歌词？</string>
     <string name="search_instruction">请在修改别名后手动重新搜索</string>
+    <string name="title_lyrics_configuration">歌词设置</string>
 </resources>

@@ -14,6 +14,7 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.IpConfiguration
 import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
@@ -25,10 +26,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.preference.*
 import cn.lyric.getter.api.API
+import statusbar.finder.BuildConfig
 import statusbar.finder.R
 import statusbar.finder.config.Config
 import statusbar.finder.hook.tool.Tool.xpActivation
 import statusbar.finder.misc.Constants
+import statusbar.finder.misc.Constants.PREFERENCE_KEY_LYRICS_CONFIGURATION
 
 class SettingsActivity : FragmentActivity() {
 
@@ -113,6 +116,7 @@ class SettingsActivity : FragmentActivity() {
         private lateinit var mConnectionStatusPreference: SwitchPreference
         private lateinit var mForceRepeatPreference: SwitchPreference
         private lateinit var mTranslateListPreference: ListPreference
+        private lateinit var mLyricsConfigurationPreference: Preference
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -135,6 +139,7 @@ class SettingsActivity : FragmentActivity() {
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS)!!
             mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_TRANSLATE_TYPE)!!
             mForceRepeatPreference = findPreference(Constants.PREFERENCE_KEY_FORCE_REPEAT)!!
+            mLyricsConfigurationPreference = findPreference(PREFERENCE_KEY_LYRICS_CONFIGURATION)!!
             mConnectionStatusPreference.notifyDependencyChange(false)
 
             mConnectionStatusPreference.apply {
@@ -175,6 +180,10 @@ class SettingsActivity : FragmentActivity() {
                 }
             }
 
+            mLyricsConfigurationPreference.apply {
+                onPreferenceClickListener = this@SettingsFragment
+            }
+
             findPreference<Preference>("app")?.apply {
                 summary = getAppVersionName(context)
                 isEnabled = true
@@ -206,6 +215,9 @@ class SettingsActivity : FragmentActivity() {
                     } catch (e: Exception) {
                         Toast.makeText(context, R.string.toast_cannot_start_lyricsgetter, Toast.LENGTH_SHORT).show()
                     }
+                }
+                mLyricsConfigurationPreference -> {
+                    startActivity(Intent(this.context, LyricsActivity::class.java))
                 }
                 else -> {
                     mUrlMap[preference.key]?.let {

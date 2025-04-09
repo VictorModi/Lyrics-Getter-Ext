@@ -24,6 +24,12 @@
             android:summary="@string/force_repeat_summary"
             android:key="force_repeat"
         />
+
+        <Preference
+                android:title="@string/title_lyrics_configuration"
+                android:key="lyrics_configuration"
+        />
+
         <statusbar.finder.preferences.PackageListPreference
             android:title="@string/target_apps_title"
             android:key="target_packages"
