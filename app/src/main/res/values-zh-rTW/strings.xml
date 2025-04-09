@@ -26,4 +26,5 @@
     <string name="info_album">專輯</string>
     <string name="dialog_lyric_rescan">是否重新搜尋歌詞？</string>
     <string name="search_instruction">請在修改別名後手動重新搜尋</string>
+    <string name="title_lyrics_configuration">歌詞設定</string>
 </resources>
