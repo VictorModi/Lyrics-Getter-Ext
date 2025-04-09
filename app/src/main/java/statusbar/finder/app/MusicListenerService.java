@@ -13,10 +13,7 @@ import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.os.*;
 import android.service.notification.NotificationListenerService;
 import android.text.TextUtils;
 import android.util.Log;
@@ -25,11 +22,12 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
-import cn.lyric.getter.api.API;
-import cn.lyric.getter.api.data.ExtraData;
-import cn.lyric.getter.api.tools.Tools;
 import cn.zhaiyifan.lyric.LyricUtils;
 import cn.zhaiyifan.lyric.model.Lyric;
+import com.hchen.superlyricapi.SuperLyricData;
+import com.hchen.superlyricapi.SuperLyricPush;
+import com.hchen.superlyricapi.SuperLyricTool;
+import statusbar.finder.BuildConfig;
 import statusbar.finder.CSLyricHelper;
 import statusbar.finder.LrcGetter;
 import statusbar.finder.R;
@@ -69,7 +67,6 @@ public class MusicListenerService extends NotificationListenerService {
     public final static String systemLanguage = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
     private String drawBase64;
     private LrcUpdateThread curLrcUpdateThread;
-    private API lyricsGetterApi;
     public static MusicListenerService instance;
     public CSLyricHelper.PlayInfo playInfo;
     private static Lyric.Sentence lastSentence;
@@ -111,7 +108,7 @@ public class MusicListenerService extends NotificationListenerService {
                 if (state.getState() == PlaybackState.STATE_PLAYING) {
                     startLyric();
                 } else {
-                    stopLyric();
+                    stopLyric(state);
                 }
             }
         }
@@ -189,8 +186,6 @@ public class MusicListenerService extends NotificationListenerService {
             return;
         }
         instance = this;
-        lyricsGetterApi = new API();
-        drawBase64 = Tools.INSTANCE.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mLyricNotification = buildLrcNotification();
@@ -199,7 +194,7 @@ public class MusicListenerService extends NotificationListenerService {
              updateTargetPackageList();
              bindMediaListeners();
         };
-
+        drawBase64 = SuperLyricTool.drawableToBase64(getDrawable(R.drawable.ic_statusbar_icon));
         playInfo = new CSLyricHelper.PlayInfo(drawBase64, getPackageName());
         DatabaseHelper.INSTANCE.init(getApplicationContext());
         mGetResultObserver = data -> {
@@ -337,11 +332,25 @@ public class MusicListenerService extends NotificationListenerService {
         mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
         mHandler.post(mLyricUpdateRunnable);
     }
-
     private void stopLyric() {
+        stopLyric(new PlaybackState.Builder()
+                .setState(PlaybackState.STATE_PAUSED, 0L, 1.0f)
+                .setActions(
+                        PlaybackState.ACTION_PLAY |
+                                PlaybackState.ACTION_PAUSE |
+                                PlaybackState.ACTION_PLAY_PAUSE
+                )
+                .build());
+    }
+
+    private void stopLyric(PlaybackState playbackState) {
         mHandler.removeCallbacks(mLyricUpdateRunnable);
         mNotificationManager.cancel(NOTIFICATION_ID_LRC);
-        lyricsGetterApi.clearLyric();
+        SuperLyricPush.onStop(
+                new SuperLyricData()
+                        .setPackageName(BuildConfig.APPLICATION_ID)
+                        .setPlaybackState(playbackState)
+        ); // 状态暂停
         playInfo.isPlaying = false;
         CSLyricHelper.pause(getApplicationContext(), playInfo);
     }
@@ -394,14 +403,15 @@ public class MusicListenerService extends NotificationListenerService {
             mNotificationManager.notify(NOTIFICATION_ID_LRC, mLyricNotification);
             // EventTools.INSTANCE.sendLyric(getApplicationContext(), curLyric, true, drawBase64, false, "", getPackageName(), delay);
             Log.d("updateLyric: ", String.format("Lyric: %s , delay: %d", curLyric, delay));
-            lyricsGetterApi.sendLyric(curLyric, new ExtraData(
-                    true,
-                    drawBase64,
-                    false,
-                    getPackageName(),
-                    delay // 单位: 秒 (Second)
-                    // 文档里写毫秒骗人呢，别信，信我，我怎么可能骗你呢
-            ));
+            SuperLyricPush.onSuperLyric(
+                    new SuperLyricData()
+                            .setPackageName(BuildConfig.APPLICATION_ID)
+                            .setBase64Icon(drawBase64)
+                            .setLyric(curLyric)
+                            .setDelay(delay)
+                            .setPlaybackState(mMediaController.getPlaybackState())
+                            .setMediaMetadata(mMediaController.getMetadata())
+            );
             playInfo.isPlaying = true;
             CSLyricHelper.updateLyric(
                     getApplicationContext(),

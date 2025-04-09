@@ -19,12 +19,13 @@ import android.os.Message
 import android.os.UserHandle
 import android.service.notification.NotificationListenerService
 import androidx.core.content.res.ResourcesCompat
-import cn.lyric.getter.api.data.ExtraData
-import cn.lyric.getter.api.tools.Tools.drawableToBase64
 import cn.zhaiyifan.lyric.LyricUtils
 import cn.zhaiyifan.lyric.model.Lyric
 import com.github.kyuubiran.ezxhelper.EzXHelper
 import com.google.gson.Gson
+import com.hchen.superlyricapi.SuperLyricData
+import com.hchen.superlyricapi.SuperLyricPush
+import com.hchen.superlyricapi.SuperLyricTool.drawableToBase64
 import org.apache.commons.lang3.tuple.MutablePair
 import statusbar.finder.BuildConfig
 import statusbar.finder.CSLyricHelper
@@ -37,7 +38,6 @@ import statusbar.finder.config.Config
 import statusbar.finder.data.db.DatabaseHelper
 import statusbar.finder.data.model.MediaInfo
 import statusbar.finder.data.repository.ResRepository
-import statusbar.finder.hook.tool.EventTool
 import statusbar.finder.misc.Constants.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -164,7 +164,11 @@ object MediaSessionManagerHelper {
                         handler.post(lyricUpdateRunnable)
                     } else {
                         handler.removeCallbacks(lyricUpdateRunnable)
-                        EventTool.cleanLyric()
+                        SuperLyricPush.onStop(
+                            SuperLyricData()
+                                .setPackageName(BuildConfig.APPLICATION_ID)
+                                .setPlaybackState(it.state)
+                        )
                         CSLyricHelper.pauseAsUser(context, playInfo, user)
                         notificationManager.cancel(NOTIFICATION_ID_LRC)
                     }
@@ -181,7 +185,11 @@ object MediaSessionManagerHelper {
                 if (playbackState?.state != PlaybackState.STATE_PLAYING) {
                     playInfo.isPlaying = false
                     CSLyricHelper.pauseAsUser(context, playInfo, user)
-                    EventTool.cleanLyric()
+                    SuperLyricPush.onStop(
+                        SuperLyricData()
+                            .setPackageName(BuildConfig.APPLICATION_ID)
+                            .setPlaybackState(playbackState)
+                    )
                     return
                 }
                 updateLyric(controller, playbackState.position, context)
@@ -246,14 +254,14 @@ object MediaSessionManagerHelper {
                     .setTicker(curLyric)
                     .build()
                 notificationManager.notify(NOTIFICATION_ID_LRC, notification)
-                EventTool.sendLyric(curLyric,
-                    ExtraData(
-                        customIcon = icon != null,
-                        icon ?: "",
-                        false,
-                        BuildConfig.APPLICATION_ID,
-                        delay = delay,
-                    )
+                SuperLyricPush.onSuperLyric(
+                    SuperLyricData()
+                        .setLyric(curLyric)
+                        .setDelay(delay)
+                        .setMediaMetadata(it.lastMetadata)
+                        .setPlaybackState(it.state)
+                        .setBase64Icon(icon)
+                        .setPackageName(BuildConfig.APPLICATION_ID)
                 )
                 CSLyricHelper.updateLyricAsUser(
                     context,
@@ -297,7 +305,6 @@ object MediaSessionManagerHelper {
         context = initContext
         config = Config()
         if (config.targetPackages.isBlank()) return
-        EventTool.setContext(context, user)
         DatabaseHelper.init(context)
         mediaSessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
         mediaSessionManager?.addOnActiveSessionsChangedListener(
@@ -336,7 +343,11 @@ object MediaSessionManagerHelper {
             synchronized(it) {
                 if (it.curLrcUpdateThread?.isAlive == true) return
                 it.currentLyric = null
-                EventTool.cleanLyric()
+                SuperLyricPush.onStop(
+                    SuperLyricData()
+                        .setPackageName(BuildConfig.APPLICATION_ID)
+                        .setPlaybackState(it.state)
+                )
                 context.sendBroadcastAsUser(
                     Intent(BROADCAST_LYRICS_CHANGED).apply {
                         putExtra("data", gson.toJson(LyricsChange.Data(null, null)))
