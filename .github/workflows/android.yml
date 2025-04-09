@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "api-superlyric" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "api-superlyric" ]
 
 jobs:
   build:
