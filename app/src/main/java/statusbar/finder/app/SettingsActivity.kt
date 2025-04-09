@@ -29,6 +29,7 @@ import statusbar.finder.R
 import statusbar.finder.config.Config
 import statusbar.finder.hook.tool.Tool.xpActivation
 import statusbar.finder.misc.Constants
+import statusbar.finder.misc.Constants.PREFERENCE_KEY_LYRICS_CONFIGURATION
 
 class SettingsActivity : FragmentActivity() {
 
@@ -113,6 +114,7 @@ class SettingsActivity : FragmentActivity() {
         private lateinit var mConnectionStatusPreference: SwitchPreference
         private lateinit var mForceRepeatPreference: SwitchPreference
         private lateinit var mTranslateListPreference: ListPreference
+        private lateinit var mLyricsConfigurationPreference: Preference
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -135,6 +137,7 @@ class SettingsActivity : FragmentActivity() {
             mConnectionStatusPreference = findPreference(Constants.PREFERENCE_KEY_CONNECTION_STATUS)!!
             mTranslateListPreference = findPreference(Constants.PREFERENCE_KEY_TRANSLATE_TYPE)!!
             mForceRepeatPreference = findPreference(Constants.PREFERENCE_KEY_FORCE_REPEAT)!!
+            mLyricsConfigurationPreference = findPreference(PREFERENCE_KEY_LYRICS_CONFIGURATION)!!
             mConnectionStatusPreference.notifyDependencyChange(false)
 
             mConnectionStatusPreference.apply {
@@ -175,6 +178,11 @@ class SettingsActivity : FragmentActivity() {
                 }
             }
 
+            mLyricsConfigurationPreference.apply {
+                onPreferenceClickListener = this@SettingsFragment
+            }
+
+
             findPreference<Preference>("app")?.apply {
                 summary = getAppVersionName(context)
                 isEnabled = true
@@ -196,11 +204,13 @@ class SettingsActivity : FragmentActivity() {
         }
 
         override fun onPreferenceClick(preference: Preference): Boolean {
-            val context = requireContext()
             when (preference) {
                 mEnabledPreference -> startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
                 mConnectionStatusPreference -> {
                     mConnectionStatusPreference.isChecked = apiHasEnable
+                }
+                mLyricsConfigurationPreference -> {
+                    startActivity(Intent(requireContext(), LyricsActivity::class.java))
                 }
                 else -> {
                     mUrlMap[preference.key]?.let {
