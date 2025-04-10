@@ -260,7 +260,7 @@ object MediaSessionManagerHelper {
                         .setDelay(delay)
                         .setMediaMetadata(it.lastMetadata)
                         .setPlaybackState(it.state)
-                        .setBase64Icon(icon)
+                        .setBase64Icon(icon ?: "")
                         .setPackageName(BuildConfig.APPLICATION_ID)
                 )
                 CSLyricHelper.updateLyricAsUser(

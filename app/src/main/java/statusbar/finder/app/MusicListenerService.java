@@ -350,6 +350,7 @@ public class MusicListenerService extends NotificationListenerService {
                 new SuperLyricData()
                         .setPackageName(BuildConfig.APPLICATION_ID)
                         .setPlaybackState(playbackState)
+                        .setExtra(new Bundle())
         ); // 状态暂停
         playInfo.isPlaying = false;
         CSLyricHelper.pause(getApplicationContext(), playInfo);
@@ -405,12 +406,13 @@ public class MusicListenerService extends NotificationListenerService {
             Log.d("updateLyric: ", String.format("Lyric: %s , delay: %d", curLyric, delay));
             SuperLyricPush.onSuperLyric(
                     new SuperLyricData()
+                            .setLyric(curLyric)
                             .setPackageName(BuildConfig.APPLICATION_ID)
                             .setBase64Icon(drawBase64)
-                            .setLyric(curLyric)
                             .setDelay(delay)
-                            .setPlaybackState(mMediaController.getPlaybackState())
                             .setMediaMetadata(mMediaController.getMetadata())
+                            .setPlaybackState(mMediaController.getPlaybackState())
+                            .setExtra(new Bundle())
             );
             playInfo.isPlaying = true;
             CSLyricHelper.updateLyric(
