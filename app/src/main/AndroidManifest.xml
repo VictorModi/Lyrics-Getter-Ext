@@ -34,7 +34,7 @@
         </service>
 
         <receiver android:name=".app.broadcast.LyricsBroadcastReceiver" android:exported="true"
-                  android:permission="status.finder.Broadcast">
+                  tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="statusbar.finder.LYRICS_CHANGED" />
                 <action android:name="statusbar.finder.LYRICS_SENTENCE_UPDATED"/>
