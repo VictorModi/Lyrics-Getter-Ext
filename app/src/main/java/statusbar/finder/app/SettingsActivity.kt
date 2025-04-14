@@ -14,7 +14,6 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.IpConfiguration
 import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
@@ -24,9 +23,12 @@ import android.widget.Toast
 import android.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.preference.*
-import cn.lyric.getter.api.API
-import statusbar.finder.BuildConfig
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceCategory
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
+import com.hchen.superlyricapi.SuperLyricTool
 import statusbar.finder.R
 import statusbar.finder.config.Config
 import statusbar.finder.hook.tool.Tool.xpActivation
@@ -41,7 +43,7 @@ class SettingsActivity : FragmentActivity() {
             "statusbarlyricext" to "https://github.com/KaguraRinko/StatusBarLyricExt",
             "lyricview" to "https://github.com/markzhai/LyricView"
         )
-        val lyricsGetterApiHasEnable: Boolean = API().hasEnable
+        val lyricsGetterApiHasEnable: Boolean = SuperLyricTool.isEnabled
 
         private var config: Config = Config()
 

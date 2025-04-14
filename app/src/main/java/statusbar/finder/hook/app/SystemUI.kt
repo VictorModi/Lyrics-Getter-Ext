@@ -7,7 +7,12 @@ import com.github.kyuubiran.ezxhelper.finders.MethodFinder.`-Static`.methodFinde
 import statusbar.finder.hook.BaseHook
 import statusbar.finder.hook.broadcast.LyricRequestBroadcastReceiver
 import statusbar.finder.hook.helper.MediaSessionManagerHelper
-import statusbar.finder.misc.Constants.*
+import statusbar.finder.hook.superlyric.SuperLyricHelper
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_ACTIVE_UPDATE_REQUEST
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_CHANGED_REQUEST
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_DELETE_RESULT_REQUEST
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_OFFSET_UPDATE_REQUEST
+import statusbar.finder.misc.Constants.BROADCAST_LYRICS_UPDATE_ALIAS_REQUEST
 
 /**
  * LyricGetterExt - statusbar.finder.hook.app
@@ -23,6 +28,7 @@ object SystemUI : BaseHook() {
         Application::class.java.methodFinder().filterByName("attach").first().createHook {
             after {
                 val application = it.thisObject as Application
+                SuperLyricHelper.registerSuperLyricController(application)
                 MediaSessionManagerHelper.init(application)
                 application.registerReceiver(
                     LyricRequestBroadcastReceiver(),
