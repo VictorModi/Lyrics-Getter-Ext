@@ -18,6 +18,8 @@ import statusbar.finder.hook.app.SystemUI
  */
 class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
+        EzXHelper.setLogTag("LyricGetterExt")
+        EzXHelper.setToastTag("LyricGetterExt")
         EzXHelper.initHandleLoadPackage(lpparam)
         when (lpparam.packageName) {
             "com.android.systemui" -> initHooks(SystemUI)
